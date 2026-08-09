@@ -43,6 +43,37 @@ export type WritebackDraftUpdate = components["schemas"]["WritebackDraftUpdate"]
 export type EffectiveRoleOut = components["schemas"]["EffectiveRoleOut"];
 export type MembershipRole = EffectiveRoleOut["roles"][number];
 
+// --- Production Twin (F2, FR-TWN) ------------------------------------------
+
+export type MilestoneOut = components["schemas"]["MilestoneOut"];
+export type MilestoneCreate = components["schemas"]["MilestoneCreate"];
+export type MilestoneUpdate = components["schemas"]["MilestoneUpdate"];
+export type DependencyOut = components["schemas"]["DependencyOut"];
+export type DependencyCreate = components["schemas"]["DependencyCreate"];
+export type DependencyUpdate = components["schemas"]["DependencyUpdate"];
+export type TwinNodeOut = components["schemas"]["TwinNodeOut"];
+export type TwinCurrentOut = components["schemas"]["TwinCurrentOut"];
+export type TwinConstraintOut = components["schemas"]["TwinConstraintOut"];
+export type PropagateCandidate = components["schemas"]["PropagateCandidate"];
+export type PropagateRequest = components["schemas"]["PropagateRequest"];
+export type AffectedNodeOut = components["schemas"]["AffectedNodeOut"];
+export type PropagateCandidateResult = components["schemas"]["PropagateCandidateResult"];
+export type PropagateResponse = components["schemas"]["PropagateResponse"];
+export type OntologyTermOut = components["schemas"]["OntologyTermOut"];
+
+// `create_dependency`'s cycle-rejection 422 and `delete_milestone`'s
+// referenced-edge 409 are both raised as a plain `HTTPException(detail=
+// "...")` (backend/app/api/milestones.py), never a response_model — so
+// openapi-typescript only ever generates `HTTPValidationError`'s
+// `{detail: ValidationError[]}` shape for these operations' typed 422, which
+// doesn't match either real body at the wire level. Same untyped-at-the-
+// wire-level situation lib/reports/hooks.ts's ExportBlockedError already
+// documents for the export-blocked 409 — `detail` here is a bare string, not
+// an array, for both of these.
+export interface TwinErrorBody {
+  detail: string;
+}
+
 export type VerificationState = ReportFieldT["verification_state"];
 
 // `ExportBlockedCommitment` (app/reports/schema.py) is never used as a

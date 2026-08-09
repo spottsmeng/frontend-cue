@@ -27,7 +27,7 @@ session's job, triggered by real mobile work starting, not by convenience.
 |---|---|---|---|---|---|
 | F0 | Foundations — auth, API client, app shell, CI | `Prompt F0 — Frontend Foundations.txt` | §12.1 design language; infra for all surfaces below | backend M1–M10 (Done) | Done (2026-08-09) |
 | F1 | Living WIP, verification & write-back | `Prompt F1 — Living WIP, Verification and Write-back.txt` | §12.2; FR-RPT; FR-LED-07/08; FR-WBK | F0 | Done (2026-08-09) |
-| F2 | Production Twin visualisation | `Prompt F2 — Production Twin visualisation.txt` | FR-TWN | F0 | Not started |
+| F2 | Production Twin visualisation | `Prompt F2 — Production Twin visualisation.txt` | FR-TWN | F0 | Done (2026-08-10) |
 | F3 | Foresight — risks, deviations, escalation | `Prompt F3 — Foresight, Risks and Deviations.txt` | FR-FOR; FR-DEV; FR-NTF | F0 | Not started |
 | F4 | Documents | `Prompt F4 — Documents.txt` | FR-DOC | F0 | Not started |
 | F5 | Ask & Successor Brief | `Prompt F5 — Ask and Successor Brief.txt` | §12.5; FR-ASK | F0 | Not started |
@@ -190,6 +190,106 @@ summary's own verification pills flip in the same page (not just the drawer); th
 draft → authorise → send cycle (draft composed by the real local Ollama model — the test budgets
 150s for this, not a fixed sleep); and export succeeding once verified, with a real signed MinIO
 download link. `pnpm typecheck` / `pnpm lint` / `pnpm build` all clean.
+
+## F2 notes (2026-08-10)
+
+**Layout decision, made deliberately per this prompt's own instruction: a vertical, chronologically-
+ordered timeline (a rail with a dot/lock marker per milestone, ordered by each node's own CPM-computed
+`earliest` date), not a horizontal Gantt bar-chart and not a force-directed graph.** CUE-Tech-Stack.md
+§4's "tens of nodes... twenty lines of code, not a database" already ruled out a graph-visualisation
+library; between the two remaining timeline shapes, horizontal Gantt bars need a fixed date scale and
+either truncate real milestone names or force horizontal scrolling once a project has two dozen items
+(the seeded archetype alone has 19) — a vertical list reads top-to-bottom like Living WIP's own
+"stable document" pattern (DESIGN.md's layout concept) and scales to any milestone count without a
+scale problem. Dependency *edges* (upstream/downstream/lag) are a separate "Dependencies" section
+below the timeline, not drawn as rail connectors — overlaying both concerns on one rail would
+reintroduce the density problem a graph layout was ruled out for in the first place. See
+`lib/twin/presentation.ts`'s `joinTwinNodes` docstring and `components/twin/timeline.tsx`'s own
+docstring for the full reasoning kept in-code.
+
+**Ontology `type_code` discovery, confirmed working as documented**: `GET /projects/{id}/ontology-
+terms?category=milestone_type` (F0's own addition) backs the add-milestone type picker
+(`components/twin/add-milestone-form.tsx`) — no CUE-PRD.md §4.2 term list hardcoded client-side, per
+this prompt's own instruction. One real gap found while wiring it: `OntologyTermOut` deliberately
+omits `id` (`backend/app/api/schemas.py`'s own docstring: "this response shape matches what a caller
+can actually use" — codes are the only stable reference), which means `MilestoneOut.type_term_id` (a
+raw UUID) has **no way to resolve back to a human-readable type label** anywhere in the current API
+surface — the ontology-terms endpoint can validate/populate a picker by code, but can't answer "what
+type is milestone X" after the fact. This session works around it by simply never displaying a
+milestone's type in the UI (name + dates + slack + fixed-ness carry enough identity on their own) —
+worth a `GET /ontology-terms/{id}` or an `id` field added to `OntologyTermOut` if a later session
+needs to show it.
+
+**Two backend-response-shape gaps found and worked around, not fixed** (documented per this prompt's
+own instruction, same "flag it in PROGRESS.md rather than working around it client-side" pattern):
+- `POST .../milestones/dependencies`'s cycle-rejection 422 and `DELETE .../milestones/{id}`'s
+  referenced-edge 409 are both a plain `HTTPException(detail="...")` — a bare string, never
+  `HTTPValidationError`'s typed `{detail: ValidationError[]}` array shape openapi-typescript generates
+  for every other 422 in this API. `lib/api/types.ts`'s `TwinErrorBody` and `lib/twin/hooks.ts`'s
+  `TwinConflictError` name this explicitly (same pattern `lib/reports/hooks.ts`'s `ExportBlockedError`
+  already established for the export-blocked 409). The cycle 422 also doesn't name *which* milestones
+  form the loop — surfaced verbatim as the backend's own message ("this dependency would create a
+  cycle (FR-TWN-01)") rather than re-derived client-side, per this prompt's own explicit instruction
+  not to work around it that way.
+- `DELETE .../milestones/{id}`'s 409 body is a flat message, not a structured list of blocking edges —
+  `components/twin/milestone-detail-panel.tsx` never actually sends that request while blocked: it
+  filters the already-loaded `dependencies` list client-side for edges referencing the milestone and
+  refuses locally, listing them with an inline "remove edge" action per row, so the UI never has to
+  parse a 409 it can't get structure out of.
+
+**Real backend gap found and closed, not just a frontend workaround**: `backend/scripts/
+seed_dev_data.py`'s seeded project never set `event_start` — `materialize_archetype`'s own docstring
+says every seeded `Milestone.planned_at` is `None` without it, so the Twin surface would have rendered
+completely dateless (`earliest`/`latest`/`slack_days` all `null` on every node, nothing to visually
+distinguish). Added `event_start = now + 90 days` (covers the archetype's own earliest anchor,
+`fnb_confirmation` at day offset -86). Also added one real fork/join branch — "Backup generator
+delivery," forking from "Exhibits move in" and rejoining at "Content load into screens," 5 days versus
+the original path's 1 — per this prompt's own TESTING EXPECTATION ("extend the dev-seed script... a
+couple of parallel branches, at least one fixed node"); `doors` already covered the fixed node. This
+produces a genuinely non-trivial, verified-against-the-real-CPM-engine fixture: the new branch becomes
+critical (-4d slack, pulling the *entire* upstream chain's `latest` back with it, a real and correct
+property of `app/twin/graph.py`'s backward pass once a shared ancestor has two successors of different
+length), while the original rigging/install/exhibitor-check-in leg it bypasses sits at exactly 0d slack
+— off the critical path despite being "on schedule," a genuinely instructive case for slack rendering.
+Confirmed live against the real backend (`uv run python3 scripts/seed_dev_data.py`, then
+`GET /twin/current`) before writing any frontend code against it, not assumed from reading
+`graph.py` alone.
+
+**Propagation simulator supports multi-candidate comparison in one call** (FR-TWN-07's own "recovery
+options" surface) — not cut for a later pass. `PropagateRequest.candidates` already accepts more than
+one; `components/twin/propagation-simulator.tsx` lets a PM add several "what if" rows and submits them
+in one `/twin/propagate` call, rendering each candidate's result as its own card in a wrapped row for
+side-by-side comparison. Cost nothing extra structurally once the single-candidate form existed, so
+built rather than deferred.
+
+**Manual recompute affordance kept** (`components/twin/recompute-button.tsx`, `POST .../twin/
+recompute`) even though every mutation this session's own hooks make already invalidates and refetches
+`/twin/current` — §11.2's resource table lists it as its own operation, and unlike the equivalent-read
+`GET /twin/current`, it leaves a distinct, audited "a PM explicitly asked for a fresh look" entry
+server-side (`app/api/twin.py`'s own docstring). Useful for a change made outside this app (e.g. an ops
+fix run directly against the database) that this session's own cache has no other reason to refetch.
+
+**Testing**: `pnpm test` (Vitest) — `lib/twin/presentation.test.ts` covers `joinTwinNodes`'s join-by-
+`milestone_id` and earliest-date ordering (including the orphan-milestone and tied-date fallback cases)
+against hand-built `TwinCurrentOut`-shaped fixtures, and `formatSlackDays`'s null/negative/zero/positive/
+fractional cases; `components/twin/timeline-node.test.tsx` renders `TimelineNodeRow` directly against
+hand-built `TimelineNode` fixtures and asserts the critical-path badge, the fixed-node lock marker +
+badge (independent of criticality), and slack-text rendering — this milestone's own TESTING EXPECTATION
+named all three explicitly. `pnpm test:e2e` (`e2e/twin.spec.ts`, `test.describe.serial`, extending the
+same seeded project `e2e/living-wip.spec.ts` already logs into) covers, against the real backend:
+viewing the timeline with real critical-path/fixed-node styling from the seeded fork/join fixture;
+editing "F&B confirmation" (the graph's one source node, so its own date edit is guaranteed to ripple
+forward — `graph.py`'s forward pass ignores a non-source node's own `planned_at`) and confirming a
+downstream row's rendered text changes; attempting a cycle-creating dependency and seeing the
+`TwinConflictError` message rendered inline; opening "Backup generator delivery" (this session's own
+seed fixture, with exactly two edges) and confirming the delete affordance never renders while blocked,
+listing both edges instead; and running a propagation simulation, then hard-reloading and confirming
+the binding-constraint banner's text is byte-identical to before the simulation. No test deletes a real
+milestone or dependency, so nothing here corrupts the shared fixture for a spec file running alongside
+it in the same suite. `pnpm typecheck` / `pnpm lint` / `pnpm build` all clean. Verified live in a real
+browser against the real backend before writing the Playwright spec (not just inferred from code) —
+screenshots covered the full timeline, a blocked-delete drawer, a rejected cycle, and a completed
+propagation run followed by a reload proving no persistence.
 
 ## Updating this file
 

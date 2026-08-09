@@ -1,5 +1,10 @@
-import { SurfacePlaceholder } from "@/components/app-shell/surface-placeholder";
+"use client";
+
+import { useParams } from "next/navigation";
+
+import { TwinView } from "@/components/twin/twin-view";
 
 export default function TwinPage() {
-  return <SurfacePlaceholder title="Production Twin" milestone="F2" />;
+  const { projectId } = useParams<{ projectId: string }>();
+  return <TwinView projectId={projectId} />;
 }
