@@ -42,6 +42,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${notoSansSC.variable} ${notoSansTC.variable} h-full antialiased`}
+      // The beforeInteractive script below deliberately sets data-theme on
+      // this element ahead of hydration (a returning visitor's stored theme
+      // choice must paint on the first frame, not flash the OS theme then
+      // snap) — the server render can never see localStorage, so this
+      // attribute always legitimately differs at hydration time. Scoped to
+      // this element's own attributes only, not the subtree.
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-bg text-ink font-sans">
         {/* Runs before hydration so a returning visitor's explicit theme
