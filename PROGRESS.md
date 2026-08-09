@@ -26,7 +26,7 @@ session's job, triggered by real mobile work starting, not by convenience.
 | # | Milestone | Prompt file | PRD surface | Depends on | Status |
 |---|---|---|---|---|---|
 | F0 | Foundations — auth, API client, app shell, CI | `Prompt F0 — Frontend Foundations.txt` | §12.1 design language; infra for all surfaces below | backend M1–M10 (Done) | Done (2026-08-09) |
-| F1 | Living WIP, verification & write-back | `Prompt F1 — Living WIP, Verification and Write-back.txt` | §12.2; FR-RPT; FR-LED-07/08; FR-WBK | F0 | Not started |
+| F1 | Living WIP, verification & write-back | `Prompt F1 — Living WIP, Verification and Write-back.txt` | §12.2; FR-RPT; FR-LED-07/08; FR-WBK | F0 | Done (2026-08-09) |
 | F2 | Production Twin visualisation | `Prompt F2 — Production Twin visualisation.txt` | FR-TWN | F0 | Not started |
 | F3 | Foresight — risks, deviations, escalation | `Prompt F3 — Foresight, Risks and Deviations.txt` | FR-FOR; FR-DEV; FR-NTF | F0 | Not started |
 | F4 | Documents | `Prompt F4 — Documents.txt` | FR-DOC | F0 | Not started |
@@ -119,6 +119,77 @@ Vitest, `next build`, no backend needed) and `e2e` (checks out `cue-backend` as 
 brings up its `docker-compose.yml` stack, applies migrations, starts the API, then runs the one real
 Playwright spec against it — no mocks, per this file's own testing-philosophy note). Confirmed green
 against a real pushed commit via `gh run watch`, not just "should work" (see commit history).
+
+## F1 notes (2026-08-09)
+
+**Pending-verification entry point: Living WIP alone, not a separate "needs verification" view.**
+Every section that carries a commitment reference (vendor status's outstanding/confirmed rows,
+next steps, decision log's outstanding approvals, budget summary's provenance, the export-blocked
+409 list) already opens the same commitment detail drawer — a dedicated pending-items list would
+only be a filtered re-projection of what's already one click away from several places on this one
+page. Documented here rather than left as an open question for a later session, per the prompt's
+own instruction.
+
+**Two small, additive backend gaps found and closed while reading the surfaces this session builds
+against** (same "close the gap you find, document it" pattern `backend/PROGRESS.md`'s post-M10
+section already established) — see that file's own "Frontend-enablement additions, round 2" entry
+for the full reasoning:
+- `EvidenceOut.media_ref` was never exposed by any response schema, so FR-VOI-05 (audio playback
+  from any evidence link) had no API surface at all. Added.
+- `GET /projects/{project_id}/members/me` (effective roles) didn't exist, so the frontend had no
+  way to know which role-gated controls (payment-status, budget-revise, write-back, verify) to
+  *show* the current user — F0's own stated "UX nicety, not a security boundary" position needed
+  this to be more than a stated intention. Added, any-member-gated, mirrors
+  `app.identity.service.effective_roles` exactly.
+- `PATCH /projects/{project_id}/writeback/{outbound_id}` (draft_text edit) was also missing — this
+  prompt's own §4 explicitly asks for "review/**edit** before authorisation," and there was no way
+  to edit a composed draft before this, only to review it. Added, draft-status-only, same
+  `WRITE_ROLES` gate as draft/authorise/send.
+
+`backend/scripts/seed_dev_data.py` (F0's own script) extended with real ledger content per this
+session's own TESTING EXPECTATION ("prefer extending the seed over hand-crafting one-off
+fixtures"): a vendor `Party` + `Channel` + `ChannelIdentity` + real-capture `Message`/`Evidence`
+(bilingual, Chinese original / English translation — exercises P7's toggle), one
+`pending_verification` monetary `Commitment` off that evidence (drives verify-end-to-end, the
+export-block 409, and write-back draft in one fixture — write-back's `_resolve_writeback_target`
+needs real-capture evidence, not a manually-entered commitment), one `human_verified` `Commitment`
+for section variety, a `Budget` baseline, and one `auto_drafted` `Deviation`. Hit and fixed a real
+bug in the same pass: `channel_identities` has a *global* `UNIQUE(channel_type, external_id)`
+constraint (not per-organisation), so a fixed phone number collided across separate seed runs the
+same way F0's own notes describe for a fixed dev-login email — fixed with the same
+org-suffix-per-run treatment.
+
+**A real correctness bug caught by actually running the app against the backend, not just
+typecheck/lint/build:** the commitment correction form's `due_at` field round-tripped through
+`toDatetimeLocal` by slicing the UTC ISO string's first 16 characters and handing it to
+`<input type="datetime-local">`, which the browser (correctly) treats as *local* time — off by the
+viewer's UTC offset, and building the value back to compare against the original's full-precision
+UTC string flagged *every* plain "Confirm" as a correction (`human_corrected` instead of
+`human_verified`), polluting FR-LED-09's training-signal labelling on every single verification.
+Fixed by (1) building the datetime-local string from `Date`'s own local-timezone getters instead of
+slicing the raw UTC string, and (2) comparing the form's value against the *same* minute-precision
+transform applied to the original, not full ISO precision the input can never actually express.
+Caught via a real Playwright-driven browser session against the live backend (screenshots + network
+log), not inferred from reading the code — see the two other bugs that same pass caught: a
+`<button>` nested inside `ProvenanceChip`'s own `<button>` (invalid HTML, hydration error, blocked
+the whole page in dev) in `CommitmentSummaryRow`, and `ExportBlockedBody` missing FastAPI's own
+`{"detail": {...}}` wrapper around `HTTPException(detail=...)` (crashed the export-blocked-list
+render with `Cannot read properties of undefined`). All three fixed; the full 8-step manual
+walkthrough (view report → open evidence → translation toggle → export-blocked 409 → verify →
+report figure updates → write-back draft → export succeeds) and a second pass (deviation
+confirm-as-is, budget revise, payment-status) were re-run clean afterward with zero console errors.
+
+**Testing**: `pnpm test` (Vitest) covers the verification badge across all five states, the
+original/translation evidence toggle (plus the no-translation and no-media-ref cases), and the
+export-blocked-409 list rendering (`useExportMutation` mocked, `ExportBlockedError` real) — the
+three behaviours this session's own TESTING EXPECTATION names explicitly. `pnpm test:e2e`
+(`e2e/living-wip.spec.ts`, `test.describe.serial` since both tests act on the same seeded
+commitment) covers, against the real backend: viewing all seven sections with real seeded data;
+export blocked with a genuine unverified monetary commitment; verifying it and seeing the budget
+summary's own verification pills flip in the same page (not just the drawer); the full write-back
+draft → authorise → send cycle (draft composed by the real local Ollama model — the test budgets
+150s for this, not a fixed sleep); and export succeeding once verified, with a real signed MinIO
+download link. `pnpm typecheck` / `pnpm lint` / `pnpm build` all clean.
 
 ## Updating this file
 
