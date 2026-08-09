@@ -32,6 +32,15 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Generate Next.js route types
+        # `LayoutProps<...>`/`PageProps<...>` (app/layout.tsx,
+        # app/(shell)/projects/[projectId]/layout.tsx) are ambient globals
+        # Next.js writes into `.next/types/` — generated as a side effect of
+        # `next dev`/`next build`, or here explicitly, since a fresh CI
+        # checkout has no `.next/` yet and `pnpm typecheck` (bare `tsc
+        # --noEmit`) doesn't build anything itself to produce them first.
+        run: pnpm exec next typegen
+
       - name: Typecheck
         run: pnpm typecheck
 
@@ -102,6 +111,13 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          # Default `package_json_file: package.json` is relative to
+          # $GITHUB_WORKSPACE root, which is empty here — this job checks
+          # out into `frontend/`/`backend/` subdirectories (two sibling
+          # repos, not one), so the action can't find a "packageManager"
+          # field to read the version from without being told where.
+          package_json_file: frontend/package.json
 
       - name: Install Node
         uses: actions/setup-node@v4
