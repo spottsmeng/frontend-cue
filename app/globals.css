@@ -1,26 +1,240 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ==========================================================================
+   CUE design tokens — centralized, single source of truth.
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+   Approved design review: see frontend/DESIGN.md for the full rationale
+   (palette validation via the dataviz skill's CVD/contrast checks, type
+   pairing, layout concept). Do not add a raw hex value anywhere outside
+   this file — every component reads a token by role, never a literal.
+
+   Three layers, in order:
+   1. Raw theme-able primitives (`:root`, dark overrides) — the only place
+      an actual hex lives. Flips per theme; components never see this layer.
+   2. `@theme` — maps primitives to Tailwind v4's utility namespace, so
+      `bg-signal`, `text-ink-muted`, `border-critical` etc. exist as real
+      utilities, generated from these tokens, not hand-maintained.
+   3. Base element defaults (body font/colour, `:lang()` CJK routing).
+
+   Three theme states, per the artifact-design pattern: an un-stamped
+   document follows `prefers-color-scheme` (the default — most viewers);
+   `[data-theme="light"]` / `[data-theme="dark"]` on <html> is an explicit
+   override that must win both directions. F0 (frontend/PROGRESS.md) is
+   what wires an actual toggle to set that attribute — the CSS contract
+   here is ready for it, doesn't require it.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* Neutrals — "Slate", cool/blue-biased (hue ~225°), chosen deliberately
+     rather than a default gray (artifact-design's own fundamental). */
+  --bg:            #F7F8FA;
+  --surface:       #FFFFFF;
+  --surface-sunk:  #F1F3F6;
+  --border:        #E3E6EB;
+  --border-strong: #CDD2DA;
+  --ink:           #14171C;
+  --ink-secondary: #4A5262;
+  --ink-muted:     #7C8494;
+
+  /* Brand triad — Signal / Dusk / Bloom. Deliberately clear of red/amber/
+     green (PRD §12.1: "semantic colour is distinct from brand colour").
+     Validated with the dataviz skill's validate_palette.js: worst adjacent
+     pair ΔE 12.6 (deutan CVD) / 16.6 (normal vision) in dark mode, both
+     clear of the 8/15 gates — see frontend/DESIGN.md for the full run. */
+  --signal:      #2A78D6;   /* primary — actions, links, focus ring */
+  --signal-soft: #E4EFFB;
+  --dusk:        #4A3AA7;   /* secondary — selection, emphasis */
+  --dusk-soft:   #ECE8F8;
+  --bloom:       #C43D78;   /* tertiary — sparse accents only, never a CTA */
+  --bloom-soft:  #FBE7EF;
+
+  /* Status quad — fixed, reserved, never themed by brand. Always paired
+     with an icon + label (PRD §12.1); on light surfaces `warning` and
+     `serious` sit below 3:1 fill contrast by design — text/icon carries
+     the meaning, never the fill alone. */
+  --good:          #0CA30C;
+  --good-soft:     #E3F6E3;
+  --warning:       #C97D00;
+  --warning-soft:  #FBEDD3;
+  --serious:       #C1552C;
+  --serious-soft:  #FBE4DA;
+  --critical:      #D03B3B;
+  --critical-soft: #FBE1E1;
+
+  /* Verification chips — a second, independent status axis (extraction
+     trust, not delivery risk). Built from BRAND hues, never Status hues,
+     and rendered as pills, never stripes, so the two systems can never be
+     mistaken for one another — CommitmentOut.verification_state /
+     ReportField.verification_state / DeviationOut all resolve here. */
+  --verify-auto:      var(--ink-muted);
+  --verify-pending:   var(--warning);
+  --verify-verified:  var(--signal);
+  --verify-corrected: var(--dusk);
+
+  --shadow-card: 0 1px 2px rgba(20, 23, 28, 0.04), 0 1px 1px rgba(20, 23, 28, 0.03);
+  --shadow-pop:  0 8px 24px rgba(20, 23, 28, 0.12), 0 2px 6px rgba(20, 23, 28, 0.06);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg:            #0B0D11;
+    --surface:       #12151B;
+    --surface-sunk:  #0E1015;
+    --border:        #232833;
+    --border-strong: #323847;
+    --ink:           #F3F5F8;
+    --ink-secondary: #B7BECC;
+    --ink-muted:     #8890A0;
+
+    --signal:      #3987E5;
+    --signal-soft: #172A42;
+    --dusk:        #9184E8;
+    --dusk-soft:   #241F42;
+    --bloom:       #EB9CC0;
+    --bloom-soft:  #3A1E2C;
+
+    --good:          #37C837;
+    --good-soft:     #163318;
+    --warning:       #F0A93B;
+    --warning-soft:  #3A2C10;
+    --serious:       #F0916A;
+    --serious-soft:  #3A2418;
+    --critical:      #F06B6B;
+    --critical-soft: #3A1717;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
+    --shadow-pop:  0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
   }
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:            #0B0D11;
+  --surface:       #12151B;
+  --surface-sunk:  #0E1015;
+  --border:        #232833;
+  --border-strong: #323847;
+  --ink:           #F3F5F8;
+  --ink-secondary: #B7BECC;
+  --ink-muted:     #8890A0;
+
+  --signal:      #3987E5;
+  --signal-soft: #172A42;
+  --dusk:        #9184E8;
+  --dusk-soft:   #241F42;
+  --bloom:       #EB9CC0;
+  --bloom-soft:  #3A1E2C;
+
+  --good:          #37C837;
+  --good-soft:     #163318;
+  --warning:       #F0A93B;
+  --warning-soft:  #3A2C10;
+  --serious:       #F0916A;
+  --serious-soft:  #3A2418;
+  --critical:      #F06B6B;
+  --critical-soft: #3A1717;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
+  --shadow-pop:  0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   Tailwind theme mapping — every utility below is generated from the
+   primitives above via `var()`, never a second copy of a hex. This is the
+   layer of indirection that makes light/dark "just work" for `bg-signal`,
+   `text-critical`, etc: the utility's CSS variable reference never changes,
+   only what it resolves to per theme.
+   -------------------------------------------------------------------------- */
+@theme inline {
+  /* Enforcement, not convention: wipes Tailwind's entire built-in color
+     palette (red-500, gray-400, zinc-950, the lot) so a session literally
+     cannot compile `bg-blue-500` or `text-gray-500` by accident — it gets a
+     build error pointing back at this file instead of a silently-off-brand
+     screen. Every color a component needs must be one of the named tokens
+     below (or `white`/`black`/`transparent`/`current`, restored just below
+     as structural escape hatches, not a second palette to reach for
+     instead of the tokens). See frontend/DESIGN.md for the "why". */
+  --color-*: initial;
+  --color-white: #fff;
+  --color-black: #000;
+
+  --color-bg:            var(--bg);
+  --color-surface:       var(--surface);
+  --color-surface-sunk:  var(--surface-sunk);
+  --color-border:        var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink:           var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-muted:     var(--ink-muted);
+
+  --color-signal:      var(--signal);
+  --color-signal-soft: var(--signal-soft);
+  --color-dusk:        var(--dusk);
+  --color-dusk-soft:   var(--dusk-soft);
+  --color-bloom:       var(--bloom);
+  --color-bloom-soft:  var(--bloom-soft);
+
+  --color-good:          var(--good);
+  --color-good-soft:     var(--good-soft);
+  --color-warning:       var(--warning);
+  --color-warning-soft:  var(--warning-soft);
+  --color-serious:       var(--serious);
+  --color-serious-soft:  var(--serious-soft);
+  --color-critical:      var(--critical);
+  --color-critical-soft: var(--critical-soft);
+
+  --color-verify-auto:      var(--verify-auto);
+  --color-verify-pending:   var(--verify-pending);
+  --color-verify-verified:  var(--verify-verified);
+  --color-verify-corrected: var(--verify-corrected);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-pop:  var(--shadow-pop);
+
+  /* Type — Geist Sans/Mono are next/font-loaded in app/layout.tsx (self-
+     hosted, zero layout shift); Noto Sans SC/TC likewise, routed by
+     :lang() below rather than merged into one "CJK" stack (CUE-Tech-
+     Stack.md §6: Simplified and Traditional are different fonts, not one
+     with a fallback). */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", "Cascadia Code", monospace;
+
+  /* Precision-instrument radii — deliberately tight, not the soft
+     rounded-2xl "default SaaS" look (artifact-design's own anti-pattern
+     note). Overrides Tailwind's default --radius-* scale. */
+  --radius-sm:  4px;
+  --radius-md:  6px;
+  --radius-lg:  8px;
+  --radius-xl:  10px;
+}
+
+/* --------------------------------------------------------------------------
+   Base element defaults
+   -------------------------------------------------------------------------- */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+:lang(zh-Hans), :lang(zh) {
+  font-family: var(--font-geist-sans), var(--font-noto-sans-sc), ui-sans-serif, sans-serif;
+}
+:lang(zh-Hant) {
+  font-family: var(--font-geist-sans), var(--font-noto-sans-tc), ui-sans-serif, sans-serif;
+}
+
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--color-signal-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
 }
