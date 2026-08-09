@@ -28,7 +28,7 @@ session's job, triggered by real mobile work starting, not by convenience.
 | F0 | Foundations — auth, API client, app shell, CI | `Prompt F0 — Frontend Foundations.txt` | §12.1 design language; infra for all surfaces below | backend M1–M10 (Done) | Done (2026-08-09) |
 | F1 | Living WIP, verification & write-back | `Prompt F1 — Living WIP, Verification and Write-back.txt` | §12.2; FR-RPT; FR-LED-07/08; FR-WBK | F0 | Done (2026-08-09) |
 | F2 | Production Twin visualisation | `Prompt F2 — Production Twin visualisation.txt` | FR-TWN | F0 | Done (2026-08-10) |
-| F3 | Foresight — risks, deviations, escalation | `Prompt F3 — Foresight, Risks and Deviations.txt` | FR-FOR; FR-DEV; FR-NTF | F0 | Not started |
+| F3 | Foresight — risks, deviations, escalation | `Prompt F3 — Foresight, Risks and Deviations.txt` | FR-FOR; FR-DEV; FR-NTF | F0 | Done (2026-08-10) |
 | F4 | Documents | `Prompt F4 — Documents.txt` | FR-DOC | F0 | Not started |
 | F5 | Ask & Successor Brief | `Prompt F5 — Ask and Successor Brief.txt` | §12.5; FR-ASK | F0 | Not started |
 | F6 | Vendor Reliability Graph | `Prompt F6 — Vendor Reliability Graph.txt` | FR-VRG | F0 | Not started |
@@ -290,6 +290,119 @@ it in the same suite. `pnpm typecheck` / `pnpm lint` / `pnpm build` all clean. V
 browser against the real backend before writing the Playwright spec (not just inferred from code) —
 screenshots covered the full timeline, a blocked-delete drawer, a rejected cycle, and a completed
 propagation run followed by a reload proving no persistence.
+
+## F3 notes (2026-08-10)
+
+**Route/composition decision**: kept the existing `/projects/[projectId]/foresight` placeholder route
+(F0 already reserved it in `components/app-shell/project-subnav.tsx`) rather than folding into another
+surface. One scrolling page (`components/foresight/foresight-view.tsx`), same "sections as bounded
+panels" concept `SectionPanel` already establishes for Living WIP/Twin, not a new layout system:
+Risks, Deviations, Your notifications, Webhook subscriptions, Quiet hours, Foresight thresholds — in
+that order, risk feed first per the Challenge Brief's own "Critically weighted" note this prompt
+called out. **Quiet-hours and threshold config live here, not under Admin (F7, not yet built)** — both
+are Foresight-specific configuration (item 5's own judgment call); F7 should link to these two screens
+when it exists, not duplicate them.
+
+**Role gates, confirmed by reading the dependency each endpoint actually uses, not assumed**:
+`app/api/foresight_admin.py`'s `threshold_router` is `require_org_administrator` — org-wide ("holds
+`administrator` on *any* project in the org"), genuinely different from every other write gate on this
+page. `quiet_hours_router` and `webhooks`/`risks`/`deviations` write actions are all ordinary
+`require_project_role(*WRITE_ROLES)`. `components/foresight/threshold-config-panel.tsx` renders a 403
+as an explainable "you don't hold that role" message (`ForesightPermissionError`,
+`lib/foresight/hooks.ts`), not a generic failure — most write-role viewers of this page will see it.
+
+**Severity/status color mapping actually wired** (DESIGN.md flagged its own §12.1 mapping as "a
+reasonable default, not tested against every real value yet" — this is that): `SeverityBadge`
+(`components/foresight/severity-badge.tsx`) steps `low`→quiet neutral, `medium`→warning,
+`high`→serious, `critical`→critical (low and medium deliberately share the warning dot hue — label
+text carries the distinction, not color alone, per §12.1). `RiskStatusBadge` is a second, independent
+brand-hue pill system (open/acknowledged/signal/dusk), same "can never be confused with severity even
+at a glance" discipline the verification-chip system already established — `resolved` and
+`superseded` render with visibly different hue/copy, never collapsed into one "closed" look, per this
+prompt's own NON-OBVIOUS note.
+
+**Two real backend-shape gaps found — and actually fixed, not left as documented workarounds.**
+Originally landed as flagged-not-fixed (this codebase's own "flag it, don't silently work around it"
+convention, `components/twin/`'s own PROGRESS.md notes set the precedent) since fixing either meant
+touching backend code outside F3's own stated scope. Both were then closed on explicit direction, same
+"close the gap you find, document it" pattern the post-M10 and F1 frontend-enablement additions already
+established — see `backend/PROGRESS.md`'s new "round 3" section for the full backend-side writeup:
+- **`OntologyTermOut.id`** — was deliberately omitted (a choice that only covered *picking* a term to
+  write, not resolving an already-persisted `*_term_id` FK back to a label; F2's notes had already hit
+  the identical gap for `MilestoneOut.type_term_id` and worked around it by never displaying a
+  milestone's type at all). Now a real, additive field. `lib/foresight/hooks.ts`'s
+  `useDeviationClassTermsQuery` + `resolveTermLabel` (a plain `Map`-style lookup over the already-
+  fetched category list, unit-tested in `lib/foresight/resolve-term-label.test.ts`) resolve
+  `Deviation.class_term_id` to its real `label_en (code)` in `components/foresight/deviation-row.tsx`,
+  falling back to the raw id only if a term is ever genuinely missing from the fetched set (stale
+  cache, or a term retired from the project's effective vocabulary after the Deviation was created) —
+  never a guess. F2/Twin's own identical `type_term_id` gap is now trivially closeable by the same
+  mechanism (same schema fix); not retrofitted into Twin's code this session, since that wasn't asked
+  for and Twin is a separate, already-Done, already-tested surface.
+- **`GET /projects/{project_id}/members`** — didn't exist; only self-only `/members/me` and the
+  org-admin-gated `GET /admin/roles` (which itself carries no display_name/email) did.
+  `DeviationResolveRequest.resolution_owner` (FR-DEV-03) is a required user id, so an ordinary
+  write-role PM — the same tier actually allowed to call `POST .../resolve` — had no way to name a
+  colleague at all. Now a real, project-scoped, any-member-readable endpoint (`ProjectMemberOut`: a
+  proper `Membership` × `User` join, one explicit query, not two round trips). `lib/members/hooks.ts`'s
+  `useProjectMembersQuery` + `resolveMemberLabel` (unit-tested in `lib/members/
+  resolve-member-label.test.ts`) back a real `<select>` of names in the resolve-deviation form —
+  no more pasted UUID — and also resolve an already-recorded `resolution_owner` back to a name in the
+  "Resolved for ... owner ..." line, which the pre-fix version left as a raw id too.
+
+Both fixes verified against the real backend before regenerating the client (`curl` against the live
+`fastapi dev` reload, not just read from the diff) — `lib/api/schema.gen.ts` regenerated via
+`pnpm generate:api`, `pnpm typecheck`/`pnpm lint`/`pnpm test`/`pnpm build` all clean afterward, and the
+full backend suite (`uv run pytest`, 508 passing, up from 504) confirmed no regression from either
+schema/endpoint change.
+
+**Cross-surface linking is plain navigation, not a query-param deep link.** A Risk/Deviation card's
+`commitment_id`/`milestone_id` links to `/projects/{id}` (Living WIP) or `/projects/{id}/twin`, not a
+specific open drawer — F1/F2 render their own detail drawers from local `useState`, not a URL param, so
+wiring true deep-linking would mean adding `useSearchParams`-driven initial state to both of those
+already-Done, already-tested surfaces. Judged not worth the regression risk for this session; landing
+on the right surface (rather than a generic project page) still satisfies "linking through to whichever
+real object it's about" honestly. `spec_claim_id` renders as inert text ("see Documents — coming soon")
+since no Document surface exists yet (F4), per this prompt's own EXPLICITLY OUT OF SCOPE note.
+
+**Dev-seed extension** (`backend/scripts/seed_dev_data.py`): two `Risk` rows (one `silence`/`open` with
+a fixture `base_rate=0.8` on the pending LED-wall commitment, one `forecast`/`open`/`critical` with
+`base_rate=None` on "Content load into screens" — covers both the base-rate-present and honestly-absent
+render paths), one collapsed `Notification` (`collapsed_count=2`) to the seeded administrator (same
+role `e2e/global-setup.ts` logs Playwright into), and a second, already-`confirmed` manual `Deviation`
+(distinct from the existing auto-drafted `spec_drift` one, so confirm and resolve each have their own
+row to act on) — real ORM-direct rows, same pattern `loadtest/seed.py` established, since the arq
+worker's periodic sweeps only ever fire on real elapsed time.
+
+**Testing**: `pnpm test` (Vitest, 57 passing across 13 files) — `severity-badge.test.tsx`/
+`risk-status-badge.test.tsx` cover all four `RiskSeverityLiteral`/`RiskStatusLiteral` values each (this
+milestone's own TESTING EXPECTATION named both explicitly); `notification-list.test.tsx` covers the
+collapsed-count "N related findings" rendering (both the collapsed and uncollapsed cases) against
+`NotificationRow` directly, hand-built fixtures, no query client needed; `lib/foresight/
+resolve-term-label.test.ts` and `lib/members/resolve-member-label.test.ts` cover the two ontology-
+term/member label resolvers' found/not-found/not-yet-loaded cases (the "round 3" fixes above). `pnpm
+test:e2e` (`e2e/foresight.spec.ts`, `test.describe.serial`, 7 specs) covers, against the real backend:
+server-side severity filtering on the risk feed; every risk card leading with `downstream_consequence`
+and rendering `base_rate` honestly (present vs. "not enough history yet"); the acknowledge/resolve 409
+race — confirmed that `acknowledge_risk` is actually idempotent on an already-*acknowledged* risk
+(`app/api/risks.py`'s own guard only rejects `resolved`/`superseded`), so the real race test resolves
+the risk out-of-band via the same session's own bearer token (`GET /api/auth/session`) and confirms a
+stale-UI acknowledge click 409s but the mutation's `onSettled` refetch still converges the card on the
+true "Resolved" state with an explanatory message, never a stuck stale "Open"; confirming an
+auto-drafted deviation as-is *and* asserting its class now renders as "Spec drift / contradiction," not
+a raw `class <uuid>` string; recording a deviation resolution by picking a real name from the member
+`<select>` (asserting the option count matches the seeded roster and the resolved row reads "owner
+Producer," never a UUID); a webhook's signing secret shown exactly once (asserted absent from the page
+after dismissal *and* after a hard reload); and a project-scoped threshold override, verified by
+reading it back after a reload rather than inferring the POST succeeded from the optimistic UI alone.
+Two real bugs this test run caught and fixed: the risk conflict-error message was originally nested
+inside the same `canAcknowledge || canResolve`-gated block as the action buttons, so it disappeared the
+instant the risk moved to a terminal status — exactly when it mattered most (moved outside that block
+in `risk-card.tsx`); and the initial "round 3" edit to `app/api/ontology.py` dropped the already-
+required `sort_order` field while adding `id` (caught immediately by the live `curl` check against the
+running backend, not by a passing-but-blind test). `pnpm typecheck` / `pnpm lint` / `pnpm build` all
+clean; full `pnpm test:e2e` suite (F0–F3, 15 specs) passes together, confirming no regression in F1/F2's
+own already-Done surfaces from either backend schema/endpoint change.
 
 ## Updating this file
 

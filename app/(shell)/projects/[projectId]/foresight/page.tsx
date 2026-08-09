@@ -1,5 +1,10 @@
-import { SurfacePlaceholder } from "@/components/app-shell/surface-placeholder";
+"use client";
+
+import { useParams } from "next/navigation";
+
+import { ForesightView } from "@/components/foresight/foresight-view";
 
 export default function ForesightPage() {
-  return <SurfacePlaceholder title="Foresight" milestone="F3" />;
+  const { projectId } = useParams<{ projectId: string }>();
+  return <ForesightView projectId={projectId} />;
 }

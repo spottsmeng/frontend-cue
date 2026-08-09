@@ -33,6 +33,8 @@ export type PaymentStatusUpdate = components["schemas"]["PaymentStatusUpdate"];
 
 export type DeviationOut = components["schemas"]["DeviationOut"];
 export type DeviationConfirmRequest = components["schemas"]["DeviationConfirmRequest"];
+export type DeviationResolveRequest = components["schemas"]["DeviationResolveRequest"];
+export type DeviationStatus = DeviationOut["status"];
 
 export type BudgetOut = components["schemas"]["BudgetOut"];
 export type BudgetWrite = components["schemas"]["BudgetWrite"];
@@ -42,6 +44,7 @@ export type WritebackDraftUpdate = components["schemas"]["WritebackDraftUpdate"]
 
 export type EffectiveRoleOut = components["schemas"]["EffectiveRoleOut"];
 export type MembershipRole = EffectiveRoleOut["roles"][number];
+export type ProjectMemberOut = components["schemas"]["ProjectMemberOut"];
 
 // --- Production Twin (F2, FR-TWN) ------------------------------------------
 
@@ -75,6 +78,34 @@ export interface TwinErrorBody {
 }
 
 export type VerificationState = ReportFieldT["verification_state"];
+
+// --- Foresight (F3, FR-FOR / FR-DEV / FR-NTF) -------------------------------
+
+export type RiskOut = components["schemas"]["RiskOut"];
+export type RiskSource = RiskOut["source"];
+export type RiskSeverity = RiskOut["severity"];
+export type RiskStatus = RiskOut["status"];
+
+export type NotificationOut = components["schemas"]["NotificationOut"];
+export type NotificationChannel = components["schemas"]["NotificationOut"]["delivered_via"];
+
+export type WebhookSubscriptionOut = components["schemas"]["WebhookSubscriptionOut"];
+export type WebhookSubscriptionCreated = components["schemas"]["WebhookSubscriptionCreated"];
+export type WebhookSubscriptionCreate = components["schemas"]["WebhookSubscriptionCreate"];
+export type WebhookEventType = WebhookSubscriptionCreate["event_types"][number];
+
+export type ForesightThresholdOut = components["schemas"]["ForesightThresholdOut"];
+export type ForesightThresholdMetric = ForesightThresholdOut["metric"];
+
+export type QuietHoursConfigOut = components["schemas"]["QuietHoursConfigOut"];
+
+// `acknowledge_risk`/`resolve_risk`'s 409 ("cannot acknowledge/resolve a
+// {status} risk") is a plain HTTPException(detail=str) like TwinErrorBody
+// above, not a typed response_model — same untyped-at-the-wire-level
+// situation, confirmed against app/api/risks.py directly rather than assumed.
+export interface ForesightErrorBody {
+  detail: string;
+}
 
 // `ExportBlockedCommitment` (app/reports/schema.py) is never used as a
 // response_model — app/api/reports.py's export_report constructs the 409

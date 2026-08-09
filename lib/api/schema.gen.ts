@@ -158,6 +158,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{project_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Project Members
+         * @description Frontend-enablement addition (F3, same pattern `/members/me` above
+         *     already used for F1) — a project-scoped member directory, distinct from
+         *     both `MembershipOut` (raw `user_id`, no name/email) and the org-wide,
+         *     org-admin-gated `GET /admin/roles`. Closes a real gap: nothing let an
+         *     ordinary write-role caller (e.g. naming a `DeviationResolveRequest.
+         *     resolution_owner`) look up a fellow member by name at all before this —
+         *     only an org administrator could, via `/admin/roles`, and even that
+         *     response carries no display_name/email to resolve to. Any project
+         *     member may call this (`Depends(get_project)`'s own any-membership-or-
+         *     delegation tier, same as `/members/me`) — this is read access to
+         *     "who's on my own project," not an administrative action.
+         *
+         *     No `relationship()` between Membership and User (this codebase's own
+         *     established style, `app/api/deviations.py`'s `_to_out` docstring: "one
+         *     explicit query," not an ORM join traversal) — an explicit JOIN here
+         *     instead, same reasoning, one query rather than N+1.
+         */
+        get: operations["list_project_members_projects__project_id__members_get"];
+        put?: never;
+        /**
+         * Add Member
+         * @description FR-ADM-06's 'assign members' step, standalone (not just at
+         *     provisioning time) — administrator or producer only.
+         */
+        post: operations["add_member_projects__project_id__members_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects/{project_id}/archive": {
         parameters: {
             query?: never;
@@ -178,27 +218,6 @@ export interface paths {
          *     stay unbuilt; this endpoint only closes "archive".
          */
         post: operations["archive_project_endpoint_projects__project_id__archive_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{project_id}/members": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Add Member
-         * @description FR-ADM-06's 'assign members' step, standalone (not just at
-         *     provisioning time) — administrator or producer only.
-         */
-        post: operations["add_member_projects__project_id__members_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3388,13 +3407,27 @@ export interface components {
          * @description GET /projects/{id}/ontology-terms?category=X — read-only discovery
          *     of the valid *_code values for one ontology_terms category, resolved
          *     against the calling project's own effective three-tier vocabulary
-         *     (CUE-PRD.md §4.2.1). `id` is deliberately omitted: every *_code field
-         *     across this API (MilestoneCreate.type_code, CommitmentCreate.act_type,
-         *     DeviationCreate.class_code, ...) takes the stable `code`, never the
-         *     internal surrogate id — this response shape matches what a caller can
-         *     actually use.
+         *     (CUE-PRD.md §4.2.1). Every *_code field across this API
+         *     (MilestoneCreate.type_code, CommitmentCreate.act_type,
+         *     DeviationCreate.class_code, ...) still takes the stable `code`, never
+         *     `id` — that part of the original design holds.
+         *
+         *     `id` was dropped from the first version of this response on exactly that
+         *     reasoning, but it silently broke a *different, equally real* need this
+         *     session (frontend F3) hit and F2 had already independently hit before
+         *     it: resolving an already-persisted `*_term_id` FK (MilestoneOut.
+         *     type_term_id, DeviationOut.class_term_id, ...) back to a human-readable
+         *     label. A caller can't join a stored id against a response keyed by code
+         *     alone. `id` is additive here (no existing caller reads a fixed key set
+         *     or would break on a new field), so both needs are served by the same
+         *     endpoint rather than adding a second one.
          */
         OntologyTermOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Code */
             code: string;
             /** Label En */
@@ -3679,6 +3712,42 @@ export interface components {
              * @default []
              */
             members: components["schemas"]["MembershipCreate"][];
+        };
+        /**
+         * ProjectMemberOut
+         * @description Backs `GET /projects/{project_id}/members` — a project-scoped member
+         *     directory any project member can read (same read tier as
+         *     `GET .../milestones`), distinct from both `MembershipOut` above (raw
+         *     `user_id`, no name/email — fine for an admin who already has a user in
+         *     hand) and the org-wide, org-admin-only `GET /admin/roles`. Exists so a
+         *     caller who needs to *name* a fellow member (e.g.
+         *     `DeviationResolveRequest.resolution_owner`) can do so without either
+         *     already knowing their UUID or holding org-admin access — never a
+         *     security boundary of its own (any member can already infer their
+         *     project's own roster from other project-scoped reads), only a name/
+         *     email join FastAPI hasn't had a response shape for. Not
+         *     `from_attributes`-backed: constructed from an explicit `Membership` JOIN
+         *     `User` query (`app/api/projects.py`'s own list_project_members), same
+         *     "no relationship(), one explicit select" style
+         *     `app/api/deviations.py`'s `_to_out` already establishes for this
+         *     codebase — Membership carries no ORM relationship to User to read
+         *     display_name/email off of directly.
+         */
+        ProjectMemberOut: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Display Name */
+            display_name: string | null;
+            /** Email */
+            email: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "project_manager" | "producer" | "finance" | "account_manager" | "designer" | "administrator" | "delegate" | "read_only";
         };
         /** ProjectOut */
         ProjectOut: {
@@ -4861,7 +4930,7 @@ export interface operations {
             };
         };
     };
-    archive_project_endpoint_projects__project_id__archive_post: {
+    list_project_members_projects__project_id__members_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -4878,7 +4947,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ProjectArchiveOut"];
+                    "application/json": components["schemas"]["ProjectMemberOut"][];
                 };
             };
             /** @description Validation Error */
@@ -4914,6 +4983,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MembershipOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_project_endpoint_projects__project_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectArchiveOut"];
                 };
             };
             /** @description Validation Error */
