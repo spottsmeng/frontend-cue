@@ -25,7 +25,7 @@ session's job, triggered by real mobile work starting, not by convenience.
 
 | # | Milestone | Prompt file | PRD surface | Depends on | Status |
 |---|---|---|---|---|---|
-| F0 | Foundations — auth, API client, app shell, CI | `Prompt F0 — Frontend Foundations.txt` | §12.1 design language; infra for all surfaces below | backend M1–M10 (Done) | Not started |
+| F0 | Foundations — auth, API client, app shell, CI | `Prompt F0 — Frontend Foundations.txt` | §12.1 design language; infra for all surfaces below | backend M1–M10 (Done) | Done (2026-08-09) |
 | F1 | Living WIP, verification & write-back | `Prompt F1 — Living WIP, Verification and Write-back.txt` | §12.2; FR-RPT; FR-LED-07/08; FR-WBK | F0 | Not started |
 | F2 | Production Twin visualisation | `Prompt F2 — Production Twin visualisation.txt` | FR-TWN | F0 | Not started |
 | F3 | Foresight — risks, deviations, escalation | `Prompt F3 — Foresight, Risks and Deviations.txt` | FR-FOR; FR-DEV; FR-NTF | F0 | Not started |
@@ -69,6 +69,56 @@ prompt below — F0 generates the OpenAPI client straight into `frontend/lib/api
 correct call for a web-only, single-consumer plan (CUE-Tech-Stack.md §7's package only earns its
 keep once a second client — mobile — needs the same generated types). Revisit the moment F-mobile
 work starts, per this file's own scope note above.
+
+## F0 notes (2026-08-09)
+
+**Dev-seed script**: `backend/scripts/seed_dev_data.py`, a sibling to `loadtest/seed.py` rather than
+an extension of it (that script deliberately stays a single-identity k6 bootstrap; this one seeds one
+organisation, one `event-production-default`-archetype project, and one `User`+`Membership` per
+FR-ADM-01 role). Prints `organisation_id` and each role's email to stdout for pasting into `/login`.
+**Non-obvious fix mid-implementation**: `POST /auth/dev-login` always mints `subject=body.email`
+(`app/api/auth.py`), and `resolve_user` matches existing users by `(issuer, external_subject)`, not
+email — so a seeded row is only ever *found* by a later dev-login (instead of colliding with it on
+`users_org_email_key` while trying to insert a "new" user) if `external_subject == email`. That in
+turn means the seeded emails must be unique per run, not just per organisation, since
+`(issuer, external_subject)` is a global constraint — hence `{role}+{org_id_prefix}@cue.dev` rather
+than a bare `{role}@cue.dev`. Cost this session a live 500 in the Playwright run before being caught;
+worth knowing before extending this script.
+
+**Fetch wrapper**: `openapi-fetch`, per the prompt's own named judgment call — no deviation.
+`frontend/lib/api/schema.gen.ts` is generated (`pnpm generate:api`, backend must be running) and
+committed; `lib/api/client.ts` is the thin wrapper (Authorization header attached via middleware,
+`NEXT_PUBLIC_CUE_API_URL` env var); `lib/api/server.ts` / `lib/api/browser.ts` split Server vs. Client
+Component usage (`auth()` vs. `useSession()` as the token source).
+
+**Auth flow**: Auth.js v5 (`next-auth@beta`), Credentials provider (`auth.ts`) calling
+`POST /auth/dev-login`, JWT session strategy, backend access token carried in the Auth.js JWT/session
+via `callbacks.jwt`/`callbacks.session`. `/login` posts through `next-auth/react`'s `signIn()`.
+`@auth/core` had to be added as an explicit devDependency purely so its type declarations are
+resolvable for module augmentation (`types/next-auth.d.ts`) — pnpm's strict `node_modules` otherwise
+nests it only inside `next-auth`'s own install, which silently breaks `declare module "@auth/core/..."`
+merging (surfaced as `Property 'accessToken' does not exist on type 'Session'`, wrong at first for a
+non-obvious reason — see that file's own comments for the full explanation, including the `export {}`
+"module vs. script" gotcha that briefly made `NextAuth(...)` itself stop type-checking as callable).
+
+**This Next.js version renamed `middleware.ts` to `proxy.ts`** (functionally identical — see
+`frontend/proxy.ts`'s own comment) — `frontend/AGENTS.md`'s warning to check
+`node_modules/next/dist/docs/` rather than trained-in knowledge caught this before it became a
+same-named-file-does-nothing bug.
+
+**Route layout**: `/login` (outside the shell), `app/(shell)/layout.tsx` (auth-gated, fetches
+`GET /projects` for the nav), `app/(shell)/page.tsx` ("/", redirects to the sole project or shows a
+picker), `app/(shell)/projects/[projectId]/...` for project-scoped surfaces (Living WIP at the
+project's own root, `twin`/`foresight`/`documents`/`ask` alongside it), and top-level `/admin`,
+`/vendors`, `/analytics` for the org-scoped surfaces (Admin console, VRG, Analytics) — deliberately
+*not* nested under `/projects/[projectId]`, since their own backend endpoints (`/admin/*`, `/parties`)
+are org-scoped, not project-scoped. F1–F8 own the real content; this session only left the shell.
+
+**CI**: `.github/workflows/ci.yml` has two jobs — `lint-typecheck-test-build` (lint, typecheck,
+Vitest, `next build`, no backend needed) and `e2e` (checks out `cue-backend` as a sibling directory,
+brings up its `docker-compose.yml` stack, applies migrations, starts the API, then runs the one real
+Playwright spec against it — no mocks, per this file's own testing-philosophy note). Confirmed green
+against a real pushed commit via `gh run watch`, not just "should work" (see commit history).
 
 ## Updating this file
 

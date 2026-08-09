@@ -1,19 +1,17 @@
 name: Frontend CI
 
-# Lint + build only — no test suite exists yet for the Next.js app (per
-# scope: don't invent one, just keep the build honest).
-
 on:
   push:
     branches: [main]
   pull_request:
 
 concurrency:
-  group: frontend-ci-${{ github.ref }}
+  group: frontend-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  lint-and-build:
+  lint-typecheck-test-build:
+    name: lint, typecheck, vitest, build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -34,5 +32,103 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Vitest
+        run: pnpm test
+
       - name: Build
         run: pnpm build
+
+  e2e:
+    name: Playwright (real backend, no mocks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Same default docker-compose.yml/pytest.yml already use for the
+      # ephemeral CI Postgres container's password — not a secret.
+      CUE_APP_DB_PASSWORD: cue_app
+    steps:
+      # Two sibling checkouts, not one — e2e/global-setup.ts seeds real data
+      # by shelling out to backend/scripts/seed_dev_data.py at `../../backend`
+      # relative to this repo's own `e2e/` dir, the same relative layout a
+      # local `frontend/` + `backend/` checkout has. Both repos are public,
+      # so the default GITHUB_TOKEN needs no extra scope for the second
+      # checkout.
+      - uses: actions/checkout@v4
+        with:
+          path: frontend
+
+      - uses: actions/checkout@v4
+        with:
+          repository: spottsmeng/cue-backend
+          path: backend
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9.0.0
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: uv sync
+
+      - name: Start backend's Postgres/MinIO/Valkey
+        # Reuses docker-compose.yml directly (not a native Actions service
+        # container), same reasoning backend/.github/workflows/pytest.yml's
+        # own comment gives: db/init/01-create-app-role.sql only runs via
+        # docker-entrypoint-initdb.d, which a bare service container skips.
+        working-directory: backend
+        run: docker compose up -d --wait
+
+      - name: Apply backend migrations
+        # Unlike pytest.yml (tests/conftest.py migrates cue_test itself),
+        # this job runs the real app against the real `cue` database, so
+        # migrations have to be applied explicitly first — backend/README.md's
+        # own "For the running app" step.
+        working-directory: backend
+        run: uv run alembic upgrade head
+
+      - name: Start the backend API
+        working-directory: backend
+        run: |
+          nohup uv run fastapi run main.py --port 8000 > /tmp/cue-backend.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/health > /dev/null && exit 0
+            sleep 1
+          done
+          echo "backend did not become healthy in time" >&2
+          cat /tmp/cue-backend.log >&2
+          exit 1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright's Chromium
+        working-directory: frontend
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run the Playwright suite
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_CUE_API_URL: http://localhost:8000
+          AUTH_SECRET: ci-only-insecure-secret-not-a-real-deployment
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 14

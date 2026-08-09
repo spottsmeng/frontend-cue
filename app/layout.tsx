@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans_SC, Noto_Sans_TC } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
+
+import { Providers } from "./providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,7 +43,24 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${notoSansSC.variable} ${notoSansTC.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-bg text-ink font-sans">{children}</body>
+      <body className="min-h-full flex flex-col bg-bg text-ink font-sans">
+        {/* Runs before hydration so a returning visitor's explicit theme
+            choice (lib/store/ui-store.ts, localStorage key "cue-theme")
+            paints on the very first frame — without this, the page would
+            flash the OS theme and then snap to the stored override once
+            React mounts. */}
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`
+            try {
+              var t = window.localStorage.getItem("cue-theme");
+              if (t === "light" || t === "dark") {
+                document.documentElement.setAttribute("data-theme", t);
+              }
+            } catch (e) {}
+          `}
+        </Script>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
