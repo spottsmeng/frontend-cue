@@ -15,6 +15,14 @@ const CUE_API_URL = process.env.NEXT_PUBLIC_CUE_API_URL ?? "http://localhost:800
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
+  // Auth.js only auto-trusts the request Host header on a few recognized
+  // platforms (Vercel among them); anywhere else it 500s with "There is a
+  // problem with the server configuration" — surfaced by CI's own
+  // `next start` on a GitHub-hosted runner, not by any local `next dev`
+  // (which trusts localhost regardless). Safe here specifically because
+  // nothing sits between this app and its own traffic yet — revisit if a
+  // reverse proxy/load balancer is ever added in front of it.
+  trustHost: true,
   providers: [
     Credentials({
       id: "cue-dev-login",
