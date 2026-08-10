@@ -17,18 +17,16 @@ import type { PartyType, VendorMetricName } from "@/lib/api/types";
 export class VendorPermissionError extends Error {}
 
 /**
- * `require_org_administrator`'s 403 — `GET /parties/{id}/organisation`
- * (app/api/parties.py's organisation_router) is gated on FR-NRM-04's
- * roster-management tier, NOT `require_org_finance` like every other read
- * in this file. A real, live gate mismatch this milestone's gap-audit
- * found by reading app/api/parties.py directly (not assumed from the
- * prompt, which just calls this "read-only this session"): a Finance/
- * Producer user who can see every vendor's reliability metrics will still
- * get a 403 here unless they *also* hold `administrator` on some project.
- * Documented in frontend/PROGRESS.md's F6 notes rather than silently
- * worked around — this session doesn't loosen a backend access-control
- * decision it didn't make. Distinct error type so the panel renders an
- * explainable message instead of a blank/broken section.
+ * `require_org_finance_or_administrator`'s 403 — `GET /parties/{id}/
+ * organisation` (app/api/parties.py's organisation_router). Originally
+ * `require_org_administrator` alone, a real, live gate mismatch F6's own
+ * gap-audit found (a Finance/Producer user who can see every other section
+ * of a vendor's detail page would 403 here specifically) — closed on the
+ * spot in a later session (backend/PROGRESS.md's "round 6"): the two GET
+ * operations now accept Finance/Producer *or* administrator, the write
+ * stays administrator-only. Kept as its own typed error regardless (not
+ * merged into VendorPermissionError above) since a caller holding neither
+ * tier is still a real, reachable case worth an explainable message.
  */
 export class VendorOrganisationPermissionError extends Error {}
 

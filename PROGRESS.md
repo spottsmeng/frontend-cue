@@ -823,6 +823,62 @@ without this session's changes, and is outside F6's own surface (Ask/decision-lo
 untouched by anything in this round) — left exactly as found and documented in backend/PROGRESS.md's
 "round 6" rather than chased inside this milestone.
 
+## Post-F6: commitment supersession review + organisation-mapping gate fix (2026-08-10)
+
+Two real gaps F6's own notes named but didn't close, fixed on direct request rather than left
+documented — see backend/PROGRESS.md's own "FR-LED-05" and "round 6" entries for the full backend-side
+writeup; this section covers the UI half.
+
+**FR-LED-05: `revision_churn`/`price_drift_pct` no longer permanently `available=False`.** A new
+"Commitment revisions" section on Living WIP (`components/living-wip/supersession-review-panel.tsx`,
+placed right after Vendor status, before Budget summary — a price revision is exactly the kind of
+thing that precedes and explains a budget figure) lists every AI-proposed candidate
+(`app/ledger/supersession.py`'s own propose/confirm/reject lifecycle) grouped "Needs review" /
+"Recently reviewed", each `SupersessionCandidateRow` resolving both commitments via the same
+`useCommitmentQuery` the detail drawer already uses (the API only ever returns plain ids —
+`CommitmentSupersessionCandidateOut`'s own docstring: "resolve against an already-fetched list
+client-side," this codebase's own established discipline, not a new one invented here) and offering
+real Confirm/Reject actions, `WRITE_ROLES`-gated.
+
+**A real UX bug this session's own e2e test caught before it shipped**: the panel originally queried
+only `status=pending`, so confirming a candidate immediately dropped it out of the refetched list —
+the row a reviewer just acted on silently vanished instead of showing the real "Confirmed" outcome,
+indistinguishable from the click not having registered at all. Fixed by fetching every status and
+grouping client-side (same two-group shape `ThresholdConfigPanel`'s own "organisation-wide" / "this
+project's overrides" split already established) — `SupersessionCandidateRow`'s own confirmed/rejected
+rendering, already built, was simply never being reached before this fix.
+
+**`GET /parties/{id}/organisation`'s gate mismatch, closed, not just documented.** F6's own notes
+named this precisely: a Finance/Producer viewer of a vendor's detail page would 403 specifically on
+the "Represents" section (`require_org_administrator`-only), even though every other section on that
+page is `require_org_finance`-gated. Backend now accepts Finance/Producer *or* administrator on the
+two reads (`require_org_finance_or_administrator`, app/api/deps.py); the write stays admin-only.
+`components/vendors/organisation-mapping-panel.tsx`'s own copy updated to match — the permission
+message is now a real (if rarer) edge case rather than the expected common case for every plain
+Finance user, and says so.
+
+**Testing**: `pnpm test` — `components/living-wip/supersession-candidate-row.test.tsx` (5 new: real
+formatted amounts either side of the revision, an honest "not specified" for a null amount rather
+than a fabricated $0, confirm/reject visible only for a write-role viewer on a still-pending
+candidate, hidden for a read-only viewer, and hidden again — replaced by the real outcome — once
+already confirmed). `pnpm test:e2e` (`e2e/supersession.spec.ts`, `test.describe.serial`, 2 specs)
+covers, against the real backend, real Ollama locally / `FakeClient`'s own new branch in CI: a real
+pending candidate visible in Living WIP with its real model-generated reasoning and real amounts: and
+confirming it — a real click, not a seeded state — making `revision_churn`/`price_drift_pct` genuinely
+`available` on the Vendor Reliability Graph afterward, read back from the real API, not asserted on
+the confirm response alone. Deliberately targets a *different* seeded vendor ("Nimbus Event Staffing
+Pte Ltd") than `e2e/vendors.spec.ts`'s own subject ("Golden Sound & Light Pte Ltd") — a real
+cross-spec-file interaction this session's own verification run caught (both files share one seeded
+org for a whole Playwright invocation; confirming a candidate on the vendor the other suite asserts
+stays permanently unavailable would make that independently-correct assertion false depending on run
+order) — see backend/PROGRESS.md's own notes for the two real seed-script bugs this same run caught
+(a same-transaction `created_at` tie, and a stray `pending_verification` state that broke
+`e2e/living-wip.spec.ts`'s own unrelated, already-established assertion). Full `pnpm test:e2e` suite
+(F0–F6 plus this addition, 31 specs) run twice — once against real local Ollama, once with
+`CUE_LLM_*_PROVIDER=fake` matching CI exactly — both green except one pre-existing, unrelated F5
+(Ask) failure already documented before this work started. `pnpm typecheck`/`pnpm lint`/`pnpm build`
+all clean throughout.
+
 ## Updating this file
 
 When a milestone completes:

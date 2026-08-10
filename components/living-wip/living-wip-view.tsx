@@ -16,6 +16,7 @@ import { NextStepsPanel } from "./sections/next-steps-section";
 import { ProjectOverviewPanel } from "./sections/project-overview-section";
 import { RiskAndIssuesPanel } from "./sections/risk-and-issues-section";
 import { VendorStatusPanel } from "./sections/vendor-status-section";
+import { SupersessionReviewPanel } from "./supersession-review-panel";
 
 /**
  * §12.2's Living WIP — single scrolling document at a stable per-project
@@ -58,6 +59,7 @@ export function LivingWipView({ projectId }: { projectId: string }) {
         <ProjectOverviewPanel section={report.project_overview} onOpenCommitment={setOpenCommitmentId} />
         <MilestoneTrackerPanel rows={report.milestone_tracker} />
         <VendorStatusPanel section={report.vendor_status} onOpenCommitment={setOpenCommitmentId} />
+        <SupersessionReviewPanel projectId={projectId} effectiveRoles={roles?.roles} />
         <BudgetSummaryPanel
           section={report.budget_summary}
           projectId={projectId}

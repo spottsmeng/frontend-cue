@@ -42,6 +42,10 @@ export type BudgetWrite = components["schemas"]["BudgetWrite"];
 export type OutboundMessageOut = components["schemas"]["OutboundMessageOut"];
 export type WritebackDraftUpdate = components["schemas"]["WritebackDraftUpdate"];
 
+export type CommitmentSupersessionCandidateOut =
+  components["schemas"]["CommitmentSupersessionCandidateOut"];
+export type CommitmentSupersessionCandidateStatus = CommitmentSupersessionCandidateOut["status"];
+
 export type EffectiveRoleOut = components["schemas"]["EffectiveRoleOut"];
 export type MembershipRole = EffectiveRoleOut["roles"][number];
 export type ProjectMemberOut = components["schemas"]["ProjectMemberOut"];

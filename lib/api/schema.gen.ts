@@ -289,6 +289,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{project_id}/commitments/supersession-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Supersession Candidates
+         * @description Defaults to every status, not just `pending` — a reviewer may want
+         *     to see what was already confirmed/rejected on this project, the same
+         *     "no server-side default filter hiding history" shape
+         *     `list_deviations`/`list_risks` already give their own status params.
+         */
+        get: operations["list_supersession_candidates_projects__project_id__commitments_supersession_candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/commitments/supersession-candidates/{candidate_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm Supersession Candidate Endpoint */
+        post: operations["confirm_supersession_candidate_endpoint_projects__project_id__commitments_supersession_candidates__candidate_id__confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/commitments/supersession-candidates/{candidate_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject Supersession Candidate Endpoint */
+        post: operations["reject_supersession_candidate_endpoint_projects__project_id__commitments_supersession_candidates__candidate_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects/{project_id}/commitments": {
         parameters: {
             query?: never;
@@ -2566,6 +2623,58 @@ export interface components {
             /** Verification State */
             verification_state: string;
             provenance: components["schemas"]["ReportProvenance"];
+        };
+        /**
+         * CommitmentSupersessionCandidateOut
+         * @description FR-LED-05: an AI-proposed, not-yet-applied candidate link between two
+         *     commitments (app/ledger/supersession.py) — plain ids only, no
+         *     denormalised deliverable/amount text, same "resolve against an already-
+         *     fetched list client-side" discipline this API holds everywhere else
+         *     (OntologyTermOut, ProjectMemberOut) rather than duplicating display data
+         *     that would drift from the commitments it describes.
+         */
+        CommitmentSupersessionCandidateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Commitment Id
+             * Format: uuid
+             */
+            commitment_id: string;
+            /**
+             * Supersedes Commitment Id
+             * Format: uuid
+             */
+            supersedes_commitment_id: string;
+            /** Reasoning */
+            reasoning: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "confirmed" | "rejected";
+            /** Reviewed By */
+            reviewed_by: string | null;
+            /** Reviewed At */
+            reviewed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /**
          * ConsentActionRequest
@@ -5235,6 +5344,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DelegationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_supersession_candidates_projects__project_id__commitments_supersession_candidates_get: {
+        parameters: {
+            query?: {
+                status?: ("pending" | "confirmed" | "rejected") | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitmentSupersessionCandidateOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_supersession_candidate_endpoint_projects__project_id__commitments_supersession_candidates__candidate_id__confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidate_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitmentSupersessionCandidateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_supersession_candidate_endpoint_projects__project_id__commitments_supersession_candidates__candidate_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidate_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitmentSupersessionCandidateOut"];
                 };
             };
             /** @description Validation Error */

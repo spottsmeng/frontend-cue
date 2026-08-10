@@ -15,14 +15,15 @@ import { VendorOrganisationPermissionError, useVendorOrganisationHistoryQuery } 
  * history, which would be a confusing, meaningless-looking empty section on
  * a party this mapping was never about.
  *
- * Real, live gate mismatch (this milestone's own gap-audit finding, see
- * lib/vendors/hooks.ts's VendorOrganisationPermissionError docstring):
- * `require_org_administrator`, not `require_org_finance` like every other
- * read on this page — a Finance/Producer-only viewer of the vendor detail
- * page will 403 here even though they can see every metric above it.
- * Rendered as an explainable permission message, not a broken section,
- * same posture ThresholdConfigPanel already established for its own
- * org-admin-only gate.
+ * The gate mismatch this milestone's own gap-audit originally found here
+ * (`require_org_administrator` alone, stricter than every other read on
+ * this page) was closed on the spot, not just documented — `GET
+ * .../organisation`/`.../organisation/current` are
+ * `require_org_finance_or_administrator`-gated now (see that dependency's
+ * own docstring in app/api/deps.py). `VendorOrganisationPermissionError`
+ * stays a real, typed case here regardless — a role revoked mid-session
+ * (this query can refetch independently of the page's own initial load)
+ * still needs an explainable message, not a silent blank section.
  */
 export function OrganisationMappingPanel({ partyId }: { partyId: string }) {
   const { data, isLoading, isError, error } = useVendorOrganisationHistoryQuery(partyId, true);
@@ -31,10 +32,8 @@ export function OrganisationMappingPanel({ partyId }: { partyId: string }) {
     if (error instanceof VendorOrganisationPermissionError) {
       return (
         <p className="text-sm text-ink-muted">
-          Party-organisation mapping history is organisation-administrator only — a different, higher
-          tier than the Finance/Procurement role that gates the rest of this page (app/api/parties.py&apos;s
-          own `require_org_administrator` gate on this one read). You don&apos;t hold that role on any
-          project in this organisation, so this section isn&apos;t visible to you.
+          You don&apos;t currently hold a Finance/Procurement or administrator role on any project in
+          this organisation, so this section isn&apos;t visible to you.
         </p>
       );
     }
