@@ -16,6 +16,12 @@ import { TopNav } from "@/components/app-shell/top-nav";
 // this constant says.
 const FINANCE_ROLES = ["finance", "producer"];
 
+// Same posture, applied to /admin: require_org_administrator's own role set
+// ({"administrator"}, app/api/deps.py) — a second, independent copy, never
+// itself a security boundary (every /admin/* read/write independently
+// re-derives and enforces this server-side).
+const ADMIN_ROLES = ["administrator"];
+
 export default async function ShellLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   // proxy.ts already redirects unauthenticated requests optimistically
@@ -53,12 +59,16 @@ export default async function ShellLayout({ children }: { children: React.ReactN
   const canSeeVendors = roleChecks.some(({ data }) =>
     (data?.roles ?? []).some((r) => FINANCE_ROLES.includes(r)),
   );
+  const canSeeAdmin = roleChecks.some(({ data }) =>
+    (data?.roles ?? []).some((r) => ADMIN_ROLES.includes(r)),
+  );
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <TopNav
         projects={(projects ?? []).map((p) => ({ id: p.id, name: p.name }))}
         canSeeVendors={canSeeVendors}
+        canSeeAdmin={canSeeAdmin}
       />
       <main className="flex flex-1 flex-col">{children}</main>
     </div>

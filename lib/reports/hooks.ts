@@ -85,3 +85,85 @@ export function useExportMutation(projectId: string) {
     },
   });
 }
+
+// --- F7 Admin console: report schedule config (FR-RPT-09/10) ------------
+
+/**
+ * F1's own EXPLICITLY OUT OF SCOPE named this console's job; still undone
+ * when F7 ran, so built here — `ADMIN_ROLES`-gated (administrator/producer,
+ * §12.2's "Freeze & Export" being a Producer-owned control), per-project.
+ */
+export function reportScheduleQueryKey(projectId: string) {
+  return ["report-schedule", projectId] as const;
+}
+
+export function useReportScheduleQuery(projectId: string) {
+  const api = useApiClient();
+  return useQuery({
+    queryKey: reportScheduleQueryKey(projectId),
+    queryFn: async () => {
+      const { data, error } = await api.GET("/projects/{project_id}/report/schedule", {
+        params: { path: { project_id: projectId } },
+      });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useCreateReportScheduleMutation(projectId: string) {
+  const api = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: {
+      day_of_week: number;
+      hour_local: number;
+      minute_local?: number;
+      format?: "pptx" | "pdf";
+      template_code?: string;
+    }) => {
+      const { data, error } = await api.POST("/projects/{project_id}/report/schedule", {
+        params: { path: { project_id: projectId } },
+        body: {
+          minute_local: 0,
+          format: "pptx",
+          template_code: "cue_placeholder",
+          ...body,
+        },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: reportScheduleQueryKey(projectId) }),
+  });
+}
+
+export function useUpdateReportScheduleMutation(projectId: string) {
+  const api = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ scheduleId, active }: { scheduleId: string; active: boolean }) => {
+      const { data, error } = await api.PATCH("/projects/{project_id}/report/schedule/{schedule_id}", {
+        params: { path: { project_id: projectId, schedule_id: scheduleId } },
+        body: { active },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: reportScheduleQueryKey(projectId) }),
+  });
+}
+
+export function useDeleteReportScheduleMutation(projectId: string) {
+  const api = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (scheduleId: string) => {
+      const { error } = await api.DELETE("/projects/{project_id}/report/schedule/{schedule_id}", {
+        params: { path: { project_id: projectId, schedule_id: scheduleId } },
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: reportScheduleQueryKey(projectId) }),
+  });
+}

@@ -1,5 +1,7 @@
-import { SurfacePlaceholder } from "@/components/app-shell/surface-placeholder";
+"use client";
+
+import { AdminOverviewView } from "@/components/admin/admin-overview-view";
 
 export default function AdminPage() {
-  return <SurfacePlaceholder title="Admin console" milestone="F7" />;
+  return <AdminOverviewView />;
 }

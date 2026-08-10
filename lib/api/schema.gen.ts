@@ -677,6 +677,37 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{project_id}/budget/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Budget History
+         * @description Frontend-enablement addition (Prompt F7's own gap-audit check) —
+         *     FR-ADM-11's 'full audit trail and revision history' has always been real
+         *     at the row level (`revise_budget` below never mutates a prior row, only
+         *     flips `is_current`), but nothing ever read more than the single current
+         *     row back. `BudgetOut.revision_of` is a Class A id-with-no-resolver
+         *     otherwise: a caller could see *that* the current baseline revises
+         *     something, never *what* the prior amount was. Every project member may
+         *     call this (`Depends(get_project)`'s own any-membership-or-delegation
+         *     tier) — same read tier as the current-budget endpoint above, since this
+         *     is a superset of the same information, not a more sensitive one. Most
+         *     recent first, same order convention `list_writeback_history` and
+         *     `channel_health_history` already use.
+         */
+        get: operations["list_budget_history_projects__project_id__budget_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects/{project_id}/budget/revise": {
         parameters: {
             query?: never;
@@ -972,6 +1003,40 @@ export interface paths {
         };
         /** Read Org User */
         get: operations["read_org_user_admin_users__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Org Projects
+         * @description Frontend-enablement addition (Prompt F7's own gap-audit check) — the
+         *     only project listing before this, `GET /projects` (app/api/projects.py),
+         *     is FR-ADM-02's own membership/delegation-filtered view: an
+         *     Administrator on project A but not a member of project B sees B via
+         *     `/admin/export/{id}` and every other `/admin/*` read
+         *     (`require_org_administrator`'s own docstring, exercised directly by
+         *     `tests/test_admin_api.py`'s `test_org_admin_visibility_is_distinct_
+         *     from_project_membership`) — but had no way to *name* B at all.
+         *     `GET /admin/delegations`/`GET /admin/roles` can both return rows whose
+         *     `project_id` refers to a project this admin never joined, a real Class A
+         *     id-with-no-resolver otherwise (frontend/CLAUDE.md's own gap shape); this
+         *     closes it the same way `GET /admin/users` already closes the equivalent
+         *     gap for user ids. No explicit organisation_id filter needed — `projects`
+         *     carries its own direct-column tenant_isolation RLS policy (migration
+         *     a895ae03ec5c), same as `users`.
+         */
+        get: operations["list_org_projects_admin_projects_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6155,6 +6220,37 @@ export interface operations {
             };
         };
     };
+    list_budget_history_projects__project_id__budget_history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     revise_budget_projects__project_id__budget_revise_post: {
         parameters: {
             query?: never;
@@ -6712,6 +6808,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_org_projects_admin_projects_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectOut"][];
                 };
             };
         };

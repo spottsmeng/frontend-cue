@@ -178,6 +178,44 @@ export type PartyOrganisationMappingOut = components["schemas"]["PartyOrganisati
 // every project-scoped surface gets its own `projectId` from the URL.
 export type ProjectOut = components["schemas"]["ProjectOut"];
 
+// --- Admin console (F7, §6.14 FR-ADM) ---------------------------------
+
+export type UserOut = components["schemas"]["UserOut"];
+
+export type MembershipOut = components["schemas"]["MembershipOut"];
+export type MembershipCreate = components["schemas"]["MembershipCreate"];
+export type DelegationOut = components["schemas"]["DelegationOut"];
+export type DelegationCreate = components["schemas"]["DelegationCreate"];
+
+export type ProjectCreate = components["schemas"]["ProjectCreate"];
+export type ProjectArchiveOut = components["schemas"]["ProjectArchiveOut"];
+
+export type ChannelOut = components["schemas"]["ChannelOut"];
+export type ChannelCreate = components["schemas"]["ChannelCreate"];
+export type ChannelTypeOut = components["schemas"]["ChannelTypeOut"];
+export type ChannelHealthEventOut = components["schemas"]["ChannelHealthEventOut"];
+export type ChannelHealthSignal = components["schemas"]["ChannelHealthSignal"];
+
+export type ConsentRecordOut = components["schemas"]["ConsentRecordOut"];
+export type ConsentActionRequest = components["schemas"]["ConsentActionRequest"];
+export type ConsentStatus = ConsentRecordOut["status"];
+
+export type ChannelIdentityOut = components["schemas"]["ChannelIdentityOut"];
+export type ChannelIdentityOverrideRequest = components["schemas"]["ChannelIdentityOverrideRequest"];
+
+export type RetentionPolicyOut = components["schemas"]["RetentionPolicyOut"];
+export type RetentionPolicyCreate = components["schemas"]["RetentionPolicyCreate"];
+export type RetentionPolicyUpdate = components["schemas"]["RetentionPolicyUpdate"];
+
+export type WritebackConfigOut = components["schemas"]["WritebackConfigOut"];
+export type WritebackConfigUpdate = components["schemas"]["WritebackConfigUpdate"];
+
+export type ReportScheduleConfigOut = components["schemas"]["ReportScheduleConfigOut"];
+export type ReportScheduleConfigCreate = components["schemas"]["ReportScheduleConfigCreate"];
+export type ReportScheduleConfigUpdate = components["schemas"]["ReportScheduleConfigUpdate"];
+
+export type PartyOrganisationMappingSet = components["schemas"]["PartyOrganisationMappingSet"];
+
 // `ExportBlockedCommitment` (app/reports/schema.py) is never used as a
 // response_model — app/api/reports.py's export_report constructs the 409
 // body as a raw dict passed to HTTPException(detail=...), so

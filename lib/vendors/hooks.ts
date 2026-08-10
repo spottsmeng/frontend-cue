@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useApiClient } from "@/lib/api/browser";
 import type { PartyType, VendorMetricName } from "@/lib/api/types";
@@ -227,6 +227,43 @@ export function useVendorOrganisationHistoryQuery(partyId: string, enabled: bool
     enabled,
     retry: (failureCount, err) =>
       !(err instanceof VendorOrganisationPermissionError) && failureCount < 3,
+  });
+}
+
+/**
+ * FR-NRM-04's write path — `POST /parties/{id}/organisation`
+ * (`require_org_administrator`-only, unchanged by round 6's read-gate
+ * widening). Added during F7's Admin console per that milestone's own
+ * cross-milestone note ("add the write control to whatever detail view F6
+ * built"), landing here rather than a new component, so the vendor detail
+ * page's existing history list and its own write control invalidate the
+ * exact same query.
+ */
+export class VendorOrganisationWritePermissionError extends Error {}
+
+export function useSetOrganisationMutation(personPartyId: string) {
+  const api = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: {
+      organisation_party_id: string;
+      role_title?: string | null;
+      effective_from?: string | null;
+    }) => {
+      const { data, error, response } = await api.POST("/parties/{party_id}/organisation", {
+        params: { path: { party_id: personPartyId } },
+        body,
+      });
+      if (response.status === 403) {
+        throw new VendorOrganisationWritePermissionError(
+          "administrator role required on at least one project in this organisation",
+        );
+      }
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: vendorOrganisationHistoryQueryKey(personPartyId) }),
   });
 }
 

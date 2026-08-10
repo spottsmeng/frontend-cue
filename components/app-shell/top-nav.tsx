@@ -19,17 +19,24 @@ const ORG_LINKS = [
 export function TopNav({
   projects,
   canSeeVendors,
+  canSeeAdmin,
 }: {
   projects: ProjectSwitcherItem[];
   canSeeVendors: boolean;
+  canSeeAdmin: boolean;
 }) {
   // F6's own instruction: "hide the nav entry for other roles, but the real
   // gate is the backend's 403" (F0's UX-nicety-not-security-boundary
   // position) — /parties is require_org_finance-gated (FINANCE_ROLES,
-  // app/api/deps.py), computed in app/(shell)/layout.tsx from the caller's
-  // own effective role on every project in the org, not re-derived here.
-  // Admin/Analytics aren't gated the same way yet — F7/F8's own job.
-  const links = ORG_LINKS.filter((link) => link.href !== "/vendors" || canSeeVendors);
+  // app/api/deps.py) and /admin is require_org_administrator-gated
+  // (ADMIN_ROLES = {"administrator"}), both computed in
+  // app/(shell)/layout.tsx from the caller's own effective role on every
+  // project in the org, not re-derived here. Analytics isn't gated the same
+  // way yet — F8's own job.
+  const links = ORG_LINKS.filter(
+    (link) =>
+      (link.href !== "/vendors" || canSeeVendors) && (link.href !== "/admin" || canSeeAdmin),
+  );
 
   return (
     <header className="flex h-14 flex-none items-center justify-between border-b border-border bg-surface px-4">

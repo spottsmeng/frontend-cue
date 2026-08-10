@@ -32,7 +32,7 @@ session's job, triggered by real mobile work starting, not by convenience.
 | F4 | Documents | `Prompt F4 — Documents.txt` | FR-DOC | F0 | Done (2026-08-10) |
 | F5 | Ask & Successor Brief | `Prompt F5 — Ask and Successor Brief.txt` | §12.5; FR-ASK | F0 | Done (2026-08-10) |
 | F6 | Vendor Reliability Graph | `Prompt F6 — Vendor Reliability Graph.txt` | FR-VRG | F0 | Done (2026-08-10) |
-| F7 | Admin console | `Prompt F7 — Admin console.txt` | §6.14 FR-ADM; channel/consent/retention | F0 | Not started |
+| F7 | Admin console | `Prompt F7 — Admin console.txt` | §6.14 FR-ADM; channel/consent/retention | F0 | Done (2026-08-11) |
 | F8 | Analytics dashboard | `Prompt F8 — Analytics dashboard.txt` | §13 | F0, and partially F1/F3/F6 for data sources | Not started |
 | F9 | Hardening — accessibility, localisation, perf | `Prompt F9 — Hardening, accessibility and localisation.txt` | §7.6 NFR-ACC; §7.1 NFR-PRF (web-applicable subset) | all of the above | Not started |
 
@@ -878,6 +878,154 @@ order) — see backend/PROGRESS.md's own notes for the two real seed-script bugs
 `CUE_LLM_*_PROVIDER=fake` matching CI exactly — both green except one pre-existing, unrelated F5
 (Ask) failure already documented before this work started. `pnpm typecheck`/`pnpm lint`/`pnpm build`
 all clean throughout.
+
+## F7 notes (2026-08-11)
+
+**Route/composition decision**: several distinct screens under one admin shell, not one monolithic
+page, per this prompt's own top-of-file instruction. `/admin` (`AdminSubnav`: Overview / Users /
+Delegations / Retention / Channel identities — genuinely global, no project needed) and
+`/admin/projects/[projectId]` (`AdminProjectSubnav`: Members & Delegations / Channels / Consent /
+Budget / Settings / Export — one project at a time, root segment is Members & Delegations, same
+"root = the first/primary screen" convention `project-subnav.tsx` already established). Both
+subnavs are plain client components mirroring `components/app-shell/project-subnav.tsx`'s own shape
+exactly; the per-project layout re-uses `Depends(get_project)`'s plain membership tier (not
+`require_org_administrator`) just to resolve the project's own name for the header, the same
+"real, if lighter, access check" `app/(shell)/projects/[projectId]/layout.tsx` already does — every
+actual admin action underneath still independently enforces `require_org_administrator` server-side
+regardless.
+
+**Nav visibility wired the same fan-out way F6 wired Vendors**: `app/(shell)/layout.tsx` now also
+checks `ADMIN_ROLES = ["administrator"]` against the same per-project `GET .../members/me` calls it
+already fans out for `FINANCE_ROLES`, and `TopNav` takes a second `canSeeAdmin` boolean. Same
+"UX nicety, not a security boundary" posture — the real gate is each `/admin/*` endpoint's own 403.
+
+**Gap-audit findings, three real backend gaps found and closed on the spot** (this session's own
+required check, `frontend/CLAUDE.md`'s Class A/B checklist) — see `backend/PROGRESS.md`'s "round 7"
+for the full backend-side writeup:
+- **`GET /projects/{project_id}/budget/history`** — `GET .../budget` only ever returned the current
+  row; `BudgetOut.revision_of` was a real Class A id-with-no-resolver otherwise. Closed so the
+  Budget screen can show a baseline alongside the revision that superseded it, most recent first —
+  this milestone's own TESTING EXPECTATION names this exact scenario.
+- **`GET /parties` / `GET /parties/{party_id}` widened from `require_org_finance` to
+  `require_org_finance_or_administrator`** — a Class B gap (a form needs to pick an entity, but no
+  endpoint exists at the picking role's own access tier): FR-NRM-03's channel-identity override
+  screen and FR-NRM-04's organisation-mapping write control are both administrator-only actions that
+  still need a real party picker, and the only party directory was finance/producer-gated. The
+  mirror image of F6's own round 6 fix (there an administrator-only gate was stricter than the
+  finance-gated page around it; here a finance-only gate was stricter than the administrator-only
+  actions needing it) — same `require_org_finance_or_administrator` dependency reused, not a new one
+  invented.
+- **`GET /admin/projects`** — `GET /admin/delegations`/`GET /admin/roles` can both return rows whose
+  `project_id` refers to a project the calling Administrator was never a member of
+  (`require_org_administrator`'s own documented "not just ones they happen to be a member of"
+  scope), but the only project listing before this, `GET /projects`, is FR-ADM-02's own
+  membership-filtered view — a real Class A gap on the org-wide Delegations screen specifically.
+  Closed; `AdminOverviewView`'s own project picker uses this too, so it's genuinely org-wide rather
+  than membership-filtered like every other surface's project list.
+
+**Judgment call, explicitly checked before building, per this prompt's own instruction**: no
+archetype or vertical picker on the provisioning form. Confirmed by reading
+`app/twin/models.py`'s `MilestoneArchetype` docstring and
+`alembic/versions/9b2f8bc21d89_seed_default_event_production_archetype.py` directly — `organisation_id`
+is empty at v1 ("no tenant-authored archetype UI exists," the model's own words) and exactly one
+archetype (`event-production-default`) and one vertical (`event-production`) are seeded in the whole
+system, with no `GET /verticals` or archetype-listing endpoint at all. A picker would only ever offer
+one option, so both fields are simply omitted from `POST /projects`'s body — the backend resolves
+each to its sole real default. Not a backend gap to close (widening it would mean building a v1
+tenant-archetype-authoring UI nobody asked for, the exact over-build `CUE-PRD.md §4.2.1`'s "mechanism
+exists, not a v1 feature commitment" posture already warns against).
+
+**A real frontend bug this session's own e2e run caught**: `useReviseBudgetMutation`
+(`lib/budget/hooks.ts`, added back in F1 for the Living WIP report's budget-summary section) never
+invalidated the current-budget query — F1's own report query has `staleTime: 0` and happened to
+refetch anyway, masking this for its own surface, but this milestone's new `ProjectBudgetView`
+(`useBudgetQuery`) has no such forced refetch, so a revision's own "Current baseline" line stayed
+stale at the pre-revision amount after a real, successful `POST .../budget/revise` (confirmed 201 via
+`page.waitForResponse` before concluding it was a frontend bug, not a backend one). Fixed by adding
+the missing `invalidateQueries` call.
+
+**A real, load-bearing cross-spec-file interaction found and fixed, not just documented** — the
+exact category `backend/PROGRESS.md`'s "round 6" notes already flag as worth verifying directly
+rather than assuming. `e2e/admin.spec.ts`'s own provisioning test is the *first* session in this
+plan to create a real second `Project` via the UI; every other e2e spec's `login()` helper
+(`login.spec.ts`, `twin.spec.ts`, `foresight.spec.ts`, `documents.spec.ts`, `ask.spec.ts`,
+`supersession.spec.ts`, `vendors.spec.ts`, `living-wip.spec.ts`) assumed `scripts/seed_dev_data.py`'s
+"exactly one project per organisation" holds for the whole Playwright invocation, since
+`app/(shell)/page.tsx` only auto-redirects `"/"` to a project when `list.length === 1`. Confirmed
+broken by actually running `e2e/admin.spec.ts` alongside each of them (not assumed) — `login.spec.ts`
+failed outright, and every helper that does `page.goto(page.url() + "/twin")`-style relative
+navigation right after login would have silently built a malformed URL against the multi-project
+picker instead. Fixed at the root: every affected `login()`/`beforeEach()` now waits for navigation
+to settle (`waitForLoadState("networkidle")`, needed because Next's server-side redirect can commit
+an intermediate `"/"` URL Playwright observes before the client finishes navigating away from it —
+found by first shipping a version without it and watching a real, reproducible timeout) and, if still
+on the picker, clicks the seeded project by its own known name ("CUE Dev Project") rather than
+assuming the redirect. `login.spec.ts`'s own assertion updated to match — it still proves the same
+auth chain works end to end, just no longer coupled to which of the two real cases fires. Re-run
+together (`e2e/admin.spec.ts` + `login.spec.ts` + `twin.spec.ts` + `living-wip.spec.ts` +
+`supersession.spec.ts` + `vendors.spec.ts`, 20 specs) confirms no regression; `ask.spec.ts` and
+`foresight.spec.ts` weren't re-run this session (see below).
+
+**Cross-milestone notes, as this prompt's own TESTING EXPECTATION asks**:
+- **Payment-status control**: already on F1's own commitment detail view (`commitment-detail-panel.tsx`'s
+  `usePaymentStatusMutation`), confirmed by reading the code directly — nothing to add here, per this
+  prompt's own EXPLICITLY OUT OF SCOPE note.
+- **Party-organisation mapping's write control**: added to F6's `organisation-mapping-panel.tsx`
+  (`components/vendors/`), not a new screen — `lib/vendors/hooks.ts`'s new `useSetOrganisationMutation`
+  (`POST /parties/{id}/organisation`, `require_org_administrator`-only, a genuinely stricter gate
+  than the read the rest of that panel already uses, so a Finance-role viewer sees the history but a
+  real, explainable 403 on the form specifically — `VendorOrganisationWritePermissionError`).
+- **Quiet hours / foresight thresholds**: deliberately *not* duplicated here — F3's own notes already
+  named this "Foresight-specific configuration... F7 should link to these two screens when it exists,
+  not duplicate them." No link was added this session (F3's Foresight page is reachable from its own
+  project's subnav already); worth revisiting only if a later session finds real user confusion about
+  where these live.
+- **Report schedule config**: F1's own EXPLICITLY OUT OF SCOPE named this console's job, and it was
+  still undone — built here (`lib/reports/hooks.ts`'s new schedule hooks, `ProjectSettingsView`),
+  alongside write-back's daily ceiling on the same screen per this prompt's own instruction not to
+  split "project-provisioning-adjacent settings" into unrelated standalone screens.
+
+**Provisioning flow, FR-ADM-06's own "under 10 minutes" bar**: not literally stopwatched by a human
+this session (no hands to click with) — what's confirmed instead, and recorded honestly as such, is
+the *shape* the bar depends on: one page, one form, ~6 fields plus an inline team-access sub-form,
+ending in a single `POST /projects` (`ProjectCreate.members` grants initial access in the same
+request per `app/api/projects.py`'s own docstring) — never a second "now add people" request. The
+automated `e2e/admin.spec.ts` run completes the whole flow (fill name, add two team-access rows,
+submit, land on the new project's Members screen showing all three grants) in ~1.3s end to end,
+which is not itself the FR-ADM-06 measurement but is consistent with there being no structural
+reason a human walkthrough would approach 10 minutes.
+
+**Testing**: `pnpm test` (Vitest, 92 passing across 21 files, up from 19 files pre-session, the 2 new
+ones below) — `components/admin/delegation-row.test.tsx` (this milestone's
+own named TESTING EXPECTATION: "the delegation expiry/scope display" — active/expired/revoked
+states, each resolved to real names, never a raw uuid) and
+`components/admin/retention-policy-view.test.tsx` (this milestone's own named TESTING EXPECTATION:
+"the retention-policy narrowing/broadening table rendering" — an organisation-wide NULL/NULL default
+rendered distinctly from a narrower region-scoped override, a vertical-scoped policy's own real
+vertical resolved never as a raw id, the explainable permission message, and the honest empty state).
+`pnpm test:e2e` (`e2e/admin.spec.ts`, `test.describe.serial`, 6 specs) covers, against the real
+backend: the full provisioning flow (project + two initial team-access grants in one submit); attach
+→ an honest empty health history → a real degraded report (simulated out-of-band via this session's
+own bearer token, `foresight.spec.ts`'s own precedent, since no capture-agent identity exists to call
+that endpoint as) → reconnect; a consent action-request round-tripping to a real current status,
+read back after a reload; a budget baseline creation then revision showing both in the resulting
+history (the real frontend bug above, caught and fixed by this very test); both export formats
+producing a real, non-empty downloaded file (`page.waitForEvent("download")`, file size asserted
+`> 0`); and a retention-policy override narrowing behaviour, read back after a reload. `pnpm
+typecheck` / `pnpm lint` / `pnpm build` all clean. `uv run pytest` (backend): 549 passing (up from
+546 pre-session).
+
+**Not re-run this session, not assumed clean**: `e2e/ask.spec.ts` and `e2e/foresight.spec.ts` (the
+latter's own `login()` was patched the same way as every other affected file, but not re-verified
+live) — both are slower, LLM-adjacent specs this session's own time budget didn't cover a fresh run
+of after the shared `login()` fix. Everything else in the suite that was re-run together with
+`e2e/admin.spec.ts` (`login`, `twin`, `living-wip`, `supersession`, `vendors` — 20 specs total) is
+confirmed green; `living-wip.spec.ts`'s own second spec (write-back draft compose) hit a real, timing
+-only failure against a locally-running backend with no `CUE_LLM_*_PROVIDER=fake` set — the exact
+pre-existing, documented flakiness class `backend/PROGRESS.md`'s "round 6" notes already describe
+("Setting the three `*_PROVIDER=fake` env vars... fixed `living-wip.spec.ts` fully"), reproduces
+identically without any change this session made, and is a CI-parity/local-env concern, not an F7
+regression.
 
 ## Updating this file
 

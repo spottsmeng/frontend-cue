@@ -93,6 +93,46 @@ export function useAuthoriseWritebackMutation(projectId: string) {
   });
 }
 
+// --- F7 Admin console: daily rate-ceiling config ------------------------
+
+export function writebackConfigQueryKey(projectId: string) {
+  return ["writeback-config", projectId] as const;
+}
+
+export function useWritebackConfigQuery(projectId: string) {
+  const api = useApiClient();
+  return useQuery({
+    queryKey: writebackConfigQueryKey(projectId),
+    queryFn: async () => {
+      const { data, error } = await api.GET("/projects/{project_id}/writeback/config", {
+        params: { path: { project_id: projectId } },
+      });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+/** FR-WBK-04's "no code path... can exceed [the ceiling] without an
+ * explicit, audited configuration change" — ADMIN_ROLES-gated
+ * (administrator/producer), same tier channel attach/detach and membership
+ * provisioning already use. */
+export function useUpdateWritebackConfigMutation(projectId: string) {
+  const api = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (dailyCeiling: number) => {
+      const { data, error } = await api.PATCH("/projects/{project_id}/writeback/config", {
+        params: { path: { project_id: projectId } },
+        body: { daily_ceiling: dailyCeiling },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: writebackConfigQueryKey(projectId) }),
+  });
+}
+
 /** Only callable on an already-authorised draft (409); rejects once the
  * group's daily rate ceiling is already met (429) — the mutation surfaces
  * both distinctly rather than a generic failure toast. */

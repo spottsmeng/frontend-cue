@@ -21,6 +21,16 @@ async function login(page: Page, email: string) {
   await page.getByLabel("Organisation ID").fill(seed.organisationId);
   await page.getByLabel("Email").fill(email);
   await page.getByRole("button", { name: /sign in/i }).click();
+  // e2e/admin.spec.ts's own FR-ADM-06 provisioning test can add a real
+  // second project to this shared seed within one Playwright invocation —
+  // once that's happened, "/" no longer auto-redirects
+  // (app/(shell)/page.tsx's `list.length === 1` check), so pick the known
+  // seeded project by name from the picker if landed there instead.
+  await page.waitForURL((url) => url.pathname !== "/login");
+  await page.waitForLoadState("networkidle");
+  if (page.url().endsWith("/")) {
+    await page.getByRole("link", { name: "CUE Dev Project" }).click();
+  }
   await expect(page).toHaveURL(/\/projects\/[^/]+$/);
 }
 
