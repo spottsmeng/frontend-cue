@@ -243,3 +243,27 @@ jobs:
           name: playwright-report
           path: frontend/playwright-report/
           retention-days: 14
+
+      # Diagnostic addition: this job's own backend/Ollama stdout+stderr were
+      # never captured anywhere before — a Playwright-side failure (a
+      # citation that never appears) gives no way to see what the *backend*
+      # was actually doing at that moment (did the request even arrive? how
+      # long did each real model call actually take on this runner's own
+      # CPU-only, no-GPU hardware?) without this. Always uploaded, not just
+      # on failure, so a slow-but-passing run's own real timings are on
+      # record too.
+      - name: Upload backend log
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-log
+          path: /tmp/cue-backend.log
+          retention-days: 14
+
+      - name: Upload Ollama log
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ollama-log
+          path: /tmp/ollama.log
+          retention-days: 14
