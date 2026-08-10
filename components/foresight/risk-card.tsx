@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { formatDateTime } from "@/lib/format";
 import { ForesightConflictError, useAcknowledgeRiskMutation, useResolveRiskMutation } from "@/lib/foresight/hooks";
+import { useResolveSpecClaimQuery } from "@/lib/documents/hooks";
 import type { MembershipRole, RiskOut } from "@/lib/api/types";
 import { hasAnyRole, WRITE_ROLES } from "@/lib/roles";
 
@@ -66,11 +67,7 @@ export function RiskCard({
             View in Twin →
           </Link>
         )}
-        {risk.spec_claim_id && (
-          <span className="text-ink-muted" title="Document/spec-claim comparison is F4's surface">
-            Spec claim — see Documents (coming soon)
-          </span>
-        )}
+        {risk.spec_claim_id && <SpecClaimLink projectId={projectId} specClaimId={risk.spec_claim_id} />}
       </div>
 
       <button
@@ -150,5 +147,24 @@ export function RiskCard({
         <p className="mt-2 text-xs text-critical">{conflictMessage(resolveMutation.error)}</p>
       )}
     </li>
+  );
+}
+
+/**
+ * Was a static "coming soon" span before F4 shipped a real Documents
+ * surface — `GET .../documents/spec-claims/{id}` (F4's own frontend-
+ * enablement addition) resolves the claim's own document identity so this
+ * can link out for real. Plain navigation to the document, not a deep link
+ * to the specific claim/version — same "cross-surface linking is plain
+ * navigation" convention this card already uses for commitment_id/
+ * milestone_id above.
+ */
+function SpecClaimLink({ projectId, specClaimId }: { projectId: string; specClaimId: string }) {
+  const { data: claim } = useResolveSpecClaimQuery(projectId, specClaimId);
+  if (!claim) return null;
+  return (
+    <Link href={`/projects/${projectId}/documents/${claim.document_id}`} className="text-signal hover:underline">
+      View spec claim in Documents →
+    </Link>
   );
 }

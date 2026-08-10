@@ -1047,6 +1047,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{project_id}/documents/spec-claims/{spec_claim_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Spec Claim
+         * @description Frontend-enablement addition (F4): resolves a `contradicts` target
+         *     that may live on a different document/version than the one the caller
+         *     is currently viewing — see SpecClaimResolvedOut's own docstring.
+         *     Registered ahead of `/{document_id}` (matching this router's existing
+         *     `/search` precedent) so "spec-claims" is never mistaken for a
+         *     document_id path segment.
+         */
+        get: operations["read_spec_claim_projects__project_id__documents_spec_claims__spec_claim_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects/{project_id}/documents/{document_id}": {
         parameters: {
             query?: never;
@@ -4342,6 +4367,56 @@ export interface components {
             evidence: components["schemas"]["EvidenceOut"][];
         };
         /**
+         * SpecClaimResolvedOut
+         * @description F4 frontend-enablement addition: `SpecClaim.contradicts` can point at
+         *     a claim on a *different* document version — Foresight's own
+         *     contradiction detector (app/foresight/contradiction.py) compares claims
+         *     project-wide by shared deliverable_id/location_code, not just within one
+         *     version. `GET .../versions/{id}/spec-claims` only returns claims for one
+         *     version, so a `contradicts` target outside that list is otherwise an
+         *     unresolvable UUID with no way to reach its own document. This adds just
+         *     enough document identity (id, name, the version's own number) to render
+         *     "conflicts with <attribute>=<value> at <location_code>, from <document
+         *     name>" and link out to it — doesn't touch SpecClaim's own field set,
+         *     which CUE-PRD.md §4.3 already fixed.
+         */
+        SpecClaimResolvedOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Document Version Id
+             * Format: uuid
+             */
+            document_version_id: string;
+            /** Deliverable Id */
+            deliverable_id: string | null;
+            /** Location Code */
+            location_code: string | null;
+            /**
+             * Attribute
+             * @enum {string}
+             */
+            attribute: "dimension" | "finish" | "quantity" | "price";
+            /** Value */
+            value: string;
+            /** Contradicts */
+            contradicts: string | null;
+            /** Evidence */
+            evidence: components["schemas"]["EvidenceOut"][];
+            /**
+             * Document Id
+             * Format: uuid
+             */
+            document_id: string;
+            /** Document Name */
+            document_name: string;
+            /** Document Version No */
+            document_version_no: number;
+        };
+        /**
          * SuccessorBriefOut
          * @description FR-ASK-07: 'a full handover context pack for an incoming PM in one
          *     action' — §12.5's own list, verbatim: open commitments, decision
@@ -6571,6 +6646,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DocumentSearchResult"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_spec_claim_projects__project_id__documents_spec_claims__spec_claim_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spec_claim_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpecClaimResolvedOut"];
                 };
             };
             /** @description Validation Error */

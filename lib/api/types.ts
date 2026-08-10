@@ -107,6 +107,34 @@ export interface ForesightErrorBody {
   detail: string;
 }
 
+// --- Documents (F4, FR-DOC) --------------------------------------------
+
+export type DocumentOut = components["schemas"]["DocumentOut"];
+export type DocumentVersionOut = components["schemas"]["DocumentVersionOut"];
+export type DocumentLineageOut = components["schemas"]["DocumentLineageOut"];
+export type DocumentTagRequest = components["schemas"]["DocumentTagRequest"];
+export type DocumentSearchResult = components["schemas"]["DocumentSearchResult"];
+export type SpecClaimOut = components["schemas"]["SpecClaimOut"];
+export type SpecClaimResolvedOut = components["schemas"]["SpecClaimResolvedOut"];
+export type SpecClaimAttribute = SpecClaimOut["attribute"];
+
+// `create_document`/`create_version`'s multipart bodies, per the generated
+// `Body_*_post` shapes — `file` renders as `string` (openapi-typescript's
+// stand-in for a binary upload field), which is never what's actually sent;
+// see lib/documents/hooks.ts's own note on why a real File is cast through
+// this type rather than the generated one at the call site.
+export type DocumentUploadBody = components["schemas"]["Body_create_document_projects__project_id__documents_post"];
+export type DocumentVersionUploadBody =
+  components["schemas"]["Body_create_version_projects__project_id__documents__document_id__versions_post"];
+
+// tag_document's 422 ("unknown ontology code") and create_document's 422
+// ("unknown class_code") are both a plain HTTPException(detail=str) —
+// confirmed against app/api/documents.py directly, same untyped-at-the-
+// wire-level shape as TwinErrorBody/ForesightErrorBody above.
+export interface DocumentsErrorBody {
+  detail: string;
+}
+
 // `ExportBlockedCommitment` (app/reports/schema.py) is never used as a
 // response_model — app/api/reports.py's export_report constructs the 409
 // body as a raw dict passed to HTTPException(detail=...), so

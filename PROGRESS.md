@@ -29,7 +29,7 @@ session's job, triggered by real mobile work starting, not by convenience.
 | F1 | Living WIP, verification & write-back | `Prompt F1 — Living WIP, Verification and Write-back.txt` | §12.2; FR-RPT; FR-LED-07/08; FR-WBK | F0 | Done (2026-08-09) |
 | F2 | Production Twin visualisation | `Prompt F2 — Production Twin visualisation.txt` | FR-TWN | F0 | Done (2026-08-10) |
 | F3 | Foresight — risks, deviations, escalation | `Prompt F3 — Foresight, Risks and Deviations.txt` | FR-FOR; FR-DEV; FR-NTF | F0 | Done (2026-08-10) |
-| F4 | Documents | `Prompt F4 — Documents.txt` | FR-DOC | F0 | Not started |
+| F4 | Documents | `Prompt F4 — Documents.txt` | FR-DOC | F0 | Done (2026-08-10) |
 | F5 | Ask & Successor Brief | `Prompt F5 — Ask and Successor Brief.txt` | §12.5; FR-ASK | F0 | Not started |
 | F6 | Vendor Reliability Graph | `Prompt F6 — Vendor Reliability Graph.txt` | FR-VRG | F0 | Not started |
 | F7 | Admin console | `Prompt F7 — Admin console.txt` | §6.14 FR-ADM; channel/consent/retention | F0 | Not started |
@@ -403,6 +403,114 @@ required `sort_order` field while adding `id` (caught immediately by the live `c
 running backend, not by a passing-but-blind test). `pnpm typecheck` / `pnpm lint` / `pnpm build` all
 clean; full `pnpm test:e2e` suite (F0–F3, 15 specs) passes together, confirming no regression in F1/F2's
 own already-Done surfaces from either backend schema/endpoint change.
+
+## F4 notes (2026-08-10)
+
+**Route/composition decision**: `/projects/[projectId]/documents` reuses F0's reserved placeholder
+route (list + search + upload entry point, `components/documents/documents-view.tsx`); document
+detail (lineage, versions, approve, tagging, spec claims) is a new nested
+`/projects/[projectId]/documents/[documentId]` route — the first nested dynamic route in this app
+(every other surface so far is one page per top-level route). Chosen over a client-side drawer
+because the prompt's own WHAT TO BUILD lists "Document detail" as a distinct item from "list," and a
+real URL per document is worth having for direct linking (Foresight's risk cards now link straight
+to one, see below).
+
+**The prompt file's own OCR/parsing NON-OBVIOUS note is stale — verified against the running
+backend, not trusted.** It states real OCR/document parsing "is not wired up" for the direct
+`POST /documents` upload endpoint. That was true when the prompt was written but not anymore:
+`app/documents/service.py`'s `_derive_extracted_text` (backed by `app/capture/media.py`'s real
+pdftotext/Office/Tesseract extractors) now runs automatically whenever a caller doesn't supply
+`extracted_text`, confirmed by reading the service code directly and by
+`tests/test_upload_without_extracted_text_auto_derives_it_from_a_real_pdf` passing against the real
+backend. The upload/new-version forms' copy reflects the real behaviour ("leave blank to let CUE
+auto-extract... not every file type can be auto-extracted") rather than the prompt's blanket "not
+wired up" framing — an upload with no `extracted_text` supplied is very often still searchable now.
+The "not yet indexed" warning on a version (`components/documents/version-history.tsx`) still fires
+correctly for the genuine remaining case: `extracted_text` is `null` because derivation genuinely
+failed or the file type isn't one of the real extractors' targets.
+
+**Multipart-vs-generated-client handling decision** (the prompt's own item to document): no custom
+`bodySerializer` needed. `openapi-fetch`'s `defaultBodySerializer` (`node_modules/openapi-fetch/src/
+index.js`) already special-cases `body instanceof FormData` — returns it untouched and skips setting
+`Content-Type` so the browser sets the real multipart boundary itself. `lib/documents/hooks.ts`'s
+`toFormData` builds a real `FormData` and casts it through the generated `Body_create_document_...`/
+`Body_create_version_...` type at the call site (which renders a file upload field as `file: string`
+— openapi-typescript's stand-in for binary, never what's actually sent). No prior milestone had a
+multipart precedent to follow; this is F4's own judgment call, verified against the library source
+directly rather than assumed, and proven end-to-end by `e2e/documents.spec.ts`'s real
+`setInputFiles`-driven upload against the real backend/MinIO.
+
+**Documented response-shape gap, not fabricated**: `DocumentVersionOut` carries no write-back-outcome
+field — confirmed by reading `app/api/schemas.py` directly. `approve_version`'s real outcome
+(`sharepoint_write_back: "ok"`/`"failed: ..."`) is recorded only on `document_audit_log`, which has
+no read endpoint at all. The Approve UI (`version-history.tsx`) reads as unconditionally final
+("Approved by X on Y") with a plain caption noting sync status isn't surfaced by this build — never a
+fabricated "synced to SharePoint" the API never actually confirmed, per this milestone's own
+NON-OBVIOUS note. Left as documented, not closed: exposing an audit-log read endpoint is a real but
+separate addition, out of scope for what this session needed.
+
+**One real Class-A gap found and closed — `SpecClaim.contradicts` resolution across documents.**
+`app/foresight/contradiction.py` compares spec claims project-wide by shared
+`deliverable_id`/`location_code`, not just within one document version, so a `contradicts` target can
+live on a version the spec-claims view never fetched (`GET .../versions/{id}/spec-claims` only
+returns one version's claims). There was no endpoint to resolve a single claim by id at all. Closed
+on the spot (backend/PROGRESS.md's "round 4"): `GET .../documents/spec-claims/{spec_claim_id}` +
+`SpecClaimResolvedOut` (adds `document_id`/`document_name`/`document_version_no`, doesn't touch
+`SpecClaim`'s own CUE-PRD.md §4.3 field set). `lib/documents/hooks.ts`'s `useResolveSpecClaimQuery`
+backs `components/documents/spec-claims-panel.tsx`'s real "Conflicts with X at Y — from Z" link, and
+is reused as-is (not duplicated) by `components/foresight/risk-card.tsx` to turn `RiskOut.
+spec_claim_id` into a real "View spec claim in Documents →" link, replacing the inert "coming soon"
+placeholder F3 left there. Verified against the live backend (`curl`) before regenerating
+`lib/api/schema.gen.ts`; full backend suite green afterward (510 passing, up from 508).
+
+**Two Class-A-shaped checks that turned out to already be closed, not new gaps**: `DocumentOut`'s
+`class_term_id`/`milestone_type_term_id`/`phase_term_id` are the same shape of raw-id-needing-a-
+resolver risk F2 left open for `MilestoneOut.type_term_id` — but F3's own "round 3" fix
+(`OntologyTermOut.id`) already covers all three categories (`deliverable_class`/`milestone_type`/
+`phase`), so `lib/documents/hooks.ts`'s three thin category-scoped query hooks +
+`resolveTermLabel` (mirrors `lib/foresight/hooks.ts`'s copy, not imported cross-surface — same
+per-surface-owns-its-hook convention F2/F3 already established) close it for Documents without any
+backend change. `DocumentVersionOut.approved_by` is a raw user id too, but `lib/members/hooks.ts`'s
+`resolveMemberLabel` (added in F3's own round 3) already resolves it — no new gap either.
+
+**Documented, not silently presented as more than it is**: `GET .../documents` has no server-side
+filter query params (unlike `GET .../risks`'s `status`/`source`/`severity`), so the class-filter
+dropdown on the list page filters the already-fetched document list client-side —
+`components/documents/document-list.tsx`'s own comment says so; not built to look like a server
+filter it isn't. Signed URLs (`DocumentVersionOut.download_url`, NFR-SEC-02) expire after 3600s
+(`storage.py`'s own default) against F0's global 60s `staleTime` default — confirmed, not assumed,
+that this is two orders of magnitude of headroom, so no per-query override was added.
+
+**Dev-seed extension** (`backend/scripts/seed_dev_data.py`): two documents (`quotation.pdf`/
+`shop-drawing.pdf`), one spec claim each at the same `location_code`/`attribute` with genuinely
+different `dimension` values, `contradicts` wired directly — same reasoning F3's own
+`risk_silence`/`risk_forecast` ORM-direct fixtures give (the real contradiction detector only fires
+from the arq worker's periodic sweep, not something Playwright can wait on). `e2e/documents.spec.ts`'s
+own upload/version/approve test uploads a fresh document through the real UI instead, so that path
+still exercises the real `StorageBackend`/MinIO rather than relying on the seeded fixtures' fake
+`storage_ref`.
+
+**Testing**: `pnpm test` (Vitest, 64 passing across 15 files, up from 57) — `version-history.test.tsx`
+(4 new: exactly one row marked Current with every other one Superseded, `approved_by` resolved to a
+real member label not a raw id, the not-yet-indexed warning firing correctly on a null
+`extracted_text` while a populated one previews instead, and Approve only offered for a
+not-yet-approved version to a write role) and `upload-document-form.test.tsx` (3 new: nothing rendered
+for a non-write role, the multipart mutation never firing without both `file` and `name`, and a real
+`File` object plus every typed field reaching the mutation call once both are present — jsdom doesn't
+correctly recognise a `required` file input as satisfied by `userEvent.upload` for
+`checkValidity()`, a jsdom gap not a real-browser one, so these two use `fireEvent.submit` to exercise
+the component's own guard directly rather than depend on that). `pnpm test:e2e`
+(`e2e/documents.spec.ts`, `test.describe.serial`, 4 specs) against the real backend/MinIO: a real
+multipart upload appearing in the list, gaining a second version, the current pointer moving and the
+old version reading Superseded, and Approve marking it approved without implying a sync outcome;
+lexical search returning a real match against uploaded `extracted_text`; tagging round-tripping a
+real ontology-term code through a reload (not a pasted UUID); and the seeded cross-document
+`contradicts` pair rendering as a real link with no raw UUID visible, followed all the way to the
+target document. `pnpm typecheck`/`pnpm lint`/`pnpm build` all clean; full `pnpm test:e2e` suite
+(F0–F4, 19 specs) passes together — one `foresight.spec.ts` failure seen under 5-way parallel workers
+(a `dev-login` race between concurrently-running `global-setup` seed scripts, not a documents
+regression) reproduced as a clean pass when re-run alone, confirming no regression in F1–F3's own
+already-Done surfaces from the risk-card change or the backend schema/endpoint addition.
 
 ## Updating this file
 

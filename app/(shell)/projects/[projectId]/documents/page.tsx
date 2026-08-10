@@ -1,5 +1,10 @@
-import { SurfacePlaceholder } from "@/components/app-shell/surface-placeholder";
+"use client";
+
+import { useParams } from "next/navigation";
+
+import { DocumentsView } from "@/components/documents/documents-view";
 
 export default function DocumentsPage() {
-  return <SurfacePlaceholder title="Documents" milestone="F4" />;
+  const { projectId } = useParams<{ projectId: string }>();
+  return <DocumentsView projectId={projectId} />;
 }
