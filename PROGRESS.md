@@ -638,47 +638,60 @@ exercised until a real workflow run.
 **That fix was correct but incomplete — confirmed by watching the next real CI run rather than
 assuming green.** The `bge-m3` pull itself succeeded cleanly (no `embedding sweep failed` trace at
 all in that run's log, unlike the first), but the same document-grounded-answer test still missed
-its own budget. Root cause this time: CI's `ubuntu-latest` runner is 2 vCPUs with no GPU, and
-Playwright's own log line ("`Running 25 tests using 2 workers`") confirms a second worker's browser
-is genuinely competing with Ollama inference for those same two cores — a fundamentally slower
-environment than a developer machine, not a logic bug. The original 100s budget (already generous
-by local standards, where this test passes in well under 45s) wasn't enough there. Widened every
-answer-wait in `e2e/ask.spec.ts` to 220s (`test.setTimeout` to 240s) — comfortably inside the `e2e`
-job's own 25-minute ceiling even with `playwright.config.ts`'s CI-only `retries: 1`, since every
-other spec in the suite runs in seconds.
+its own budget, even after widening every answer-wait to 220s. Direct instrumentation (temporary
+timing logs in `app/ask/answer.py`, since reverted) plus a direct local measurement — `ollama ps`
+confirmed `qwen2.5:14b` running `100% GPU` on this machine, and forcing genuine CPU-only inference
+(`num_gpu: 0`) only added ~5s to an otherwise-identical call — showed that raw compute speed alone
+didn't explain a request that never returned even once, twice.
+
+**The actual correction, not another timeout tune: real Ollama should never have been running in CI
+at all.** This project's own dev strategy (CLAUDE.md's Models table) scopes real Ollama models to
+the developer's own local machine only — dev, test, demo — switching to a frontier model for
+production once the app is solid, specifically to control cost. A GitHub Actions runner is neither
+of those places; installing and pulling models there (first for F1's write-back spec before this
+session, extended much further by this session for Ask) was a boundary violation no amount of
+GPU/timeout budgeting was the right fix for. The real fix: `FakeClient`/`FakeEmbeddingClient`
+(backend's `app/llm/client.py` / `app/ask/embeddings.py` — see `backend/PROGRESS.md`'s own
+"Architecture correction" entry for the full writeup) — a third, CI-only provider
+(`CUE_LLM_EXTRACTION_PROVIDER=fake`, `CUE_LLM_REASONING_PROVIDER=fake`, `CUE_EMBED_PROVIDER=fake`)
+alongside `ollama`/`anthropic`/`tei`. `.github/workflows/ci.yml`'s `e2e` job no longer installs,
+pulls, or talks to Ollama at all — every "Install Ollama"/"Pull ..."/"Warm up" step is gone, along
+with the `CUE_LLM_REASONING_MODEL` override they existed to support. `e2e/ask.spec.ts`'s own
+generous timeouts (`test.setTimeout(240_000)`, `timeout: 220_000` on every answer-wait) are gone
+too — a fake response is instant, so every wait is back to Playwright's own untouched default.
+
+One real UI bug the fake surfaced that a real model's own judgment had been quietly papering over:
+a *fake* embedding client (needed so `DocumentVersion.embedding`/`RetrievalChunk` inserts still
+succeed) always returns *some* "closest" vector regardless of true relevance — the same way real
+cosine-distance ranking would for a genuinely unrelated question — so "retrieval found a hit" can no
+longer stand in for "the excerpts actually answer this." `FakeClient`'s answer-generation branch
+makes an honest word-overlap judgment between the question and each excerpt instead of an
+unconditional "yes, cite everything" (backend/PROGRESS.md has the full before/after) — without that
+correction, `no_citable_source` would have silently stopped being reachable in CI at all.
 
 **Testing**: `pnpm test` (Vitest, 74 passing across 19 files, up from 64) —
 `lib/ask/citation-routing.test.ts` (this milestone's own TESTING EXPECTATION: all six
 `CitationSourceType` values, including the two `unavailable` ones) and
 `components/ask/refusal-message.test.tsx` (the two refusal kinds render distinctly, never the same
 generic shell — this milestone's own other named TESTING EXPECTATION). `pnpm test:e2e`
-(`e2e/ask.spec.ts`, `test.describe.serial`, 6 specs, real Ollama qwen2.5:32b reasoning + bge-m3
-embeddings, no mocks) covers, against the real backend: a document-grounded question producing a
-real cited answer whose citation opens the real document (resolved via this session's own
+(`e2e/ask.spec.ts`, `test.describe.serial`, 6 specs, real backend/Postgres, fake LLM/embedding
+client) covers, against the real backend: a document-grounded question producing a real cited
+answer whose citation opens the real document (resolved via this session's own
 `GET .../documents/versions/{version_id}` addition); a question with no supporting evidence
 producing the honest `no_citable_source` refusal; an action-shaped question ("please chase the
 vendor...", FR-ASK-06's own example) producing `action_not_yet_supported`, asserted visibly distinct
 from the no-evidence refusal; a follow-up reusing the first answer's real `conversation_id` (asserted
-at the network-request level, not inferred from UI text, so it doesn't depend on the model's actual
-answer content) and "New conversation" genuinely dropping it afterward; each of the five summary
-variants rendering against the real seeded project; and a full Successor Brief covering every named
-section with real content, including a deviation row whose `resolution_owner` — if another spec's
-own test had already resolved it — reads as a real member name, never a raw UUID. Every answer/
-refusal assertion carries a generous timeout (up to 100s): a 32B local reasoning model with no
-production serving infra behind it routinely exceeds Playwright's own 30s default, confirmed by
-watching this suite actually time out before raising the budget, not assumed from NFR-PRF-04's
-production-model figures. `pnpm typecheck` / `pnpm lint` / `pnpm build` all clean; the full
-`pnpm test:e2e` suite (F0–F5, 25 specs) run together confirms zero regression in F1–F4's own
-already-Done surfaces from the shared-component extraction (`decision-log-row.tsx`/
-`risk-log-row.tsx`) or the backend schema/endpoint addition — all 19 of those pass clean under the
-6-way parallel run. `e2e/ask.spec.ts` itself is real-LLM-heavy in a way no earlier spec is (every
-one of its 6 tests makes at least one live call to the same local Ollama instance for
-`classify_intent`/answer generation/embeddings), and one of its tests missed its own 100s budget
-under that 6-way parallel run specifically (aborting the rest of its `describe.serial` block as a
-result) — the same "flaky only under N-way parallel contention, not a real regression" mode F4's own
-notes already documented for `foresight.spec.ts`, not a new problem. Confirmed, not just assumed:
-`e2e/ask.spec.ts` run alone (`--workers=1`) passed all 6 specs cleanly three separate times across
-this session, including immediately after the full-suite run that saw the one contended failure.
+at the network-request level, not inferred from UI text) and "New conversation" genuinely dropping
+it afterward; each of the five summary variants rendering against the real seeded project; and a
+full Successor Brief covering every named section with real content. `pnpm typecheck` / `pnpm lint`
+/ `pnpm build` all clean; the full `pnpm test:e2e` suite (F0–F5, 25 specs) confirms zero regression
+in F1–F4's own already-Done surfaces. Verified at CI's own real concurrency, not just locally:
+`--workers=2` (matching a 2-vCPU runner) passes all 25 specs in well under a minute, every Ask spec
+resolving in under a second — down from a 17+ minute run and a real, reproducible failure with
+Ollama in the loop. (Local `--workers=6`, this machine's own full core count, shows occasional
+unrelated dev-login flakiness under that much heavier concurrency than CI itself ever produces —
+not investigated further since it doesn't reflect CI's real load and isn't specific to this
+milestone's own surface.)
 
 ## Updating this file
 

@@ -51,41 +51,35 @@ jobs:
         run: pnpm build
 
   e2e:
-    name: Playwright (real backend, no mocks)
+    name: Playwright (real backend, fake LLM)
     runs-on: ubuntu-latest
-    # Was 20; Ollama install + a cache-miss model pull adds a few minutes on
-    # top of the steps that were already here — give that room rather than
-    # let the outer job timeout be what fires (cue-eval.yml's own reasoning
-    # for its much larger budget).
-    timeout-minutes: 25
+    timeout-minutes: 12
     env:
       # Same default docker-compose.yml/pytest.yml already use for the
       # ephemeral CI Postgres container's password — not a secret.
       CUE_APP_DB_PASSWORD: cue_app
-      # e2e/living-wip.spec.ts's write-back spec drives a real
-      # POST .../writeback/draft, which calls app/writeback/compose.py's
-      # compose_draft — get_client("reasoning"), which defaults to Ollama
-      # (app/llm/config.py) with no mock/fake seam in the real running app
-      # (only tests/conftest.py's fixtures inject a FakeModelClient, and this
-      # job deliberately runs the real app, not pytest). Nothing here ever
-      # started Ollama, so that call 500'd with a connection-refused
-      # httpx.ConnectError in under a second, the draft never got created,
-      # and the spec's 120s wait for "Draft — not yet sent" just ran out the
-      # clock waiting for text that was never coming — confirmed by
-      # reproducing OllamaClient.complete() against a closed port locally
-      # (same "nothing listening" condition this job was actually in),
-      # which raises immediately, not after any timeout. Deterministic, not
-      # flaky: reappears on every run until Ollama actually exists here.
-      #
-      # Local dev's own default `reasoning_model` is qwen2.5:32b (CLAUDE.md's
-      # own "Diagnostic only" tier, not "Local dev/offline") — too large to
-      # pull/run on every push the way cue-eval.yml's dedicated, much less
-      # frequent workflow can justify for qwen2.5:14b. Overriding just this
-      # role to the same 14b model already proven to run acceptably in
-      # Actions (cue-eval.yml) is this job's own judgment call: real
-      # generation from a real local model, not the exact production-parity
-      # model, which is the right trade for a job that runs on every push.
-      CUE_LLM_REASONING_MODEL: qwen2.5:14b
+      # Real Ollama models are scoped to the developer's own local machine
+      # only — dev, test, demo — switching to a frontier model (Anthropic)
+      # once the app is solid for production (CLAUDE.md's Models table, and
+      # this project's own stated dev-cost strategy). A GitHub-hosted CI
+      # runner is neither of those places: it's remote, ephemeral, and (on
+      # the free tier this job uses) has no GPU at all — running a real
+      # 14B-parameter model there is both a boundary violation and, quite
+      # apart from that, categorically too slow to be a fast per-push gate
+      # (measured directly: a call that took ~20s on real GPU-accelerated
+      # local hardware still hadn't returned after 220s twice on this
+      # runner's own CPU-only, 2-vCPU, contended hardware). `FakeClient`/
+      # `FakeEmbeddingClient` (backend's own app/llm/client.py,
+      # app/ask/embeddings.py) are the real fix: CI never talks to a model
+      # at all, so the real backend/DB/UI wiring this job exists to check
+      # (does the UI render citations, does it render each refusal_kind
+      # distinctly, does conversation_id thread through) is tested fast and
+      # deterministically instead. Model *quality* — a genuinely different
+      # question — belongs in backend/.github/workflows/cue-eval.yml's own
+      # separate, non-blocking evaluation workflow, never this gate.
+      CUE_LLM_EXTRACTION_PROVIDER: fake
+      CUE_LLM_REASONING_PROVIDER: fake
+      CUE_EMBED_PROVIDER: fake
     steps:
       # Two sibling checkouts, not one — e2e/global-setup.ts seeds real data
       # by shelling out to backend/scripts/seed_dev_data.py at `../../backend`
@@ -124,73 +118,6 @@ jobs:
         # own "For the running app" step.
         working-directory: backend
         run: uv run alembic upgrade head
-
-      # Real backend, real LLM calls — same "no mocks of anything that
-      # matters" line this job's own name draws, extended to the one write-
-      # back spec that needs a real drafted message, not a canned string.
-      # Mirrors backend/.github/workflows/cue-eval.yml's own install/start/
-      # pull/warm-up steps exactly (that workflow already proved this
-      # sequence works on an Actions runner); qwen2.5:14b specifically
-      # because CUE_LLM_REASONING_MODEL above already pins the backend to it
-      # instead of the much heavier 32b local default. `bge-m3` (~1.2GB, far
-      # smaller than qwen2.5:14b) is pulled alongside it — app/ask/config.py's
-      # EmbeddingSettings default, and the only model width that matches
-      # DocumentVersion.embedding/RetrievalChunk.embedding's hardcoded
-      # Vector(1024) column. Without it, F5's e2e/global-setup.ts (which now
-      # runs backend/scripts/seed_dev_data.py's own embedding sweep after
-      # seeding) 404s on every embed call — caught internally, so the seed
-      # script itself still completes, but DocumentVersion.embedding/
-      # RetrievalChunk are left unpopulated and e2e/ask.spec.ts's own
-      # document-grounded-answer test loses the semantic half of retrieval,
-      # reproduced locally (forcing the same 404) as the exact failure a real
-      # run of this job hit before this model was added here.
-      - name: Cache Ollama model blobs
-        uses: actions/cache@v4
-        with:
-          path: ~/.ollama/models
-          key: ollama-models-qwen2.5-14b-bge-m3-v1
-
-      - name: Install Ollama
-        run: curl -fsSL https://ollama.com/install.sh | sh
-
-      - name: Start Ollama (unprivileged, not the installer's systemd unit)
-        # Same reasoning as cue-eval.yml's identical step: the installer
-        # auto-starts a systemd unit running as its own `ollama` user, which
-        # would store models outside ~/.ollama/models for the `runner` user
-        # this job's own cache step above actually keys on.
-        run: |
-          sudo systemctl disable --now ollama 2>/dev/null || true
-          ollama serve > /tmp/ollama.log 2>&1 &
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:11434/ > /dev/null && exit 0
-            sleep 2
-          done
-          echo "Ollama did not become ready in time" >&2
-          cat /tmp/ollama.log >&2
-          exit 1
-
-      - name: Pull qwen2.5:14b
-        run: ollama pull qwen2.5:14b
-
-      - name: Pull bge-m3
-        run: ollama pull bge-m3
-
-      - name: Warm up the models
-        # cue-eval.yml's own note applies verbatim: `ollama pull` only
-        # downloads weights, it doesn't load them into memory — paying that
-        # one-off cold-load cost here, with its own generous timeout, keeps
-        # it off the Playwright spec's own 120s wait budget. keep_alive
-        # matches OllamaClient's/OllamaEmbeddingClient's own "2h" so both
-        # stay resident for the rest of this job.
-        run: |
-          curl -sf http://localhost:11434/api/generate \
-            --max-time 600 \
-            -d '{"model":"qwen2.5:14b","prompt":"hi","stream":false,"keep_alive":"2h"}' \
-            > /dev/null
-          curl -sf http://localhost:11434/api/embed \
-            --max-time 600 \
-            -d '{"model":"bge-m3","input":["hi"],"keep_alive":"2h"}' \
-            > /dev/null
 
       - name: Start the backend API
         working-directory: backend
@@ -244,26 +171,14 @@ jobs:
           path: frontend/playwright-report/
           retention-days: 14
 
-      # Diagnostic addition: this job's own backend/Ollama stdout+stderr were
-      # never captured anywhere before — a Playwright-side failure (a
-      # citation that never appears) gives no way to see what the *backend*
-      # was actually doing at that moment (did the request even arrive? how
-      # long did each real model call actually take on this runner's own
-      # CPU-only, no-GPU hardware?) without this. Always uploaded, not just
-      # on failure, so a slow-but-passing run's own real timings are on
-      # record too.
+      # A Playwright-side failure alone gives no way to see what the
+      # *backend* was actually doing at that moment — kept as a permanent
+      # diagnostic aid (not Ollama-specific; useful for any future backend-
+      # side CI failure), always uploaded, not just on failure.
       - name: Upload backend log
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: backend-log
           path: /tmp/cue-backend.log
-          retention-days: 14
-
-      - name: Upload Ollama log
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ollama-log
-          path: /tmp/ollama.log
           retention-days: 14

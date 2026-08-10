@@ -46,8 +46,6 @@ test.describe.serial("Living WIP (F1)", () => {
   test("blocks export while unverified, verifies the commitment, then exports; write-back drafts, authorises and sends", async ({
     page,
   }) => {
-    test.setTimeout(150_000); // the write-back draft composes via a real local LLM call
-
     // --- FR-RPT-06: export blocked with the real 409 shape ---------------
     await page.getByRole("button", { name: "PDF" }).click();
     await expect(page.getByText(/export blocked/i)).toBeVisible();
@@ -68,9 +66,11 @@ test.describe.serial("Living WIP (F1)", () => {
     await expect(budgetSection.getByText("Pending verification")).toHaveCount(0);
     await expect(budgetSection.getByText("Verified", { exact: true }).first()).toBeVisible();
 
-    // --- FR-WBK-01/02/03: draft (composes a real closed question) --------
+    // --- FR-WBK-01/02/03: draft (composed via a fake LLM client in CI —
+    // e2e/ask.spec.ts's own docstring explains why real Ollama is never
+    // used here) --------------------------------------------------------
     await dialog.getByRole("button", { name: "Confirm with vendor" }).click();
-    await expect(dialog.getByText("Draft — not yet sent")).toBeVisible({ timeout: 120_000 });
+    await expect(dialog.getByText("Draft — not yet sent")).toBeVisible();
     const draftTextbox = dialog.getByLabel("Draft message");
     await expect(draftTextbox).not.toHaveValue("");
 
