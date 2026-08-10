@@ -618,6 +618,23 @@ retried once after a transient network timeout at 5%) rather than working around
 infra state, not application behaviour, so there was nothing to "fix" in the repo, just a one-time
 local setup step future sessions in a fresh sandbox may need to repeat.
 
+**Real CI gap found post-merge and closed — `.github/workflows/ci.yml`'s `e2e` job never pulled an
+embedding model.** A real push surfaced `embedding sweep failed ... 404 Not Found for url
+.../api/embed` in the job log, then `e2e/ask.spec.ts`'s document-grounded-answer test timing out on
+its citation locator. Root-caused by direct reproduction, not guessed: held CI's own
+`CUE_LLM_REASONING_MODEL: qwen2.5:14b` override fixed locally and toggled only the embedding model —
+with a real one available, the test passed clean (30.9s); with the embedding call forced to 404 (the
+exact CI condition, `CUE_EMBED_MODEL` pointed at a name Ollama doesn't have), the test failed
+identically to the CI log (same locator, same 100s timeout). A smaller reasoning model was not the
+cause; the missing embedding model was — losing the semantic half of retrieval changed what got
+surfaced/ranked enough that the model's grounded-answer decision came out differently for this
+question. Fixed by adding a `Pull bge-m3` + embed-warm-up step to the `e2e` job, mirroring the
+existing `qwen2.5:14b` pull/warm-up pattern exactly, and bumping the Ollama model-blob cache key
+(`ollama-models-qwen2.5-14b-bge-m3-v1`) since its contents changed. Not caught before the original
+push because this session's own sandbox already had `bge-m3` pulled by the time
+`e2e/ask.spec.ts` was written and run — the gap was in the *CI* environment specifically, never
+exercised until a real workflow run.
+
 **Testing**: `pnpm test` (Vitest, 74 passing across 19 files, up from 64) —
 `lib/ask/citation-routing.test.ts` (this milestone's own TESTING EXPECTATION: all six
 `CitationSourceType` values, including the two `unavailable` ones) and
