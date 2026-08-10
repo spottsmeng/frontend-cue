@@ -31,7 +31,7 @@ session's job, triggered by real mobile work starting, not by convenience.
 | F3 | Foresight — risks, deviations, escalation | `Prompt F3 — Foresight, Risks and Deviations.txt` | FR-FOR; FR-DEV; FR-NTF | F0 | Done (2026-08-10) |
 | F4 | Documents | `Prompt F4 — Documents.txt` | FR-DOC | F0 | Done (2026-08-10) |
 | F5 | Ask & Successor Brief | `Prompt F5 — Ask and Successor Brief.txt` | §12.5; FR-ASK | F0 | Done (2026-08-10) |
-| F6 | Vendor Reliability Graph | `Prompt F6 — Vendor Reliability Graph.txt` | FR-VRG | F0 | Not started |
+| F6 | Vendor Reliability Graph | `Prompt F6 — Vendor Reliability Graph.txt` | FR-VRG | F0 | Done (2026-08-10) |
 | F7 | Admin console | `Prompt F7 — Admin console.txt` | §6.14 FR-ADM; channel/consent/retention | F0 | Not started |
 | F8 | Analytics dashboard | `Prompt F8 — Analytics dashboard.txt` | §13 | F0, and partially F1/F3/F6 for data sources | Not started |
 | F9 | Hardening — accessibility, localisation, perf | `Prompt F9 — Hardening, accessibility and localisation.txt` | §7.6 NFR-ACC; §7.1 NFR-PRF (web-applicable subset) | all of the above | Not started |
@@ -692,6 +692,136 @@ Ollama in the loop. (Local `--workers=6`, this machine's own full core count, sh
 unrelated dev-login flakiness under that much heavier concurrency than CI itself ever produces —
 not investigated further since it doesn't reflect CI's real load and isn't specific to this
 milestone's own surface.)
+
+## F6 notes (2026-08-10)
+
+**Route-naming decision, per the prompt's own instruction to document it**: `/vendors` (not
+`/parties`) — matches `components/app-shell/top-nav.tsx`'s pre-existing `ORG_LINKS` entry (F0 already
+named it "Vendors" in the nav, even though F6 hadn't been built yet), and reads better to the
+Finance/Procurement persona than the backend's own internal `Party` naming. Detail is a nested
+dynamic route, `/vendors/[partyId]`, the same "a real URL per item is worth having for direct
+linking" call F4 already made for `/documents/[documentId]` over a client-side drawer — the
+organisation-mapping panel's own "view vendor" links (below) depend on it. Both routes are `"use
+client"` thin wrappers delegating to `VendorsView`/`VendorDetailView`, same F1–F5 shape.
+
+**Two real backend gaps found and closed on the spot, not worked around** (this milestone's own
+gap-audit check, frontend/CLAUDE.md's Class A/B checklist — see backend/PROGRESS.md's "round 6" for
+the full write-up):
+- **`GET /parties/{party_id}`** didn't exist — only the org-wide list and the reliability/
+  organisation sub-resources did. A vendor detail page has nothing else to build a header from, and
+  specifically needs `type` to decide whether the organisation-mapping section applies at all
+  (person-only, FR-NRM-04). `lib/vendors/hooks.ts`'s `useVendorQuery` backs it.
+- **`ProjectOut.archetype_code`** was never surfaced by any response schema, even though the column
+  exists and its own docstring names it as FR-VRG-02's segmentation axis outright. Without it, the
+  segment picker's `event_archetype` field had no real values to offer at all.
+
+**A third gap found, deliberately left open, not closed — `GET /parties/{id}/organisation` is
+`require_org_administrator`-gated, not `require_org_finance` like every other read this surface
+makes.** Confirmed by reading `app/api/parties.py`'s `organisation_router` directly, not assumed
+from the prompt's own "read-only this session" framing, which doesn't mention the gate at all. A
+Finance/Producer-only user (the tier that gates the rest of this entire page) will get a real 403 on
+the "Represents" section specifically, even though they can see every vendor's reliability metrics
+fine. This is a genuine, live access-tier mismatch, not a bug this session introduced — and not one
+this session should silently paper over by loosening a backend access decision it didn't make (F7's
+Admin console, which owns FR-NRM-04's write side too, is the natural place to reconsider whether
+that gate is right). `lib/vendors/hooks.ts`'s `VendorOrganisationPermissionError` and
+`components/vendors/organisation-mapping-panel.tsx` render it as an explainable permission message
+naming the exact gate mismatch, same `ForesightPermissionError`/`ThresholdConfigPanel` posture F3
+already established for its own org-admin-only surface.
+
+**`event_archetype`'s segment-picker options are derived, not fabricated — and honestly incomplete
+by construction.** Unlike `vendor_category` (a real `ontology_terms` vocabulary, discoverable via
+the same `GET .../ontology-terms?category=X` pattern every prior milestone's hook already uses),
+`Project.archetype_code` is free text with no vocabulary table and no per-vendor "which archetypes
+does this vendor actually have data under" query either. `lib/vendors/hooks.ts`'s
+`distinctArchetypeCodes` offers every distinct archetype code in use across the org's own projects
+(via `GET /projects`, the gap closed above) — real values that exist, never invented, but not
+narrowed to values *this specific vendor* has commitments under (no endpoint answers that). `city`
+has no discovery endpoint at all (`Party.city` is plain free text) and is a real text input, not a
+select dressed up as one.
+
+**Party-organisation mapping only renders for `type: "person"` parties.** `GET .../organisation`
+doesn't error for a `vendor_org`/`internal_staff` id — it just returns an honestly empty history,
+which would be a confusing, meaningless-looking empty section on a party this mapping was never
+about (FR-NRM-04 is person -> vendor-company). `VendorDetailView` checks `party.type` before
+rendering the section at all, rather than showing empty state for every party type.
+
+**Nav visibility computed server-side by fanning out to F1's own `/members/me`, not a new org-wide
+"my roles" endpoint.** `require_org_finance` answers "does this user hold finance/producer on *any*
+project in the org" — genuinely org-wide, which no single project's `/members/me` call can answer
+alone, and there's no dedicated org-wide roles endpoint (closing one would be a new backend surface
+built purely for a nav-hiding nicety F0's own docstring already says isn't a security boundary — not
+worth it at this app's project counts, CUE-Tech-Stack.md §4's own "don't distribute early" scale
+reasoning applied to request fan-out instead of a new endpoint). `app/(shell)/layout.tsx` now calls
+`GET /projects/{id}/members/me` once per project the user can already see (via `Promise.all`,
+already-fetched project list, F1's own endpoint) and shows the "Vendors" link if any grants
+finance/producer. Deliberately **not** importing `lib/roles.ts`'s own `FINANCE_ROLES`/`hasAnyRole`
+into this Server Component — that file also exports client-hook-housing code
+(`useEffectiveRoles`, built on `lib/api/browser.ts`'s `"use client"` `useApiClient`), so
+`app/(shell)/layout.tsx` keeps its own tiny, independent copy of the constant instead, same "second,
+independent copy, never itself a security boundary" posture `lib/roles.ts`'s own comment already
+states for its three exported role-set constants. The real gate is still the backend's 403
+(`VendorPermissionError` in `lib/vendors/hooks.ts`, rendered as an explainable message by
+`VendorList`/`VendorMetricsPanel`), never the nav check alone.
+
+**History trend is a dependency-free inline SVG polyline, not a charting library** —
+`components/vendors/metric-history-chart.tsx`'s `Sparkline`. Same "tens of nodes... twenty lines of
+code, not a library" reasoning CUE-Tech-Stack.md §4 already gave Twin's own timeline over a
+graph-visualisation dependency, applied here to a five-point metric trend. Plotted only over
+snapshots with a real `value` (`available: true`) — an unavailable snapshot has no y-coordinate to
+honestly place and is never interpolated; the full snapshot list (value or `unavailable_reason`,
+whichever is real) always renders underneath the chart regardless, so the exact numbers never live
+only in the SVG.
+
+**Absent vs. unavailable, rendered distinctly per the prompt's own instruction** —
+`components/vendors/vendor-metric-row.tsx`. `VendorMetricsPanel` iterates the five canonical
+`VendorMetricNameLiteral` values (`components/vendors/metric-meta.ts`'s `METRIC_NAMES`, mirroring
+`app/parties/service.py`'s own `_METRIC_FUNCS` order) and looks each one up in the fetched
+`metrics` list by name: missing entirely -> "Not yet computed," no reason shown (there is nothing to
+explain); present with `available=false` -> "Not available" plus the real `unavailable_reason`,
+never a fabricated value. Each metric formats its own value with its own unit
+(`formatMetricValue`) — `on_time_rate`/`revision_churn` are fractions needing `*100`,
+`price_drift_pct` is already a percentage (`compute_price_drift`'s own `* 100.0`), formatting both
+the same way would silently mis-scale one of them.
+
+**Dev-seed extension** (`backend/scripts/seed_dev_data.py`): the existing vendor ("Golden Sound &
+Light Pte Ltd") gets a real `vendor_category_term_id` (`av_led`, a real seeded ontology term, not
+invented) and `city`; a second vendor ("Nimbus Event Staffing Pte Ltd," `staffing`/Kuala Lumpur) for
+the directory's own filter controls to have something real to narrow down; a person-type contact
+("Amanda Lim") mapped to the first vendor via a real `set_current_organisation` call, for the
+organisation-mapping panel; and two more real commitments (one delivered on time, one delivered
+late) with their own Evidence/AuditLog rows, so `median_response_time_days` and `on_time_rate` both
+compute genuinely `available` values — `revision_churn`/`price_drift_pct` stay honestly unavailable
+no matter what this script adds, structurally blocked on `Commitment.supersedes` (FR-LED-05) per
+`app/parties/compute.py`'s own module docstring. `recompute_vendor_metrics` is called twice, with a
+real intermediate `session.commit()` between them (not deferred to the script's single trailing
+commit like everything else) specifically so the two snapshots land in separate Postgres
+transactions and get genuinely distinct `computed_at` values — `VendorMetric.computed_at` is
+`server_default=func.now()`, fixed for the lifetime of one transaction, so two recomputes inside the
+same uncommitted transaction would otherwise tie on the history endpoint's own sort key. Verified
+against the real running backend before writing any frontend code against it (`curl`, not assumed):
+`median_response_time_days` 5.0 -> 6.0, `on_time_rate` 1.0 -> 0.5, `deviation_frequency` 0.333 ->
+0.25, `revision_churn`/`price_drift_pct` unavailable both times, two distinct `computed_at`
+timestamps ~230ms apart.
+
+**Testing**: `pnpm test` (Vitest) — `components/vendors/vendor-metric-row.test.tsx` covers this
+milestone's own named TESTING EXPECTATION (the absent-vs-unavailable split) plus the per-metric
+value-formatting split, against hand-built `VendorMetricOut` fixtures. `pnpm test:e2e`
+(`e2e/vendors.spec.ts`, `test.describe.serial`, 4 specs, real backend) covers, against the real
+seeded data above: a Finance-role user seeing the Vendors nav entry and the real directory; a
+project_manager-only user with the nav entry hidden *and* a real 403 on direct navigation to
+`/vendors` (not just the hidden link); a vendor's current metrics showing one genuinely available
+metric (`on_time_rate`, 50%) alongside both FR-LED-05-blocked ones with their real
+`unavailable_reason` text visible; and the history view showing two real snapshots for the same
+metric. `pnpm typecheck` / `pnpm lint` / `pnpm build` all clean. Full `pnpm test:e2e` suite (F0–F6,
+29 specs) run together, `CUE_LLM_*_PROVIDER=fake`/`CUE_EMBED_PROVIDER=fake` set on the backend
+(matching CI — see backend/PROGRESS.md's "round 6" for why a plain local restart without these
+briefly broke two *unrelated* F1/F5 specs, root-caused and fixed, not a regression from this
+milestone's own changes): 28/29 pass. The one remaining failure
+(`ask.spec.ts`'s five-summary-variants spec) is pre-existing, reproduces identically on a checkout
+without this session's changes, and is outside F6's own surface (Ask/decision-log content,
+untouched by anything in this round) — left exactly as found and documented in backend/PROGRESS.md's
+"round 6" rather than chased inside this milestone.
 
 ## Updating this file
 

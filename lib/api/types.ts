@@ -156,6 +156,24 @@ export type KeyDocumentRow = components["schemas"]["KeyDocumentRow"];
 export type VendorContactRow = components["schemas"]["VendorContactRow"];
 export type DeviationResolutionRow = components["schemas"]["DeviationResolutionRow"];
 
+// --- Vendor Reliability Graph (F6, FR-VRG) -------------------------------
+
+export type PartyOut = components["schemas"]["PartyOut"];
+export type PartyType = PartyOut["type"];
+export type VendorMetricOut = components["schemas"]["VendorMetricOut"];
+export type VendorMetricName = VendorMetricOut["metric"];
+export type VendorReliabilityOut = components["schemas"]["VendorReliabilityOut"];
+export type VendorReliabilityHistoryOut = components["schemas"]["VendorReliabilityHistoryOut"];
+export type PartyOrganisationMappingOut = components["schemas"]["PartyOrganisationMappingOut"];
+
+// `GET /projects` — org-scoped surfaces (Vendors among them) need "any
+// project in this org" to resolve ontology terms / archetype codes against
+// (READ FIRST note: `GET /parties` is org-scoped but ontology-terms
+// discovery is still project-scoped, and the term/archetype set doesn't
+// vary by which project is picked). No prior milestone needed this alias —
+// every project-scoped surface gets its own `projectId` from the URL.
+export type ProjectOut = components["schemas"]["ProjectOut"];
+
 // `ExportBlockedCommitment` (app/reports/schema.py) is never used as a
 // response_model — app/api/reports.py's export_report constructs the 409
 // body as a raw dict passed to HTTPException(detail=...), so

@@ -1,5 +1,7 @@
-import { SurfacePlaceholder } from "@/components/app-shell/surface-placeholder";
+"use client";
+
+import { VendorsView } from "@/components/vendors/vendors-view";
 
 export default function VendorsPage() {
-  return <SurfacePlaceholder title="Vendor Reliability Graph" milestone="F6" />;
+  return <VendorsView />;
 }
