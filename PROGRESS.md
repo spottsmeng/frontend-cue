@@ -635,6 +635,18 @@ push because this session's own sandbox already had `bge-m3` pulled by the time
 `e2e/ask.spec.ts` was written and run — the gap was in the *CI* environment specifically, never
 exercised until a real workflow run.
 
+**That fix was correct but incomplete — confirmed by watching the next real CI run rather than
+assuming green.** The `bge-m3` pull itself succeeded cleanly (no `embedding sweep failed` trace at
+all in that run's log, unlike the first), but the same document-grounded-answer test still missed
+its own budget. Root cause this time: CI's `ubuntu-latest` runner is 2 vCPUs with no GPU, and
+Playwright's own log line ("`Running 25 tests using 2 workers`") confirms a second worker's browser
+is genuinely competing with Ollama inference for those same two cores — a fundamentally slower
+environment than a developer machine, not a logic bug. The original 100s budget (already generous
+by local standards, where this test passes in well under 45s) wasn't enough there. Widened every
+answer-wait in `e2e/ask.spec.ts` to 220s (`test.setTimeout` to 240s) — comfortably inside the `e2e`
+job's own 25-minute ceiling even with `playwright.config.ts`'s CI-only `retries: 1`, since every
+other spec in the suite runs in seconds.
+
 **Testing**: `pnpm test` (Vitest, 74 passing across 19 files, up from 64) —
 `lib/ask/citation-routing.test.ts` (this milestone's own TESTING EXPECTATION: all six
 `CitationSourceType` values, including the two `unavailable` ones) and

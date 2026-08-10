@@ -29,14 +29,21 @@ async function login(page: Page, email: string) {
  * already gives.
  */
 test.describe.serial("Ask (F5)", () => {
-  // The local reasoning model (qwen2.5:32b via Ollama, CLAUDE.md's Models
-  // table) is a real 32B-parameter model with no production-grade serving
-  // infra behind it in dev — `classify_intent` plus retrieval plus answer
-  // generation routinely takes well past Playwright's own 30s default test
-  // timeout, confirmed by watching this suite actually time out against the
-  // real backend rather than assumed. NFR-PRF-04's p95 ≤ 8s budget is a
-  // production-model (claude-opus-5) target, not a local-Ollama one.
-  test.setTimeout(120_000);
+  // Every test here makes at least one real Ollama call (`classify_intent`
+  // plus, for a real answer, retrieval + answer generation) — no mock/fake
+  // seam, this project's own testing philosophy. Confirmed by direct
+  // reproduction against the real backend, not assumed: locally (macOS,
+  // `--workers=1`, no contention) this suite passes well inside 45s per
+  // test; on CI's `ubuntu-latest` runner (2 vCPUs, no GPU, `2 workers` per
+  // playwright.config.ts's own log line, so Ollama inference competes with
+  // a second Playwright worker's own browser for the same two cores) the
+  // exact same question against the exact same model missed even a 100s
+  // budget. This is a raw compute/contention gap, not a logical bug —
+  // widened generously (`test.setTimeout` plus every answer-wait) rather
+  // than guessed at a second time; CI's own `e2e` job has a 25-minute
+  // outer ceiling and the rest of this suite runs in seconds, so there is
+  // ample room even with `playwright.config.ts`'s own `retries: 1` on CI.
+  test.setTimeout(240_000);
 
   test.beforeEach(async ({ page }) => {
     await login(page, seed.email);
@@ -57,7 +64,7 @@ test.describe.serial("Ask (F5)", () => {
     // answer (caught by watching this test actually fail against the real
     // backend, not assumed).
     const citation = page.getByRole("link", { name: /^Document \(v\d+\)/ }).first();
-    await expect(citation).toBeVisible({ timeout: 100_000 });
+    await expect(citation).toBeVisible({ timeout: 220_000 });
 
     await citation.click();
     // Lands on F4's own document detail page, resolved from only the
@@ -75,7 +82,7 @@ test.describe.serial("Ask (F5)", () => {
     await page.getByLabel("Ask a question").fill("What is the capital of France?");
     await page.locator("form").getByRole("button", { name: "Ask" }).click();
 
-    await expect(page.getByText("I don’t have evidence for that")).toBeVisible({ timeout: 100_000 });
+    await expect(page.getByText("I don’t have evidence for that")).toBeVisible({ timeout: 220_000 });
     await expect(page.getByText("CUE can’t do that yet")).toHaveCount(0);
   });
 
@@ -85,7 +92,7 @@ test.describe.serial("Ask (F5)", () => {
     await page.getByLabel("Ask a question").fill("Please chase the vendor for an update on the LED wall rental.");
     await page.locator("form").getByRole("button", { name: "Ask" }).click();
 
-    await expect(page.getByText("CUE can’t do that yet")).toBeVisible({ timeout: 100_000 });
+    await expect(page.getByText("CUE can’t do that yet")).toBeVisible({ timeout: 220_000 });
     await expect(page.getByText("I don’t have evidence for that")).toHaveCount(0);
     const link = page.getByRole("link", { name: /Open the commitment in Living WIP/ });
     await expect(link).toBeVisible();
@@ -103,7 +110,7 @@ test.describe.serial("Ask (F5)", () => {
     expect(firstBody.conversation_id).toBeTruthy();
 
     await expect(page.getByText("Follow-up questions use this conversation's own context.")).toBeVisible({
-      timeout: 100_000,
+      timeout: 220_000,
     });
 
     const secondRequest = page.waitForRequest((r) => r.url().includes("/ask/query") && r.method() === "POST");
@@ -115,7 +122,7 @@ test.describe.serial("Ask (F5)", () => {
     expect(secondBody.conversation_id).toBe(firstBody.conversation_id);
 
     // "New conversation" actually drops it — the next call omits conversation_id.
-    await expect(page.getByRole("button", { name: "New conversation" })).toBeVisible({ timeout: 100_000 });
+    await expect(page.getByRole("button", { name: "New conversation" })).toBeVisible({ timeout: 220_000 });
     await page.getByRole("button", { name: "New conversation" }).click();
     const thirdRequest = page.waitForRequest((r) => r.url().includes("/ask/query") && r.method() === "POST");
     await page.getByLabel("Ask a question").fill("What is outstanding on this project?");
@@ -162,7 +169,7 @@ test.describe.serial("Ask (F5)", () => {
     await page.getByRole("button", { name: "Successor brief" }).click();
     await page.getByRole("button", { name: "Generate successor brief" }).click();
 
-    await expect(page.getByText(/Generated /)).toBeVisible({ timeout: 100_000 });
+    await expect(page.getByText(/Generated /)).toBeVisible({ timeout: 220_000 });
 
     const briefRoot = page.locator("div").filter({ hasText: "Open commitments" }).first();
     await expect(briefRoot.getByText("Stage rigging safety certification")).toBeVisible();
