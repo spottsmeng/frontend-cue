@@ -135,6 +135,27 @@ export interface DocumentsErrorBody {
   detail: string;
 }
 
+// --- Ask (F5, §12.5 / FR-ASK) --------------------------------------------
+
+export type Citation = components["schemas"]["Citation"];
+export type CitationSourceType = Citation["source_type"];
+export type AskAnswer = components["schemas"]["AskAnswerOut"];
+export type AskRefusalKind = NonNullable<AskAnswer["refusal_kind"]>;
+export type AskSummaryVariant = components["schemas"]["AskSummaryRequest"]["variant"];
+export type AskSummaryOut = components["schemas"]["AskSummaryOut"];
+export type ProjectStatusSummary = components["schemas"]["ProjectStatusSummary"];
+export type AskVendorStatusSummary = components["schemas"]["AskVendorStatusSummary"];
+export type PeriodDigestSummary = components["schemas"]["PeriodDigestSummary"];
+export type DecisionHistorySummary = components["schemas"]["DecisionHistorySummary"];
+export type OutstandingActionsSummary = components["schemas"]["OutstandingActionsSummary"];
+export type OutstandingActionsByOwner = components["schemas"]["OutstandingActionsByOwner"];
+export type OutstandingActionsByWindow = components["schemas"]["OutstandingActionsByWindow"];
+export type DueWindow = OutstandingActionsByWindow["window"];
+export type SuccessorBrief = components["schemas"]["SuccessorBriefOut"];
+export type KeyDocumentRow = components["schemas"]["KeyDocumentRow"];
+export type VendorContactRow = components["schemas"]["VendorContactRow"];
+export type DeviationResolutionRow = components["schemas"]["DeviationResolutionRow"];
+
 // `ExportBlockedCommitment` (app/reports/schema.py) is never used as a
 // response_model — app/api/reports.py's export_report constructs the 409
 // body as a raw dict passed to HTTPException(detail=...), so

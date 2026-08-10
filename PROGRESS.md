@@ -30,7 +30,7 @@ session's job, triggered by real mobile work starting, not by convenience.
 | F2 | Production Twin visualisation | `Prompt F2 — Production Twin visualisation.txt` | FR-TWN | F0 | Done (2026-08-10) |
 | F3 | Foresight — risks, deviations, escalation | `Prompt F3 — Foresight, Risks and Deviations.txt` | FR-FOR; FR-DEV; FR-NTF | F0 | Done (2026-08-10) |
 | F4 | Documents | `Prompt F4 — Documents.txt` | FR-DOC | F0 | Done (2026-08-10) |
-| F5 | Ask & Successor Brief | `Prompt F5 — Ask and Successor Brief.txt` | §12.5; FR-ASK | F0 | Not started |
+| F5 | Ask & Successor Brief | `Prompt F5 — Ask and Successor Brief.txt` | §12.5; FR-ASK | F0 | Done (2026-08-10) |
 | F6 | Vendor Reliability Graph | `Prompt F6 — Vendor Reliability Graph.txt` | FR-VRG | F0 | Not started |
 | F7 | Admin console | `Prompt F7 — Admin console.txt` | §6.14 FR-ADM; channel/consent/retention | F0 | Not started |
 | F8 | Analytics dashboard | `Prompt F8 — Analytics dashboard.txt` | §13 | F0, and partially F1/F3/F6 for data sources | Not started |
@@ -511,6 +511,145 @@ target document. `pnpm typecheck`/`pnpm lint`/`pnpm build` all clean; full `pnpm
 (a `dev-login` race between concurrently-running `global-setup` seed scripts, not a documents
 regression) reproduced as a clean pass when re-run alone, confirming no regression in F1–F3's own
 already-Done surfaces from the risk-card change or the backend schema/endpoint addition.
+
+## F5 notes (2026-08-10)
+
+**Route/composition decision**: one page, three tabs (`components/ask/ask-view.tsx`) — chat, five
+summary variants, Successor Brief — rather than three separate routes. The prompt's own WHAT TO
+BUILD lists them as three distinct capabilities but never asks for three URLs, and all three share
+one thing worth keeping in one place: a single `openCommitmentId` piece of state backing one
+`CommitmentDetailPanel` (F1's own drawer, reused directly), so a citation opened from a chat answer,
+a summary row, or a brief section all land on the exact same surface. Chat state (turns,
+`conversationId`) lives in `ChatView` itself, not lifted to `AskView` — nothing outside the chat tab
+needs it.
+
+**Citation routing, per source_type — `lib/ask/citation-routing.ts` + `components/ask/
+citation-chip.tsx`**: `commitment` opens F1's drawer directly; `deviation`/`budget` land on the
+surface that owns that data (Foresight / Living WIP) since neither has a per-row deep-link target
+yet (same "plain navigation, not a query-param deep link" call F3's own notes already made for
+Risk/Deviation cards); `document_version` needs an async resolve (see the backend gap below) so it's
+its own `CitationRoute` kind, not treated as synchronous; `audit_log` and `evidence` render as
+inert "not yet available" chips with the reason in a `title` tooltip, never a fabricated link — see
+the backend-gap entry below for why. All six values are covered by name in
+`lib/ask/citation-routing.test.ts` (this milestone's own TESTING EXPECTATION), not just the four
+that resolve to a real page.
+
+**Real backend gap found and closed — `GET /projects/{project_id}/documents/versions/{version_id}`**
+(`app/api/documents.py`, no new response schema — `DocumentVersionOut` already carries
+`document_id`). A `document_version`-typed `Citation` (app/ask/schema.py) only ever carries the
+DocumentVersion's own id, confirmed by reading `app/ask/answer.py`'s `_resolve_citation` directly —
+every other version route in that router is nested under `/{document_id}/versions/{version_id}` and
+needs both ids, which the citation doesn't have. Same Class A gap shape (frontend/CLAUDE.md's own
+gap-audit section) as round 3's `OntologyTermOut.id` and round 4's `SpecClaimResolvedOut`; closed
+the same way, on the spot. `lib/ask/hooks.ts`'s `useResolveDocumentVersionQuery` backs
+`CitationChip`'s own small loading state around the resolve. See `backend/PROGRESS.md`'s "round 5"
+for the full writeup and `tests/test_frontend_enablement_f5.py` for the backend tests (513 passing,
+up from 511).
+
+**Real backend gap found, deliberately left open — `audit_log` citations have no routing target at
+all, not just no actor name.** This milestone's own NON-OBVIOUS note already named the actor-name
+half (`Citation.label` is always null for this type, `AuditLog.actor_id` has no resolver anywhere).
+Reading `_resolve_citation` further: the `Citation` for an `audit_log` hit carries only the
+`AuditLog` row's own id — never `commitment_id`, which the row does have
+(`app/models/audit.py`: `NOT NULL`) — and no endpoint resolves one to the other, so there's no way
+to route to the commitment the log entry is even about, regardless of the actor problem. Closing
+this would mean a second small resolver endpoint in the same shape as the document_version one
+above; judged worth flagging rather than adding this session, since (unlike the document_version
+gap) nothing in this milestone's own WHAT TO BUILD specifically depends on it and the prompt's own
+NON-OBVIOUS note already anticipated leaving it as a named gap ("a real, named backend gap to flag
+... not something to route around"). `routeCitation` returns `unavailable` for it, with the reason
+in the chip's tooltip.
+
+**`AskVendorStatusSummary` reused Living WIP's `VendorStatusPanel` component directly, unmodified**
+(`components/ask/summaries/vendor-status-summary.tsx`) — the backend schema
+(`{vendors, reliability_data_available}`) is byte-identical to `VendorStatusSection`, confirmed by
+reading `app/ask/schema.py` before writing any UI, per this milestone's own instruction not to build
+a parallel renderer. `DecisionLogRow`/`RiskLogRow` list-item rendering were extracted out of F1's own
+`sections/decision-log-section.tsx` / `sections/risk-and-issues-section.tsx` into standalone
+`components/living-wip/decision-log-row.tsx` / `risk-log-row.tsx` (both now import the extracted
+component instead of inlining the same JSX) so the Successor Brief's decision-history and risks
+sections reuse the exact same rows rather than a second copy — same reuse instruction, applied to
+the two report-composer row shapes that didn't already have a standalone component.
+
+**Summaries are auto-loading tabs, not a "generate" button per variant** — `useAskSummaryQuery`
+(`lib/ask/hooks.ts`) wraps the `POST .../ask/summarise` call in a `useQuery`, not a mutation, so
+switching tabs fetches immediately (same shape `useReportQuery` already gives Living WIP), except
+`period_digest`: the only variant needing caller-supplied dates, so it owns a small date-range form
+(defaulting to the trailing 30 days) and its own self-contained query rather than the shared
+tab-switch-triggers-fetch pattern the other four use.
+
+**Successor Brief is a real mutation-on-click, not a query that loads on mount** — matches §12.5's
+"one control" framing literally: nothing renders until "Generate successor brief" is clicked, since
+the backend endpoint takes no request body at all (confirmed against `app/api/ask.py` directly, per
+this milestone's own instruction to check before assuming). A "Regenerate" affordance re-fires the
+same mutation once a brief is showing.
+
+**A real, live race condition found and fixed while writing `e2e/ask.spec.ts` against the real
+backend, not inferred from reading the code** — `components/ask/chat-view.tsx`'s "New conversation"
+button reset `conversationId` to `null`, but a *previous* question's response could still be in
+flight at that moment (a real 32B local reasoning model isn't fast); when it landed, its own
+`onSuccess` unconditionally called `setConversationId(data.conversation_id)`, silently reviving the
+old conversation's id right after the user had asked for a fresh one. Caught by a Playwright run
+that clicked "New conversation" immediately after firing a second question and asserted the *next*
+request's `conversation_id` was `null` — it wasn't. Fixed with an `epochRef` bumped on every reset;
+a mutation's `onSuccess`/`onError` now checks the epoch it was asked under against the current one
+and no-ops if they've diverged, the same "ignore a stale response after the state it belongs to is
+gone" shape a search-as-you-type debounce needs, applied here to a chat reset instead.
+
+**`scripts/seed_dev_data.py` now ends with a real call to `app/ask/embed_worker.py`'s
+`run_embedding_sweep()`** — the only thing that ever populates `RetrievalChunk` (Evidence/AuditLog
+text) or `DocumentVersion.embedding`, normally an arq cron tick on real elapsed time, the same "not
+something Playwright can wait on" gap F3's own risk fixtures and F4's own `contradicts` fixture
+already work around, applied here to Ask's retrieval index instead of a foresight/documents fixture.
+`DocumentVersion.search_vector` needs no such help (a `GENERATED` column, live the instant a version
+is inserted) — confirmed by watching `e2e/ask.spec.ts`'s own document-grounded-answer test pass
+before the embedding sweep's model dependency (`bge-m3`, below) was even available, since that test
+deliberately only needs lexical document search. Real Evidence/AuditLog-citation coverage does need
+the sweep to have run at least once; covered at the unit level for all six `source_type` values
+regardless (`lib/ask/citation-routing.test.ts`), and this session confirmed the sweep itself succeeds
+end-to-end (373 rows embedded from one seed run) once its model was actually available — see next.
+
+**Environment note, not a code gap**: `app/ask/config.py`'s `EmbeddingSettings` defaults to
+`bge-m3` (matching `DocumentVersion.embedding`/`RetrievalChunk.embedding`'s hardcoded `Vector(1024)`
+column width — `nomic-embed-text`, the only other embedding model already pulled into this
+environment's local Ollama, is 768-dim and would fail on insert, not a drop-in swap), but `bge-m3`
+itself hadn't been pulled yet in this sandbox. Pulled it during this session (`ollama pull bge-m3`,
+retried once after a transient network timeout at 5%) rather than working around it — this is
+infra state, not application behaviour, so there was nothing to "fix" in the repo, just a one-time
+local setup step future sessions in a fresh sandbox may need to repeat.
+
+**Testing**: `pnpm test` (Vitest, 74 passing across 19 files, up from 64) —
+`lib/ask/citation-routing.test.ts` (this milestone's own TESTING EXPECTATION: all six
+`CitationSourceType` values, including the two `unavailable` ones) and
+`components/ask/refusal-message.test.tsx` (the two refusal kinds render distinctly, never the same
+generic shell — this milestone's own other named TESTING EXPECTATION). `pnpm test:e2e`
+(`e2e/ask.spec.ts`, `test.describe.serial`, 6 specs, real Ollama qwen2.5:32b reasoning + bge-m3
+embeddings, no mocks) covers, against the real backend: a document-grounded question producing a
+real cited answer whose citation opens the real document (resolved via this session's own
+`GET .../documents/versions/{version_id}` addition); a question with no supporting evidence
+producing the honest `no_citable_source` refusal; an action-shaped question ("please chase the
+vendor...", FR-ASK-06's own example) producing `action_not_yet_supported`, asserted visibly distinct
+from the no-evidence refusal; a follow-up reusing the first answer's real `conversation_id` (asserted
+at the network-request level, not inferred from UI text, so it doesn't depend on the model's actual
+answer content) and "New conversation" genuinely dropping it afterward; each of the five summary
+variants rendering against the real seeded project; and a full Successor Brief covering every named
+section with real content, including a deviation row whose `resolution_owner` — if another spec's
+own test had already resolved it — reads as a real member name, never a raw UUID. Every answer/
+refusal assertion carries a generous timeout (up to 100s): a 32B local reasoning model with no
+production serving infra behind it routinely exceeds Playwright's own 30s default, confirmed by
+watching this suite actually time out before raising the budget, not assumed from NFR-PRF-04's
+production-model figures. `pnpm typecheck` / `pnpm lint` / `pnpm build` all clean; the full
+`pnpm test:e2e` suite (F0–F5, 25 specs) run together confirms zero regression in F1–F4's own
+already-Done surfaces from the shared-component extraction (`decision-log-row.tsx`/
+`risk-log-row.tsx`) or the backend schema/endpoint addition — all 19 of those pass clean under the
+6-way parallel run. `e2e/ask.spec.ts` itself is real-LLM-heavy in a way no earlier spec is (every
+one of its 6 tests makes at least one live call to the same local Ollama instance for
+`classify_intent`/answer generation/embeddings), and one of its tests missed its own 100s budget
+under that 6-way parallel run specifically (aborting the rest of its `describe.serial` block as a
+result) — the same "flaky only under N-way parallel contention, not a real regression" mode F4's own
+notes already documented for `foresight.spec.ts`, not a new problem. Confirmed, not just assumed:
+`e2e/ask.spec.ts` run alone (`--workers=1`) passed all 6 specs cleanly three separate times across
+this session, including immediately after the full-suite run that saw the one contended failure.
 
 ## Updating this file
 

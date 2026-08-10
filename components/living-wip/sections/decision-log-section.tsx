@@ -1,6 +1,7 @@
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import type { DecisionAndApprovalLogSection as DecisionAndApprovalLogSectionT } from "@/lib/api/types";
 
+import { DecisionLogRow } from "../decision-log-row";
 import { EmptyState } from "../empty-state";
 import { ProvenanceChip } from "../provenance-chip";
 import { SectionPanel } from "../section-panel";
@@ -55,24 +56,7 @@ export function DecisionLogPanel({
               </p>
               <ul className="flex flex-col gap-1.5">
                 {section.decisions.map((d) => (
-                  <li key={d.audit_log_id} className="rounded-md border border-border p-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <button
-                        type="button"
-                        onClick={() => onOpenCommitment(d.commitment_id)}
-                        className="text-signal hover:underline"
-                      >
-                        {d.action}
-                      </button>
-                      <ProvenanceChip provenance={[d.provenance]} onOpenCommitment={onOpenCommitment} />
-                    </div>
-                    <p className="mt-0.5 font-mono text-xs text-ink-muted">
-                      {d.from_state && d.to_state
-                        ? `${d.from_state} → ${d.to_state} · `
-                        : ""}
-                      {formatDateTime(d.occurred_at)}
-                    </p>
-                  </li>
+                  <DecisionLogRow key={d.audit_log_id} decision={d} onOpenCommitment={onOpenCommitment} />
                 ))}
               </ul>
             </div>

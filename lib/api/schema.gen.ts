@@ -1072,6 +1072,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{project_id}/documents/versions/{version_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Version
+         * @description Frontend-enablement addition (F5, Ask citation routing): a
+         *     `document_version`-typed Citation (app/ask/schema.py) only ever carries
+         *     the DocumentVersion's own id, never its parent document_id — every other
+         *     version route needs both ids in the URL already. `DocumentVersionOut`
+         *     already carries `document_id` itself, so this is a plain lookup by
+         *     version id alone, no new response shape needed (contrast with the
+         *     `/spec-claims/{spec_claim_id}` resolver just above, which did need one).
+         *     Registered ahead of `/{document_id}` for the same reason `/search` and
+         *     `/spec-claims/{spec_claim_id}` are — "versions" must never be parsed as a
+         *     document_id path segment.
+         */
+        get: operations["read_version_projects__project_id__documents_versions__version_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects/{project_id}/documents/{document_id}": {
         parameters: {
             query?: never;
@@ -6678,6 +6707,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SpecClaimResolvedOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_version_projects__project_id__documents_versions__version_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentVersionOut"];
                 };
             };
             /** @description Validation Error */

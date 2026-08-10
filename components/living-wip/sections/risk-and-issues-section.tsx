@@ -2,7 +2,7 @@ import type { MembershipRole, RiskAndIssuesSection as RiskAndIssuesSectionT } fr
 
 import { DeviationRow } from "../deviation-row";
 import { EmptyState } from "../empty-state";
-import { ProvenanceChip } from "../provenance-chip";
+import { RiskLogRow } from "../risk-log-row";
 import { SectionPanel } from "../section-panel";
 
 /**
@@ -38,16 +38,7 @@ export function RiskAndIssuesPanel({
               <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">Risks</p>
               <ul className="flex flex-col gap-1.5">
                 {section.risks.map((r) => (
-                  <li key={r.risk_id} className="rounded-md border border-border p-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm text-ink">{r.downstream_consequence}</p>
-                      <ProvenanceChip provenance={[r.provenance]} onOpenCommitment={onOpenCommitment} />
-                    </div>
-                    <p className="mt-1 font-mono text-xs text-ink-muted">
-                      {r.source} · {r.severity} · {r.status}
-                      {r.base_rate !== null && ` · base rate ${(r.base_rate * 100).toFixed(0)}%`}
-                    </p>
-                  </li>
+                  <RiskLogRow key={r.risk_id} risk={r} onOpenCommitment={onOpenCommitment} />
                 ))}
               </ul>
             </div>
