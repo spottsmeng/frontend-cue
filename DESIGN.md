@@ -78,6 +78,61 @@ mistaken for one another even at a glance, not just in theory:
 | `verify-verified` | `human_verified` | `signal` (trust signal, not delivery status) |
 | `verify-corrected` | `human_corrected` | `dusk` |
 
+## Charting
+
+**One technique, one shared component layer, for every chart in the app: `components/charts/`,
+built on visx.** `ThemedLineChart` (`components/charts/themed-line-chart.tsx`) is the single
+primitive every chart in this codebase renders through — F8's multi-series analytics trends and
+F6's single-series vendor metric history alike — themed entirely against these tokens, never a
+pre-styled kit fighting them. A single-series caller just passes a one-element `series` array;
+`ChartLegend` itself renders nothing below two items, so a lone series needs no extra handling.
+Don't reach for a second technique for a future chart, no matter how small — extend this layer
+instead of hand-rolling a new `<svg>`.
+
+(History, since a future session may find the reasoning referenced elsewhere: F8 originally
+introduced visx for its own genuinely multi-series charts only, deliberately leaving F6's original
+dependency-free `<svg>`/`<polyline>` sparkline — and Twin's timeline, which was never SVG at all,
+just a plain `<ol>` — untouched, citing `CUE-Tech-Stack.md §4`'s "twenty lines of code, not a
+library" reasoning at F6's original, genuinely small scale. F6's sparkline was retrofitted to
+`ThemedLineChart` in a later pass, once literal single-technique uniformity became the explicit,
+stated goal — see `frontend/PROGRESS.md`'s F8 notes for the full account of both decisions. Twin's
+timeline was never in scope for this policy either way — it's a chronological list, not a chart.)
+
+Theming idiom for visx marks: Tailwind utility classes on SVG elements (`stroke-chart-2`,
+`fill-chart-2`), never a raw `var(--color-*)` inline style — except where visx needs a literal JS
+color value (a `scaleOrdinal` range array), where `getComputedStyle` reads the resolved custom
+property at runtime rather than a hand-copied hex.
+
+**Categorical chart palette.** The brand triad is deliberately *not* a categorical palette (three
+hues, and two of the three — `signal`/`dusk` — already double as verification-chip colors) and the
+status quad is reserved. A real multi-series chart needs its own set, validated the same way `dusk`
+itself was re-stepped after failing its first CVD check:
+
+| Token | Hue family | Light | Dark |
+|---|---|---|---|
+| `chart-1` | orange | `#EB6834` | `#D95926` |
+| `chart-2` | aqua | `#1BAF7A` | `#199E70` |
+| `chart-3` | yellow | `#EDA100` | `#C98500` |
+| `chart-4` | green | `#008300` | `#008300` |
+| `chart-5` | red | `#E34948` | `#E66767` |
+
+Assigned in this fixed order, never cycled or reassigned when a filter changes which projects are
+shown (`dataviz` skill: "color follows the entity, never its rank"). Validated against this file's
+own surfaces (`#FFFFFF` light / `#12151B` dark) with `validate_palette.js`, `--pairs adjacent` (the
+correct test for a line chart — lines are compared as legend-order neighbours, not scattered marks
+freely adjacent to one another): worst adjacent CVD ΔE 7.2 light / 6.9 dark (protan) — the 6–8 floor
+band, legal only with secondary encoding, which every chart in the app ships unconditionally
+(chart + legend + an exact-numbers table/list, never the chart alone) — and worst adjacent
+normal-vision ΔE 22.9 light / 19.8 dark, both clear of the 15 floor. `chart-2`/`chart-3` sit under
+3:1 contrast on the light surface by design (WARN, same relief rule as `warning`/`serious` above);
+the mandatory legend + table is the relief, not an afterthought. `chart-4`/`chart-5` share a hue
+family with `good`/`critical` — deliberately validated as distinct steps for a genuinely different
+axis (project identity, not delivery status), never rendered in the same view as a status chip, so
+the two can't be read as the same signal. Five slots, not eight: past five simultaneous series, fold
+into "Other" or facet rather than stretching the palette further — re-stepping past this point risks
+the normal-vision floor the same way the reference default's own fourth slot does (`dataviz` skill's
+`palette.md`).
+
 ## Type
 
 - **UI + headings: Geist Sans**, one disciplined family across weights — not a second display face.

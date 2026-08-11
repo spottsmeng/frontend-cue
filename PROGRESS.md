@@ -33,7 +33,7 @@ session's job, triggered by real mobile work starting, not by convenience.
 | F5 | Ask & Successor Brief | `Prompt F5 — Ask and Successor Brief.txt` | §12.5; FR-ASK | F0 | Done (2026-08-10) |
 | F6 | Vendor Reliability Graph | `Prompt F6 — Vendor Reliability Graph.txt` | FR-VRG | F0 | Done (2026-08-10) |
 | F7 | Admin console | `Prompt F7 — Admin console.txt` | §6.14 FR-ADM; channel/consent/retention | F0 | Done (2026-08-11) |
-| F8 | Analytics dashboard | `Prompt F8 — Analytics dashboard.txt` | §13 | F0, and partially F1/F3/F6 for data sources | Not started |
+| F8 | Analytics dashboard | `Prompt F8 — Analytics dashboard.txt` | §13 | F0, and partially F1/F3/F6 for data sources | Done (2026-08-11) |
 | F9 | Hardening — accessibility, localisation, perf | `Prompt F9 — Hardening, accessibility and localisation.txt` | §7.6 NFR-ACC; §7.1 NFR-PRF (web-applicable subset) | all of the above | Not started |
 
 F1–F8 do not strictly have to run in table order after F0 — each depends only on F0, not on each
@@ -1026,6 +1026,185 @@ pre-existing, documented flakiness class `backend/PROGRESS.md`'s "round 6" notes
 ("Setting the three `*_PROVIDER=fake` env vars... fixed `living-wip.spec.ts` fully"), reproduces
 identically without any change this session made, and is a CI-parity/local-env concern, not an F7
 regression.
+
+## F8 notes (2026-08-11)
+
+**Charting architecture decision, made explicit rather than left implicit**: this session
+introduces **visx** (`@visx/group`, `@visx/shape`, `@visx/scale`, `@visx/axis`, `@visx/grid`,
+`@visx/responsive`, `@visx/tooltip`, `@visx/event`, each installed individually, never the
+`@visx/visx` meta-package) for genuinely multi-series charts — a real reversal of the
+dependency-free-SVG stance F2's Twin timeline and F6's `metric-history-chart.tsx` sparkline both
+took, citing `CUE-Tech-Stack.md §4`'s "twenty lines of code, not a library." That reasoning still
+holds for what it was applied to (a five-point single-series sparkline, a chronological node list)
+and neither is retrofitted here — both stay exactly as they were, small and already tested. What
+changed is the shape of F8's own data: verification burden and reply rate are genuinely
+multi-series (one line per project, PRD §13's own "per project" framing), which is precisely the
+case the dependency-free approach doesn't scale to gracefully. `frontend/DESIGN.md`'s new
+"Charting" section states this split as a standing rule (hand-rolled SVG for small-N single-series,
+visx for multi-series/dashboard-grade) so a future session doesn't have to infer it from two
+contradicting code comments, and a new `components/charts/` layer (`themed-line-chart.tsx`,
+`chart-legend.tsx`, `chart-colors.ts`, `not-yet-measurable.tsx`) is built once here for every future
+chart to reuse rather than each session re-solving visx-to-token theming from scratch.
+
+**New categorical chart palette**: five tokens (`chart-1`…`chart-5`), added through all three
+`app/globals.css` layers and `DESIGN.md`'s own tables in this same change, validated with the
+`dataviz` skill's `validate_palette.js` against this project's own surfaces (`#FFFFFF` light /
+`#12151B` dark), `--pairs adjacent` (the correct test for a line chart, per the skill's own
+guidance — lines are compared as legend-order neighbours, not scattered marks). Worst adjacent CVD
+ΔE 7.2 light / 6.9 dark (the 6–8 floor band, legal only with secondary encoding — every chart on
+this dashboard ships a legend plus an exact-numbers table unconditionally, so the mitigation is
+real, not aspirational) and worst adjacent normal-vision ΔE 22.9 light / 19.8 dark, both clear of
+the 15 floor. Five slots, not the skill's own eight-hue default — three slots (orange/aqua/yellow)
+were free of the existing brand triad and status quad entirely; the other two (green/red) share a
+hue family with `good`/`critical` but validate as distinct steps for a genuinely different axis
+(project identity, never rendered beside a status chip). Capped at five deliberately: this
+project's realistic project counts (its own dev-seed data runs 1–2 projects) are well inside that,
+and pushing further risks the normal-vision floor the same way the skill's own reference palette's
+fourth slot does.
+
+**Route decision**: `/analytics` (`app/(shell)/analytics/page.tsx`), not `/admin/analytics` — this
+was already decided before this session started, not this session's own call. `TopNav`'s
+`ORG_LINKS` already listed `/analytics` as a top-level, org-scoped entry alongside `/admin` and
+`/vendors` (with its own comment: *"Analytics isn't gated the same way yet — F8's own job"*), and
+the stub page already existed at that path. `AnalyticsPage` is a thin client wrapper matching
+`app/(shell)/vendors/page.tsx`'s own shape (not a Server Component fetching `GET /projects`, the
+original plan's assumption) — `AnalyticsView` fetches its own project list client-side via
+`useAnalyticsProjectsQuery`, avoiding a second, redundant server-side fetch of the same list
+`app/(shell)/layout.tsx` already does for the nav.
+
+**Gating decision**: per-panel, not whole-page. `GET /admin/cost-summary` is
+`require_org_administrator`-gated; `GET .../commitments` and `GET .../writeback` are any-project-
+member-gated — genuinely different access tiers on the same page. `top-nav.tsx`'s `/analytics` link
+stays unconditional (any authenticated user with ≥1 project sees the verification-burden/reply-rate
+panels for their own projects); the cost panel independently renders a named, explainable message
+on 403 (`CostSummaryPermissionError`, mirroring `lib/vendors/hooks.ts`'s `VendorPermissionError`
+pattern exactly) rather than gating the whole route. No changes were needed to
+`app/(shell)/layout.tsx` or `top-nav.tsx` — both already had the right shape waiting.
+
+**Gap-audit (frontend/CLAUDE.md's standing checklist)**: `CostSummaryRow.project_id` is a raw uuid
+on the wire with no embedded label — a real Class A gap. Resolved without a new endpoint: the same
+`GET /projects` fetch every panel already needs gives an id→name map (`projectNameMap`,
+`lib/analytics/hooks.ts`) to join against it. No Class B concerns — this dashboard is entirely
+read-only, no entity-picker forms.
+
+**§13 metrics: which ended up real vs. honestly-blocked, and why.**
+
+Real, live data (3):
+- **Verification burden** — `bucketVerificationBurdenByWeek` (`lib/analytics/aggregate.ts`, unit-
+  tested), fed by a fan-out of `GET .../commitments` across every project the caller can see
+  (`useAnalyticsCommitmentsQuery`). Counts commitments whose `verification_state !== "auto"`,
+  bucketed by the ISO week (Monday-start, UTC) of `created_at` — an arrival count, not a live
+  queue-depth snapshot; documented as such in the aggregate function's own comment.
+- **Write-back reply rate** — `computeWritebackReplyRate`, same fan-out shape over
+  `GET .../writeback`. Per project per week: `sent` = messages with `status === "sent"`, `replied`
+  = of those, `reply_outcome !== null` (both `"transitioned"` and `"escalated"` count as a real
+  reply — only a still-open thread doesn't). A week with zero sent messages has no row at all,
+  never a fabricated 0%.
+- **Cost per active project** — a direct render of `GET /admin/cost-summary`'s already-real rows
+  (this session builds nothing new backend-side, per the prompt's own instruction). `null` vs. real
+  `0.0` kept visually distinct throughout (`"unknown"` vs. `"$0.00"`), per `CostSummaryRow`'s own
+  docstring.
+
+Honestly blocked, each with its own named reason on the dashboard itself
+(`components/analytics/unmeasurable-metrics-panel.tsx`), not a blank space or a silent omission (7):
+coordination overhead and status meeting duration (no product-usage telemetry pipeline or calendar
+integration exists anywhere in this codebase yet), report preparation time (only the export half of
+"WIP opened → exported" is timestamped today), active chats per PM per day (same telemetry gap),
+contingency drawn (`Budget` has no contingency-vs-base split in the schema — flagged here as a real
+open decision for Finance or a future backend session, the same way this prompt's own text asks it
+to be, not resolved unilaterally), commitment capture rate (no real ground-truth corpus exists —
+Phase 0 discovery hasn't run for any live project), and extraction accuracy by slice (decided to
+leave this **absent** rather than wire a live endpoint that shells out to `cue-eval/run_eval.py
+--json` on demand — the prompt's own text names that as a design smell, "re-running eval from a
+dashboard request," and no persisted drift-check table exists yet for a cheap read instead; flagged
+here as a decision for a future backend session, same shape as the `contingency` flag above).
+
+**Testing**: `pnpm test` (Vitest, 105 passing across 22 files, up from 92/21 pre-session) —
+`lib/analytics/aggregate.test.ts` (this milestone's own named TESTING EXPECTATION: "the aggregation
+math — verification-burden weekly bucketing, reply-rate calculation — against fixed input sets with
+known correct output"), covering ISO-week boundary rollover (a Sunday-vs-Monday timestamp landing in
+different buckets, a week crossing a month boundary), `verification_state === "auto"` correctly
+excluded, escalated replies counted the same as transitioned ones, drafts/authorised-but-unsent
+messages excluded from the reply-rate denominator entirely, and no fabricated zero-rows for weeks
+with no traffic. `pnpm typecheck` / `pnpm lint` / `pnpm build` all clean — the production build was
+inspected directly for the five new `chart-*` Tailwind utilities (`stroke-chart-1`…`5`,
+`fill-chart-1`…`5`, `bg-chart-1`…`5`) to confirm the token wiring compiled for real rather than
+silently dropping, the same class of failure `app/globals.css`'s wiped default palette is designed
+to make loud.
+
+`pnpm test:e2e e2e/analytics.spec.ts` (2 specs, `.serial`) against the real backend: green. The
+first spec asserts the dev seed's own 6 real non-auto commitments and 1 real `LLMUsageEvent` row
+(from `scripts/seed_dev_data.py`'s own Ask-index embedding call) render as real numbers, the
+write-back panel shows its honest empty state (no messages sent yet in the fresh seed), then seeds
+real additional activity out-of-band (`page.request` with this session's own bearer token,
+`e2e/admin.spec.ts`'s established pattern) — a manually-created-then-verified commitment, and a
+real draft→authorise→send write-back cycle against local Ollama (`CUE_LLM_*_PROVIDER` unset,
+per this repo's own "dev/test = Ollama only" line — no Anthropic spend) — and confirms, after a
+reload, that verification burden moves 6→7, the reply-rate panel shows the one real sent/unreplied
+message at a real 0% rate, and the cost table's `call_count` moves 1→2 from that same draft call's
+own real LLM usage. The second spec confirms a non-administrator project member still sees the
+trend panels (any-project-member-gated) while the cost panel alone renders its named permission
+message (`CostSummaryPermissionError`, org-administrator-gated) — the per-panel gating decision
+above, proven live, not just typed.
+
+Also ran, per this file's own "re-run the full suite before marking Done" instruction:
+`pnpm test:e2e --grep-invert "Ask|Foresight"` (26 specs across `login`, `documents`, `living-wip`,
+`supersession`, `twin`, `vendors`, `admin`, `analytics` — the slower LLM-heavy Ask/Foresight specs
+excluded from this pass the same way F7's own session scoped its re-run). 24 of 26 passed,
+`analytics.spec.ts`'s own 2 among them; the 2 failures are both pre-existing and untouched by this
+session — `living-wip.spec.ts`'s write-back-draft-compose spec hit the exact same real-Ollama
+timing flakiness `frontend/PROGRESS.md`'s F7 notes already documented and attributed to no
+`CUE_LLM_*_PROVIDER=fake` being set locally, and `login.spec.ts`'s own `getByText("CUE Dev
+Project")` assertion is unscoped enough to match three separate elements (the project-switcher
+button, the page heading, and Next's own route-announcer live region) — a pre-existing test-
+authoring gap this session didn't introduce (this session touched neither file, nor any app-shell
+nav component). Neither is an F8 regression; both are named here rather than silently glossed over,
+the same honesty this row's own dashboard practices about its data. `pnpm test:e2e ask` /
+`foresight` remain in the same "not re-run this session" state F7 already left them in.
+
+## Post-F8: F6 sparkline retrofitted to `ThemedLineChart` (2026-08-11)
+
+F8's own notes above record a deliberate choice not to retrofit F6's `metric-history-chart.tsx`
+sparkline to visx — small, already tested, already working, converting it would've been scope
+creep. That reasoning held for *scale* (a five-point single series doesn't need a charting library)
+but the underlying goal driving the whole visx decision was reframed mid-session: this product is
+being built to compete and sell to multiple prospects, not serve one buyer's internal audit, and
+the ask sharpened from "don't introduce unjustified complexity" to "one consistent charting
+technique across the whole app, full stop, so a reviewer or new hire sees exactly one pattern with
+zero explanation needed." Under that bar, two techniques — however well-documented the split — is
+still two techniques. Retrofitting was cheap (one file, ~140 lines, no dedicated unit test to
+break) and low-risk, so it was done rather than left as a documented exception.
+
+**What changed, concretely**: `components/charts/themed-line-chart.tsx`'s prop type was generalised
+from the analytics-specific `ProjectSeries` (imported from `lib/analytics/aggregate.ts`) to a
+genuinely generic `ChartSeries`/`ChartPoint` shape (`{ id, label, points: [{x, value}] }`) defined
+in the shared chart layer itself, not borrowed from one surface's own domain types — `lib/analytics/
+aggregate.ts`'s own tested public API (`ProjectSeries`, `weekStart`) is untouched; F8's two feature
+components (`verification-burden-chart.tsx`, `writeback-reply-rate-chart.tsx`) each gained a
+three-line mapping step at the render boundary instead. `metric-history-chart.tsx`'s hand-rolled
+`Sparkline` function (the custom `<svg>`/`<polyline>` code) was deleted outright and replaced with
+`ThemedLineChart` fed a single-element series array — a history with fewer than two available
+snapshots still renders no chart (a one-point line has nothing to compare against), same as the
+original `Sparkline`'s own `points.length < 2` gate, just checked at the call site now. The exact-
+values list underneath the chart, and the loading/error/empty-state branches, are byte-for-byte
+unchanged.
+
+`frontend/DESIGN.md`'s "Charting" section was rewritten to state the current, single-technique
+policy as the primary rule, with the F8→F6 history kept as a parenthetical for whoever wonders why
+two separate decisions exist in this file's own edit history. Twin's timeline was never part of
+this policy either way — confirmed again here — it has no SVG in it at all, just a plain `<ol>`.
+
+**Verification**: `pnpm typecheck` / `pnpm lint` / `pnpm test` (105 passing, same count as
+pre-retrofit — no test depended on `Sparkline`'s internals) all clean. `e2e/vendors.spec.ts` was
+re-run live against the real backend and caught a real regression: `ThemedLineChart`'s `AxisLeft`
+now renders real numeric tick labels (the original bare-polyline `Sparkline` had none), and on this
+vendor's real 0–100% history one tick legitimately reads "100%" — the same text the snapshot list
+below already shows for its own reason, so `history-view`'s own `getByText("100%")` assertion (not
+scoped past the whole History section) started matching two elements instead of one. Fixed by
+scoping that spec's assertions to the snapshot `<ul>` specifically, not the section as a whole — a
+real, live-caught interaction between this retrofit and existing test coverage, not a hypothetical
+one left for a future session to discover. `e2e/vendors.spec.ts` (4 specs) and `e2e/analytics.spec.ts`
+(2 specs) both green afterward, against the real backend.
 
 ## Updating this file
 

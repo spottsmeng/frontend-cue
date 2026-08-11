@@ -107,9 +107,16 @@ test.describe.serial("Vendor Reliability Graph (F6)", () => {
     const history = page.locator("section").filter({ has: page.getByRole("heading", { name: "History" }) });
     // MetricHistoryChart defaults to on_time_rate — the seed's own two
     // recompute_vendor_metrics calls (1/1 then 1/2) give it a real,
-    // two-point trend without needing to change the metric picker.
-    await expect(history.getByText("100%")).toBeVisible();
-    await expect(history.getByText("50%")).toBeVisible();
-    await expect(history.locator("li")).toHaveCount(2);
+    // two-point trend without needing to change the metric picker. Scoped
+    // to the snapshot list specifically (not `history` as a whole) since
+    // post-F8's ThemedLineChart retrofit (frontend/PROGRESS.md's Post-F8
+    // notes) legitimately renders "100%" a second time as a real axis tick
+    // label on a 0–100% scale — the list below the chart is still the
+    // assertion's real target, per that same retrofit's own "chart is a
+    // visual aid, the list is the source of truth" discipline.
+    const snapshotList = history.locator("ul");
+    await expect(snapshotList.getByText("100%")).toBeVisible();
+    await expect(snapshotList.getByText("50%")).toBeVisible();
+    await expect(snapshotList.locator("li")).toHaveCount(2);
   });
 });

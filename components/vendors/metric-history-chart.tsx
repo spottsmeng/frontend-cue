@@ -6,50 +6,9 @@ import { formatDateTime } from "@/lib/format";
 import { VendorPermissionError, useVendorReliabilityHistoryQuery } from "@/lib/vendors/hooks";
 import type { VendorMetricName } from "@/lib/api/types";
 
+import { ThemedLineChart } from "@/components/charts/themed-line-chart";
+
 import { METRIC_LABEL, METRIC_NAMES, formatMetricValue } from "./metric-meta";
-
-const CHART_WIDTH = 480;
-const CHART_HEIGHT = 96;
-const CHART_PADDING = 8;
-
-/**
- * A minimal, dependency-free SVG polyline — CUE-Tech-Stack.md §4's own
- * "tens of nodes... twenty lines of code, not a library" reasoning (already
- * applied to Twin's timeline over a graph-visualisation library) extends
- * naturally to a five-point trend line; pulling in a charting dependency
- * for this would be the same kind of premature weight that reasoning
- * already ruled out elsewhere in this codebase. Plotted only over points
- * with a real `value` (`available: true`) — an unavailable snapshot has no
- * y-coordinate to honestly place, never interpolated or shown as zero.
- */
-function Sparkline({ points }: { points: { x: number; y: number }[] }) {
-  if (points.length < 2) return null;
-  const values = points.map((p) => p.y);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min || 1;
-  const usableWidth = CHART_WIDTH - CHART_PADDING * 2;
-  const usableHeight = CHART_HEIGHT - CHART_PADDING * 2;
-
-  const coords = points.map((p, i) => {
-    const x = CHART_PADDING + (i / (points.length - 1)) * usableWidth;
-    const y = CHART_PADDING + usableHeight - ((p.y - min) / span) * usableHeight;
-    return { x, y };
-  });
-
-  return (
-    <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="w-full" role="img" aria-label="Metric trend over time">
-      <polyline
-        points={coords.map((c) => `${c.x},${c.y}`).join(" ")}
-        className="fill-none stroke-signal"
-        strokeWidth={2}
-      />
-      {coords.map((c, i) => (
-        <circle key={i} cx={c.x} cy={c.y} r={3} className="fill-signal" />
-      ))}
-    </svg>
-  );
-}
 
 /**
  * FR-VRG-03's "update continuously" made visible as a trend — every
@@ -57,8 +16,12 @@ function Sparkline({ points }: { points: { x: number; y: number }[] }) {
  * oldest first (append-only, per app/parties/models.py's own docstring,
  * this milestone's own NON-OBVIOUS note). The snapshot list underneath the
  * chart is the honest source of truth (exact value/unavailable-reason per
- * point); the sparkline above it is a visual aid, not the only place the
- * numbers live.
+ * point); the chart above it (`ThemedLineChart`, DESIGN.md's shared visx
+ * primitive — retrofitted here post-F8 for one consistent charting
+ * technique across the app, see frontend/PROGRESS.md's F8 notes) is a
+ * visual aid, not the only place the numbers live. A single-point history
+ * renders no chart at all — a one-point line has nothing to compare
+ * against — the snapshot list below still shows it.
  */
 export function MetricHistoryChart({
   partyId,
@@ -88,7 +51,7 @@ export function MetricHistoryChart({
   const history = data?.history ?? [];
   const points = history
     .filter((h) => h.available && h.value !== null)
-    .map((h) => ({ x: new Date(h.computed_at ?? 0).getTime(), y: h.value as number }));
+    .map((h) => ({ x: h.computed_at ?? "", value: h.value as number }));
 
   return (
     <div className="flex flex-col gap-3">
@@ -113,8 +76,13 @@ export function MetricHistoryChart({
         <p className="text-sm text-ink-muted">No snapshots recorded yet for this metric/segment.</p>
       ) : (
         <>
-          <Sparkline points={points} />
-          {points.length < 2 && (
+          {points.length >= 2 ? (
+            <ThemedLineChart
+              series={[{ id: metric, label: METRIC_LABEL[metric], points }]}
+              valueFormat={(v) => formatMetricValue(metric, v)}
+              ariaLabel="Metric trend over time"
+            />
+          ) : (
             <p className="text-xs text-ink-muted">
               Fewer than two available snapshots — not enough to draw a trend line yet.
             </p>

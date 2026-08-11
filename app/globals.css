@@ -73,6 +73,19 @@
   --verify-verified:  var(--signal);
   --verify-corrected: var(--dusk);
 
+  /* Categorical chart palette — F8, DESIGN.md's own "Charting" section has the
+     full validate_palette.js run (adjacent-pairs, both surfaces). Five slots,
+     fixed order, never cycled — one line per project. Distinct from the brand
+     triad (not a categorical set, and signal/dusk double as verification-chip
+     hues) and from the status quad (chart-4/chart-5 share a hue family with
+     good/critical but are validated as separate steps for a different axis;
+     never shown alongside a status chip). */
+  --chart-1: #EB6834;
+  --chart-2: #1BAF7A;
+  --chart-3: #EDA100;
+  --chart-4: #008300;
+  --chart-5: #E34948;
+
   --shadow-card: 0 1px 2px rgba(20, 23, 28, 0.04), 0 1px 1px rgba(20, 23, 28, 0.03);
   --shadow-pop:  0 8px 24px rgba(20, 23, 28, 0.12), 0 2px 6px rgba(20, 23, 28, 0.06);
 }
@@ -105,6 +118,12 @@
     --critical:      #F06B6B;
     --critical-soft: #3A1717;
 
+    --chart-1: #D95926;
+    --chart-2: #199E70;
+    --chart-3: #C98500;
+    --chart-4: #008300;
+    --chart-5: #E66767;
+
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
     --shadow-pop:  0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
   }
@@ -136,6 +155,12 @@
   --serious-soft:  #3A2418;
   --critical:      #F06B6B;
   --critical-soft: #3A1717;
+
+  --chart-1: #D95926;
+  --chart-2: #199E70;
+  --chart-3: #C98500;
+  --chart-4: #008300;
+  --chart-5: #E66767;
 
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
   --shadow-pop:  0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
@@ -190,6 +215,12 @@
   --color-verify-pending:   var(--verify-pending);
   --color-verify-verified:  var(--verify-verified);
   --color-verify-corrected: var(--verify-corrected);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
 
   --shadow-card: var(--shadow-card);
   --shadow-pop:  var(--shadow-pop);

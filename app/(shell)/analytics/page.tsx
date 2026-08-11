@@ -1,5 +1,7 @@
-import { SurfacePlaceholder } from "@/components/app-shell/surface-placeholder";
+"use client";
+
+import { AnalyticsView } from "@/components/analytics/analytics-view";
 
 export default function AnalyticsPage() {
-  return <SurfacePlaceholder title="Analytics dashboard" milestone="F8" />;
+  return <AnalyticsView />;
 }

@@ -235,3 +235,8 @@ export interface ExportBlockedBody {
     }[];
   };
 }
+
+// --- Analytics dashboard (F8, PRD §13) -----------------------------------
+
+export type CostSummaryOut = components["schemas"]["CostSummaryOut"];
+export type CostSummaryRow = components["schemas"]["CostSummaryRow"];
