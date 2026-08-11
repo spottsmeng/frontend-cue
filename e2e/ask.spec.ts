@@ -157,10 +157,23 @@ test.describe.serial("Ask (F5)", () => {
 
     await page.getByRole("button", { name: "Decision history" }).click();
     // Either a real decision row or the honest empty state — never a blank
-    // panel or a thrown error either way.
-    await expect(
-      page.getByText(/No decisions recorded on this project yet\.|verify|correct/i).first(),
-    ).toBeVisible();
+    // panel or a thrown error either way. Checked structurally (an
+    // empty-state paragraph, or at least one real row), not by matching
+    // specific action-text substrings — a real, root-caused bug this
+    // session found: `AuditLog.action` is a bare string ("state_transition",
+    // "verified", "corrected", "payment_status_updated", app/api/
+    // commitments.py/lifecycle.py), and this test's own project is shared
+    // with every other e2e spec file running concurrently in the same CI
+    // job (living-wip.spec.ts's own verify step, supersession.spec.ts's
+    // confirm step, both real mutations against this same seeded project),
+    // so which specific action word is present when this reads depends on
+    // a real cross-file race, not something this assertion should be
+    // coupled to. The previous regex (`/verify|.../i`) also had a plain
+    // substring bug on top of that — "verify" is not a substring of the
+    // real "verified" action string at all.
+    const decisionEmptyState = page.getByText("No decisions recorded on this project yet.");
+    const decisionRow = page.locator("ul > li").first();
+    await expect(decisionEmptyState.or(decisionRow)).toBeVisible();
 
     await page.getByRole("button", { name: "Outstanding actions" }).click();
     await expect(page.getByText("By owner")).toBeVisible();
