@@ -14,6 +14,16 @@ const API_URL = process.env.NEXT_PUBLIC_CUE_API_URL ?? "http://localhost:8000";
 const orgSuffix = seed.organisationId.replace(/-/g, "").slice(0, 8);
 const pmEmail = `project_manager+${orgSuffix}@cue.dev`;
 
+// The seed script's own LLMUsageEvent row (from run_embedding_sweep, see
+// scripts/seed_dev_data.py) is recorded under whichever provider
+// app/ask/embeddings.py's get_embedding_client() actually resolves —
+// CUE_EMBED_PROVIDER, unset locally (defaults to real Ollama), but set to
+// "fake" by this repo's own CI workflow (.github/workflows/*.yml) to avoid
+// a real model dependency. A real, live bug this session found: this
+// assertion was hardcoded to "ollama" and had never actually passed in CI
+// — F8's own original push already failed here, undiscovered until now.
+const seededProvider = process.env.CUE_EMBED_PROVIDER ?? "ollama";
+
 async function login(page: Page, email: string) {
   await page.goto("/login");
   await page.getByLabel("Organisation ID").fill(seed.organisationId);
@@ -103,7 +113,7 @@ test.describe.serial("Analytics dashboard (F8)", () => {
     const costPanel = page
       .locator("section")
       .filter({ has: page.getByRole("heading", { name: "Cost per active project" }) });
-    await expect(costPanel.getByText("ollama")).toBeVisible();
+    await expect(costPanel.getByText(seededProvider)).toBeVisible();
     await expect(costPanel.getByText(projectName)).toBeVisible();
 
     // --- Not yet measurable: all seven honest blockers, never a blank ----
@@ -201,7 +211,7 @@ test.describe.serial("Analytics dashboard (F8)", () => {
       .locator("section")
       .filter({ has: page.getByRole("heading", { name: "Cost per active project" }) });
     await expect(costPanel.getByText(/administrator only/)).toBeVisible();
-    await expect(costPanel.getByText("ollama")).toHaveCount(0);
+    await expect(costPanel.getByText(seededProvider)).toHaveCount(0);
 
     // Any project member — not just an administrator — can see the trend
     // panels, since GET .../commitments and GET .../writeback are gated on
