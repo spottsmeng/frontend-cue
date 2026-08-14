@@ -1484,16 +1484,34 @@ expose the ordering half of the bug on every run. **The first real pushed-commit
 session did expose it** — `analytics.spec.ts` failed there, `pnpm test:e2e` had been green locally
 moments before. Root-caused from the real CI log (`gh run view --log-failed`), not guessed: fixed by
 looking the seeded project up by its own known name ("CUE Dev Project") instead of trusting array
-order, and updating the hardcoded counts (6→7 baseline, 7→8 after the test's own +1). Re-verified
-locally and via a second real pushed commit before calling this milestone's own CI claim genuine.
+order, and updating the hardcoded counts (6→7 baseline, 7→8 after the test's own +1).
 
-`pnpm test:e2e` (full suite, `--workers=2` matching CI's own concurrency), after that fix: 46 passed,
-2 failed, 5 didn't run (cascading skips from `describe.serial` blocks after their own file's one
-failure) — both remaining failures are the same pre-existing, already-documented real-Ollama timing
-flakiness class `backend/PROGRESS.md`'s and this file's own F7 notes already document at length
-(`e2e/ask.spec.ts`, `e2e/living-wip.spec.ts`'s write-back-draft spec) — this session ran locally
-against real Ollama, per this project's own dev-cost posture; CI's own `FakeClient` provider doesn't
-have this problem, confirmed by the real CI run itself passing both.
+**That fix (commit `bacdd43`) still left CI red — on a second, different, real bug in the same
+spec**: `costPanel.getByText("ollama")`, hardcoded since F8, never actually verified against a
+genuinely green CI run — F8's own original push (`31453276435`) had already failed CI too,
+undiscovered until this session went back and checked. Root cause: GitHub Actions runners cannot run
+a real Ollama model, so this repo's own CI workflow sets `CUE_EMBED_PROVIDER=fake` for the whole e2e
+job (a structural necessity, not a shortcut this session introduced) — meaning the seed script's own
+`LLMUsageEvent` row (`run_embedding_sweep`, via `app/ask/embeddings.py`'s `get_embedding_client()`)
+is genuinely recorded under `provider="fake"` in CI, never `"ollama"`. Fixed by asserting on
+`process.env.CUE_EMBED_PROVIDER ?? "ollama"` — the actual configured provider — instead of a
+hardcoded literal, correct under both real local Ollama (unset → `"ollama"`) and CI's fake provider
+(`"fake"`). Verified locally against the real Ollama-backed stack only (2/2 passing) — deliberately
+did not try to reproduce CI's fake-provider condition on the local dev backend, since that would mean
+running this project's own local e2e testing against a mocked LLM, contrary to this file's own stated
+dev-cost posture; CI's own run, which always and structurally runs under fake providers, is the
+correct and sufficient place to verify that branch. Pushed as commit `1f30914`; CI run `31802756403`
+genuinely green on both jobs (confirmed via `gh run watch --exit-status`), closing this milestone's CI
+claim for real.
+
+`pnpm test:e2e` (full suite, `--workers=2` matching CI's own concurrency), against real local Ollama,
+after both fixes: 46 passed, 2 failed, 5 didn't run (cascading skips from `describe.serial` blocks
+after their own file's one failure) — both remaining failures are the same pre-existing,
+already-documented real-Ollama timing/local-state flakiness class `backend/PROGRESS.md`'s and this
+file's own F7 notes already document at length (`e2e/ask.spec.ts`, `e2e/living-wip.spec.ts`'s
+write-back-draft spec) — this session ran locally against real Ollama, per this project's own
+dev-cost posture; CI's own `FakeClient` provider doesn't have this problem, confirmed by the real CI
+run itself (`31802756403`) passing both jobs cleanly.
 
 `e2e/hardening.spec.ts` (8 specs) and `e2e/a11y.spec.ts` (8 specs) — the 16 specs this session itself
 added — all pass cleanly and reproducibly (re-run clean multiple times during debugging, not a
