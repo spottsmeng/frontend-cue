@@ -1,0 +1,190 @@
+{
+  "verification": {
+    "auto": "Auto",
+    "pendingVerification": "Pending verification",
+    "verified": "Verified",
+    "corrected": "Corrected"
+  },
+  "reportField": {
+    "notAvailable": "Not available",
+    "noSourceRecorded": "no source recorded"
+  },
+  "budgetReviseForm": {
+    "reviseBudget": "Revise budget",
+    "newApprovedAmount": "New approved amount",
+    "currency": "Currency",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveError": "Could not save."
+  },
+  "commitmentDetail": {
+    "title": "Commitment",
+    "loading": "Loading…",
+    "statePrefix": "State:",
+    "verifiedAt": "verified {date}",
+    "evidence": "Evidence",
+    "correctAndConfirm": "Correct & confirm",
+    "deliverable": "Deliverable",
+    "deliverableOriginal": "Deliverable (original language)",
+    "due": "Due",
+    "amount": "Amount",
+    "currency": "Currency",
+    "saving": "Saving…",
+    "confirm": "Confirm",
+    "saveError": "Could not save — please try again.",
+    "saved": "Saved.",
+    "paymentStatus": "Payment status",
+    "notSet": "Not set",
+    "unpaid": "Unpaid",
+    "invoiced": "Invoiced",
+    "paid": "Paid",
+    "roleRequired": "(Finance or Producer role required to change)",
+    "writeback": "Write-back"
+  },
+  "commitmentSummaryRow": {
+    "due": "due {date}"
+  },
+  "detailDrawer": {
+    "close": "Close"
+  },
+  "deviationRow": {
+    "statusAutoDrafted": "Auto-drafted — needs review",
+    "statusConfirmed": "Confirmed",
+    "statusResolved": "Resolved",
+    "uncategorised": "uncategorised",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "confirmAsIs": "Confirm as-is",
+    "editAndConfirm": "Edit & confirm",
+    "confirmError": "Could not confirm — please try again."
+  },
+  "exportHistory": {
+    "title": "Export history",
+    "loading": "Loading…",
+    "empty": "No exports yet — use Freeze & Export above once the report is ready to share.",
+    "download": "Download →"
+  },
+  "freezeExport": {
+    "pptx": "Freeze & Export PPTX",
+    "pdf": "PDF",
+    "exporting": "Exporting…",
+    "composing": "Composing the snapshot — can take up to 30 seconds for a large project.",
+    "ready": "Export ready — this snapshot is a point-in-time artefact, distinct from the live report above.",
+    "download": "Download →"
+  },
+  "view": {
+    "loading": "Loading Living WIP…",
+    "loadError": "Could not load the report. Please retry.",
+    "lastLedgerChange": "Last ledger change: {date}"
+  },
+  "provenanceChip": {
+    "viewSourceCount": "View source ({count})",
+    "viewSource": "View source",
+    "provenance": "Provenance",
+    "commitment": "commitment"
+  },
+  "riskLogRow": {
+    "baseRate": "base rate {pct}%"
+  },
+  "supersessionCandidate": {
+    "loadingName": "Loading…",
+    "loadingAmount": "…",
+    "was": "was {amount}",
+    "now": "now {amount}",
+    "notSpecified": "not specified",
+    "confirmed": "Confirmed",
+    "rejected": "Rejected",
+    "confirmAction": "Confirm — this is a revision",
+    "rejectAction": "Reject — unrelated commitments",
+    "saveError": "Could not save — please retry."
+  },
+  "supersessionReview": {
+    "title": "Commitment revisions",
+    "loading": "Loading…",
+    "loadError": "Could not load commitment revisions.",
+    "empty": "No commitment revisions have ever been proposed on this project.",
+    "needsReview": "Needs review",
+    "recentlyReviewed": "Recently reviewed"
+  },
+  "writeback": {
+    "loading": "Loading write-back history…",
+    "draftNotSent": "Draft — not yet sent",
+    "authorisedNotSent": "Authorised — not yet sent",
+    "draftMessageLabel": "Draft message",
+    "saveEdit": "Save edit",
+    "authorise": "Authorise",
+    "send": "Send",
+    "confirmWithVendor": "Confirm with vendor",
+    "priorMessages": "Prior outbound messages",
+    "noReplyYet": "no reply yet",
+    "noActivity": "No write-back activity on this commitment yet.",
+    "genericError": "something went wrong"
+  },
+  "evidenceViewer": {
+    "original": "Original",
+    "translation": "Translation",
+    "noEvidence": "No evidence recorded.",
+    "noAudioSupport": "Your browser does not support inline audio playback."
+  },
+  "budgetSummarySection": {
+    "title": "Budget summary",
+    "approvedBudget": "Approved budget",
+    "committedSpend": "Committed spend",
+    "outstandingPayments": "Outstanding payments",
+    "variance": "Variance"
+  },
+  "decisionLogSection": {
+    "title": "Decision and approval log",
+    "empty": "No decisions or outstanding approvals recorded yet.",
+    "outstandingApprovals": "Outstanding approvals",
+    "due": "due {date}",
+    "recentDecisions": "Recent decisions"
+  },
+  "milestoneTracker": {
+    "title": "Milestone tracker",
+    "empty": "No milestones seeded for this project yet.",
+    "statusCompleted": "Completed",
+    "statusOnTrack": "On track",
+    "statusAtRisk": "At risk",
+    "statusCritical": "Critical",
+    "statusNoDate": "No date",
+    "criticalPath": "critical path",
+    "planned": "planned {date}",
+    "actual": "actual {date}",
+    "slack": "slack {days}d"
+  },
+  "nextSteps": {
+    "title": "Next steps",
+    "empty": "Nothing open — every commitment and milestone on this project is resolved, and no vendor currently owes anything.",
+    "openCommitments": "Open commitments",
+    "openMilestones": "Open milestones",
+    "planned": "planned {date}"
+  },
+  "projectOverview": {
+    "title": "Project overview",
+    "project": "Project",
+    "client": "Client",
+    "venue": "Venue",
+    "eventStart": "Event start",
+    "eventEnd": "Event end",
+    "phase": "Phase",
+    "noVisualReferences": "No visual references linked to any deliverable yet.",
+    "notAvailable": "Not available — {reason}",
+    "noSourceRecorded": "no source recorded",
+    "deliverablesWithoutVisual": "{count, plural, one {# deliverable still without a linked visual reference.} other {# deliverables still without a linked visual reference.}}"
+  },
+  "riskAndIssues": {
+    "title": "Risk and issues",
+    "empty": "No open risks or deviations on this project right now.",
+    "risks": "Risks",
+    "deviations": "Deviations"
+  },
+  "vendorStatus": {
+    "title": "Vendor status",
+    "empty": "No vendor activity recorded on this project yet.",
+    "noItems": "{name} has no open or confirmed items yet.",
+    "outstanding": "Outstanding",
+    "confirmed": "Confirmed",
+    "reliabilityUnavailable": "Vendor reliability metrics are not available yet — the Vendor Reliability Graph is a later milestone."
+  }
+}

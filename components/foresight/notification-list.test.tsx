@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { renderWithIntl as render } from "@/lib/test-utils";
 import type { NotificationOut } from "@/lib/api/types";
 
 import { NotificationRow } from "./notification-list";

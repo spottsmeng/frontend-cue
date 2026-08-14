@@ -1,0 +1,19 @@
+{
+  "admin": "管理",
+  "vendors": "供应商",
+  "analytics": "分析",
+  "theme": "主题",
+  "themeSystem": "跟随系统",
+  "themeLight": "浅色",
+  "themeDark": "深色",
+  "language": "语言",
+  "highContrast": "高对比度",
+  "signOut": "退出登录",
+  "livingWip": "实时进度",
+  "twin": "数字孪生",
+  "foresight": "预警",
+  "documents": "文档",
+  "ask": "问答",
+  "selectAProject": "选择一个项目",
+  "noProjectsYet": "暂无项目"
+}

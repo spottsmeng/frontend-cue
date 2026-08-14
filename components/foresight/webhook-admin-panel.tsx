@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { formatDateTime } from "@/lib/format";
 import {
@@ -24,6 +25,7 @@ export function WebhookAdminPanel({
   projectId: string;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("foresight.webhookAdminPanel");
   const canWrite = hasAnyRole(effectiveRoles, WRITE_ROLES);
   const { data: webhooks, isLoading, isError } = useWebhooksQuery(projectId);
   const createMutation = useCreateWebhookMutation(projectId);
@@ -33,13 +35,13 @@ export function WebhookAdminPanel({
   const [eventTypes, setEventTypes] = useState<WebhookEventType[]>([]);
   const [revealedSecret, setRevealedSecret] = useState<string | null>(null);
 
-  if (isLoading) return <p className="text-sm text-ink-muted">Loading webhooks…</p>;
-  if (isError) return <p className="text-sm text-critical">Could not load webhooks. Please retry.</p>;
+  if (isLoading) return <p className="text-sm text-ink-muted">{t("loading")}</p>;
+  if (isError) return <p className="text-sm text-critical">{t("error")}</p>;
 
   return (
     <div className="flex flex-col gap-3">
       {!webhooks || webhooks.length === 0 ? (
-        <EmptyState message="No webhook subscriptions on this project yet." />
+        <EmptyState message={t("empty")} />
       ) : (
         <ul className="flex flex-col gap-1.5">
           {webhooks.map((w) => (
@@ -50,8 +52,8 @@ export function WebhookAdminPanel({
               <div>
                 <p className="font-mono text-xs text-ink">{w.url}</p>
                 <p className="mt-0.5 text-xs text-ink-muted">
-                  {w.event_types.join(", ")} · {w.active ? "active" : "inactive"} · created{" "}
-                  {formatDateTime(w.created_at)}
+                  {w.event_types.join(", ")} · {w.active ? t("active") : t("inactive")} ·{" "}
+                  {t("created", { date: formatDateTime(w.created_at) })}
                 </p>
               </div>
               {canWrite && (
@@ -61,7 +63,7 @@ export function WebhookAdminPanel({
                   onClick={() => deleteMutation.mutate(w.id)}
                   className="rounded-md border border-border-strong px-2 py-1 text-xs text-critical hover:border-critical disabled:opacity-50"
                 >
-                  Delete
+                  {t("delete")}
                 </button>
               )}
             </li>
@@ -88,7 +90,7 @@ export function WebhookAdminPanel({
           className="flex flex-col gap-2 rounded-md border border-border p-3"
         >
           <label className="text-xs text-ink-secondary">
-            URL
+            {t("url")}
             <input
               required
               type="url"
@@ -99,7 +101,7 @@ export function WebhookAdminPanel({
             />
           </label>
           <fieldset className="flex flex-wrap gap-3">
-            <legend className="text-xs text-ink-secondary">Events</legend>
+            <legend className="text-xs text-ink-secondary">{t("events")}</legend>
             {EVENT_TYPES.map((type) => (
               <label key={type} className="flex items-center gap-1.5 text-xs text-ink-secondary">
                 <input
@@ -107,7 +109,7 @@ export function WebhookAdminPanel({
                   checked={eventTypes.includes(type)}
                   onChange={(e) =>
                     setEventTypes(
-                      e.target.checked ? [...eventTypes, type] : eventTypes.filter((t) => t !== type),
+                      e.target.checked ? [...eventTypes, type] : eventTypes.filter((et) => et !== type),
                     )
                   }
                 />
@@ -120,10 +122,10 @@ export function WebhookAdminPanel({
             disabled={createMutation.isPending}
             className="self-start rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
-            {createMutation.isPending ? "Creating…" : "Create webhook"}
+            {createMutation.isPending ? t("creating") : t("createWebhook")}
           </button>
           {createMutation.isError && (
-            <p className="text-xs text-critical">Could not create webhook — please retry.</p>
+            <p className="text-xs text-critical">{t("createError")}</p>
           )}
         </form>
       )}

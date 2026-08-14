@@ -1,15 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { VendorPermissionError, resolveTermLabel, useVendorListQuery } from "@/lib/vendors/hooks";
 import type { OntologyTermOut } from "@/lib/api/types";
 import type { VendorListFilters } from "@/lib/vendors/hooks";
 
-const TYPE_LABEL: Record<string, string> = {
-  person: "Person",
-  vendor_org: "Vendor",
-  internal_staff: "Internal",
+const TYPE_LABEL_KEY: Record<string, string> = {
+  person: "person",
+  vendor_org: "vendorOrg",
+  internal_staff: "internalStaff",
 };
 
 /**
@@ -27,23 +28,24 @@ export function VendorList({
   filters: VendorListFilters;
   categoryTerms: OntologyTermOut[] | undefined;
 }) {
+  const t = useTranslations("vendors.vendorList");
+  const tType = useTranslations("vendors.partyType");
   const { data: parties, isLoading, isError, error } = useVendorListQuery(filters);
 
   if (isError) {
     if (error instanceof VendorPermissionError) {
       return (
         <p className="text-sm text-ink-muted">
-          The vendor directory is Finance/Procurement only. You don&apos;t hold that role on any
-          project in this organisation, so there&apos;s nothing here for you to see.
+          {t("financeOnly")}
         </p>
       );
     }
-    return <p className="text-sm text-critical">Could not load the vendor directory. Please retry.</p>;
+    return <p className="text-sm text-critical">{t("loadError")}</p>;
   }
 
-  if (isLoading) return <p className="text-sm text-ink-muted">Loading vendors…</p>;
+  if (isLoading) return <p className="text-sm text-ink-muted">{t("loading")}</p>;
   if (!parties || parties.length === 0) {
-    return <p className="text-sm text-ink-muted">No parties match this filter.</p>;
+    return <p className="text-sm text-ink-muted">{t("empty")}</p>;
   }
 
   return (
@@ -52,6 +54,7 @@ export function VendorList({
         const category = party.vendor_category_term_id
           ? resolveTermLabel(categoryTerms, party.vendor_category_term_id)
           : null;
+        const typeKey = TYPE_LABEL_KEY[party.type];
         return (
           <li key={party.id} className="rounded-md border border-border p-3">
             <div className="flex items-start justify-between gap-3">
@@ -62,14 +65,14 @@ export function VendorList({
                 {party.display_name}
               </Link>
               <span className="rounded-full bg-surface-sunk px-2 py-0.5 text-xs font-medium text-ink-muted">
-                {TYPE_LABEL[party.type] ?? party.type}
+                {typeKey ? tType(typeKey) : party.type}
               </span>
             </div>
             <p className="mt-1.5 flex flex-wrap gap-2 font-mono text-xs text-ink-muted">
               {category ? (
                 <span className="rounded-full bg-dusk-soft px-2 py-0.5 text-dusk">{category.label_en}</span>
               ) : (
-                <span>uncategorised</span>
+                <span>{t("uncategorised")}</span>
               )}
               {party.city && <span>· {party.city}</span>}
             </p>

@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { DecisionLogRow } from "@/components/living-wip/decision-log-row";
 import type { DecisionHistorySummary as DecisionHistorySummaryT } from "@/lib/api/types";
 
@@ -8,8 +10,9 @@ export function DecisionHistorySummaryView({
   summary: DecisionHistorySummaryT;
   onOpenCommitment: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("ask.summaries.decisionHistory");
   if (summary.decisions.length === 0) {
-    return <p className="text-sm text-ink-muted">No decisions recorded on this project yet.</p>;
+    return <p className="text-sm text-ink-muted">{t("empty")}</p>;
   }
   return (
     <ul className="flex flex-col gap-1.5">

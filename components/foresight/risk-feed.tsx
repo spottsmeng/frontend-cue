@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { MembershipRole, RiskSeverity, RiskSource, RiskStatus } from "@/lib/api/types";
 import { useRiskFeedQuery, type RiskFilters } from "@/lib/foresight/hooks";
@@ -25,6 +26,7 @@ export function RiskFeed({
   projectId: string;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("foresight.riskFeed");
   const [filters, setFilters] = useState<RiskFilters>({});
   const { data: risks, isLoading, isError } = useRiskFeedQuery(projectId, filters);
 
@@ -32,7 +34,7 @@ export function RiskFeed({
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-2">
         <label className="text-xs text-ink-secondary">
-          Status
+          {t("status")}
           <select
             value={filters.status ?? ""}
             onChange={(e) =>
@@ -40,7 +42,7 @@ export function RiskFeed({
             }
             className="mt-1 block w-40 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
           >
-            <option value="">All statuses</option>
+            <option value="">{t("allStatuses")}</option>
             {STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -49,7 +51,7 @@ export function RiskFeed({
           </select>
         </label>
         <label className="text-xs text-ink-secondary">
-          Source
+          {t("source")}
           <select
             value={filters.source ?? ""}
             onChange={(e) =>
@@ -57,7 +59,7 @@ export function RiskFeed({
             }
             className="mt-1 block w-40 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
           >
-            <option value="">All sources</option>
+            <option value="">{t("allSources")}</option>
             {SOURCE_OPTIONS.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -66,7 +68,7 @@ export function RiskFeed({
           </select>
         </label>
         <label className="text-xs text-ink-secondary">
-          Severity
+          {t("severity")}
           <select
             value={filters.severity ?? ""}
             onChange={(e) =>
@@ -77,7 +79,7 @@ export function RiskFeed({
             }
             className="mt-1 block w-40 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
           >
-            <option value="">All severities</option>
+            <option value="">{t("allSeverities")}</option>
             {SEVERITY_OPTIONS.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -87,10 +89,10 @@ export function RiskFeed({
         </label>
       </div>
 
-      {isLoading && <p className="text-sm text-ink-muted">Loading risks…</p>}
-      {isError && <p className="text-sm text-critical">Could not load the risk feed. Please retry.</p>}
+      {isLoading && <p className="text-sm text-ink-muted">{t("loading")}</p>}
+      {isError && <p className="text-sm text-critical">{t("error")}</p>}
       {risks && risks.length === 0 && (
-        <EmptyState message="No risks match these filters right now." />
+        <EmptyState message={t("empty")} />
       )}
       {risks && risks.length > 0 && (
         <ul className="flex flex-col gap-2">

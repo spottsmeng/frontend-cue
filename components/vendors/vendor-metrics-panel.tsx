@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { VendorPermissionError, useVendorReliabilityQuery } from "@/lib/vendors/hooks";
 import type { VendorSegment } from "@/lib/vendors/hooks";
 
@@ -27,18 +29,18 @@ export function VendorMetricsPanel({
   segment: VendorSegment;
   onSegmentChange: (segment: VendorSegment) => void;
 }) {
+  const t = useTranslations("vendors.vendorMetricsPanel");
   const { data, isLoading, isError, error } = useVendorReliabilityQuery(partyId, segment);
 
   if (isError) {
     if (error instanceof VendorPermissionError) {
       return (
         <p className="text-sm text-ink-muted">
-          Vendor reliability metrics are Finance/Procurement only. You don&apos;t hold that role on
-          any project in this organisation, so there&apos;s nothing here for you to see.
+          {t("financeOnly")}
         </p>
       );
     }
-    return <p className="text-sm text-critical">Could not load reliability metrics. Please retry.</p>;
+    return <p className="text-sm text-critical">{t("loadError")}</p>;
   }
 
   const byMetric = new Map((data?.metrics ?? []).map((m) => [m.metric, m]));
@@ -47,7 +49,7 @@ export function VendorMetricsPanel({
     <div className="flex flex-col gap-4">
       <SegmentPicker segment={segment} onChange={onSegmentChange} />
       {isLoading ? (
-        <p className="text-sm text-ink-muted">Loading metrics…</p>
+        <p className="text-sm text-ink-muted">{t("loading")}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {METRIC_NAMES.map((metric) => (

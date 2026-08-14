@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -9,17 +10,19 @@ import { usePathname } from "next/navigation";
 // project-scoped (Party isn't owned by one project — see
 // backend/app/api/deps.py's require_org_finance docstring), so it lives at
 // the top-level /vendors route (components/app-shell/top-nav.tsx) instead.
-const SURFACES = [
-  { segment: "", label: "Living WIP" },
-  { segment: "twin", label: "Twin" },
-  { segment: "foresight", label: "Foresight" },
-  { segment: "documents", label: "Documents" },
-  { segment: "ask", label: "Ask" },
+const SEGMENTS = [
+  { segment: "", key: "livingWip" as const },
+  { segment: "twin", key: "twin" as const },
+  { segment: "foresight", key: "foresight" as const },
+  { segment: "documents", key: "documents" as const },
+  { segment: "ask", key: "ask" as const },
 ];
 
 export function ProjectSubnav({ projectId }: { projectId: string }) {
   const pathname = usePathname();
   const base = `/projects/${projectId}`;
+  const t = useTranslations("nav");
+  const SURFACES = SEGMENTS.map((s) => ({ ...s, label: t(s.key) }));
 
   return (
     <nav className="flex items-center gap-1 border-b border-border bg-surface px-4">

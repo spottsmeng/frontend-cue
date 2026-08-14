@@ -1,0 +1,105 @@
+{
+  "view": {
+    "title": "数字孪生",
+    "loading": "正在加载数字孪生…",
+    "error": "无法加载数字孪生，请重试。",
+    "sections": {
+      "timeline": "时间线",
+      "dependencies": "依赖关系",
+      "propagationSimulator": "影响模拟器"
+    }
+  },
+  "addMilestoneForm": {
+    "addMilestone": "+ 添加里程碑",
+    "type": "类型",
+    "selectAType": "选择类型…",
+    "name": "名称",
+    "plannedDate": "计划日期",
+    "fixed": "固定（不可顺延）",
+    "adding": "正在添加…",
+    "add": "添加里程碑",
+    "cancel": "取消",
+    "error": "添加里程碑失败。"
+  },
+  "constraintBanner": {
+    "label": "当前瓶颈：",
+    "none": "无 — 所有里程碑均有富余时间"
+  },
+  "dependencyPanel": {
+    "empty": "此项目的数字孪生中尚无依赖关系。",
+    "unknownMilestone": "未知",
+    "lagPrefix": "延迟",
+    "lagSuffix": "天",
+    "save": "保存",
+    "remove": "移除",
+    "lagDays": "延迟 {days} 天",
+    "upstream": "上游",
+    "downstream": "下游",
+    "select": "选择…",
+    "lagDaysLabel": "延迟天数",
+    "adding": "正在添加…",
+    "add": "添加依赖关系",
+    "rejected": "已拒绝 — {error} 请先移除或调整现有依赖关系后再重试。"
+  },
+  "milestoneDetailPanel": {
+    "drawerTitle": "里程碑",
+    "fixedBadge": "🔒 固定",
+    "criticalPath": "关键路径",
+    "earliest": "最早 {date}",
+    "latest": "最晚 {date}",
+    "slackExplanation": "富余时间和关键路径状态来自预设原型加上项目经理的任何覆盖设置 — CUE 尚未从历史数据中学习工期分布（FR-TWN-08 尚未构建）。",
+    "editHeading": "编辑（将记录为覆盖设置）",
+    "detailsHeading": "详情",
+    "name": "名称",
+    "planned": "计划",
+    "actual": "实际",
+    "fixedCheckbox": "固定 — 不可因上游延误而顺延（FR-TWN-11）",
+    "savingOverride": "正在保存覆盖设置…",
+    "saveOverride": "保存覆盖设置",
+    "saveError": "保存失败。",
+    "saveSuccess": "已保存 — 已记录至数字孪生审计记录。",
+    "noWritePermission": "需具备项目经理、制作人、财务、客户经理、设计师或管理员角色方可覆盖。",
+    "deleteHeading": "删除",
+    "blockingEdges": "请先移除 {count, plural, other {# 条依赖关系}} — 仍被依赖关系引用的里程碑无法删除（这是刻意设计的独立步骤）。",
+    "unknownMilestone": "未知里程碑",
+    "lagDays": "延迟 {days} 天",
+    "removeEdge": "移除依赖关系",
+    "deleteError": "删除失败 — 该里程碑可能仍被某项依赖关系引用。",
+    "deleting": "正在删除…",
+    "delete": "删除里程碑"
+  },
+  "propagationSimulator": {
+    "simulationOnly": "仅为模拟 — 不会写入任何实际数据。下方每个候选方案都只是推演，不会被保存；在项目经理直接编辑里程碑之前，此项目不会有任何变化。",
+    "ifMilestone": "若里程碑",
+    "select": "选择…",
+    "landsOn": "调整为",
+    "remove": "移除",
+    "addAnother": "+ 添加另一候选方案（并排比较）",
+    "simulating": "正在模拟…",
+    "runSimulation": "运行模拟",
+    "runError": "模拟运行失败。",
+    "unnamedMilestone": "里程碑",
+    "bindingConstraintAfter": "调整后的瓶颈：",
+    "none": "无",
+    "changedFromCurrent": "（与当前图谱相比已变化）",
+    "unknownMilestone": "未知",
+    "stoppedHere": "🔒 因固定而在此止步",
+    "consumedSlack": "消耗富余时间 {days} 天",
+    "consumedSlackUnknown": "消耗富余时间 —"
+  },
+  "recomputeButton": {
+    "title": "强制执行一次全新的关键路径计算，并记录至数字孪生审计记录",
+    "recomputing": "正在重新计算…",
+    "recompute": "重新计算"
+  },
+  "timelineNode": {
+    "fixedTitle": "固定 — 不可因上游延误而顺延",
+    "fixed": "固定",
+    "criticalPath": "关键路径",
+    "planned": "计划 {date}",
+    "actual": "实际 {date}"
+  },
+  "timeline": {
+    "empty": "此项目的数字孪生中尚无里程碑。"
+  }
+}

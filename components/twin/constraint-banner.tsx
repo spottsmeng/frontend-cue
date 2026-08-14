@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { formatSlackDays } from "@/lib/twin/presentation";
 
 /**
@@ -17,16 +19,17 @@ export function ConstraintBanner({
   milestoneName: string | null;
   slackDays: number | null;
 }) {
+  const t = useTranslations("twin.constraintBanner");
   return (
     <div className="flex items-center gap-2 rounded-lg border border-border-strong bg-surface-sunk px-4 py-2.5 text-sm">
-      <span className="font-medium text-ink">Current binding constraint:</span>
+      <span className="font-medium text-ink">{t("label")}</span>
       {milestoneName ? (
         <>
           <span className="text-ink">{milestoneName}</span>
           <span className="font-mono text-xs text-ink-muted">({formatSlackDays(slackDays)})</span>
         </>
       ) : (
-        <span className="text-ink-muted">none — every milestone has open slack</span>
+        <span className="text-ink-muted">{t("none")}</span>
       )}
     </div>
   );

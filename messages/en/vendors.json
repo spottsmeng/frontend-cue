@@ -1,0 +1,81 @@
+{
+  "partyType": {
+    "person": "Person",
+    "vendorOrg": "Vendor",
+    "internalStaff": "Internal",
+    "allTypes": "All types"
+  },
+  "metricHistoryChart": {
+    "financeOnly": "Vendor reliability history is Finance/Procurement only.",
+    "loadError": "Could not load history. Please retry.",
+    "metricLabel": "Metric",
+    "loading": "Loading history…",
+    "noSnapshots": "No snapshots recorded yet for this metric/segment.",
+    "chartAriaLabel": "Metric trend over time",
+    "notEnoughPoints": "Fewer than two available snapshots — not enough to draw a trend line yet.",
+    "notAvailable": "not available"
+  },
+  "organisationMappingPanel": {
+    "financeOnly": "You don't currently hold a Finance/Procurement or administrator role on any project in this organisation, so this section isn't visible to you.",
+    "loadError": "Could not load organisation history. Please retry.",
+    "loading": "Loading…",
+    "empty": "No organisation mapping recorded for this contact.",
+    "represents": "Represents",
+    "viewVendor": "view vendor",
+    "present": "present",
+    "vendorLabel": "Vendor",
+    "selectVendor": "Select a vendor…",
+    "roleTitleLabel": "Role title (optional)",
+    "roleTitlePlaceholder": "e.g. Account Director",
+    "setOrganisation": "Set organisation",
+    "adminOnly": "Setting this mapping is Administrator only — you don't hold that role on any project in this organisation.",
+    "saveError": "Could not save — please retry."
+  },
+  "segmentPicker": {
+    "eventArchetype": "Event archetype",
+    "allArchetypes": "All archetypes",
+    "vendorCategory": "Vendor category",
+    "ownCategory": "This vendor's own category",
+    "city": "City",
+    "cityPlaceholder": "This vendor's own city"
+  },
+  "vendorDetailView": {
+    "backToVendors": "Vendors",
+    "defaultTitle": "Vendor",
+    "noCity": "no city on file",
+    "addedOn": "added",
+    "loading": "Loading…",
+    "financeOnly": "This page is Finance/Procurement only. You don't hold that role on any project in this organisation.",
+    "loadError": "Could not load this party. Please retry.",
+    "reliabilityMetrics": "Reliability metrics",
+    "history": "History",
+    "represents": "Represents"
+  },
+  "vendorList": {
+    "financeOnly": "The vendor directory is Finance/Procurement only. You don't hold that role on any project in this organisation, so there's nothing here for you to see.",
+    "loadError": "Could not load the vendor directory. Please retry.",
+    "loading": "Loading vendors…",
+    "empty": "No parties match this filter.",
+    "uncategorised": "uncategorised"
+  },
+  "vendorMetricRow": {
+    "notYetComputed": "Not yet computed",
+    "notAvailable": "Not available",
+    "neverComputed": "No recompute has ever run for this vendor in this segment yet.",
+    "computedMeta": "n={count} · computed {date}"
+  },
+  "vendorMetricsPanel": {
+    "financeOnly": "Vendor reliability metrics are Finance/Procurement only. You don't hold that role on any project in this organisation, so there's nothing here for you to see.",
+    "loadError": "Could not load reliability metrics. Please retry.",
+    "loading": "Loading metrics…"
+  },
+  "vendorsView": {
+    "title": "Vendors",
+    "directoryTitle": "Vendor directory",
+    "type": "Type",
+    "category": "Category",
+    "allCategories": "All categories",
+    "city": "City",
+    "cityPlaceholder": "Exact city"
+  }
+}

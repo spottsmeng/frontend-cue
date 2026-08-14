@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useProjectMembersQuery } from "@/lib/members/hooks";
 import {
@@ -29,6 +30,7 @@ import { DelegationRow } from "./delegation-row";
  * `/admin/delegations`.
  */
 export function ProjectMembersView({ projectId }: { projectId: string }) {
+  const t = useTranslations("admin.members");
   const { data: members, isLoading: membersLoading } = useProjectMembersQuery(projectId);
   const { data: users } = useOrgUsersQuery();
   const {
@@ -51,8 +53,8 @@ export function ProjectMembersView({ projectId }: { projectId: string }) {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
-      <SectionPanel title="Members">
-        {membersLoading && <p className="text-sm text-ink-muted">Loading…</p>}
+      <SectionPanel title={t("membersTitle")}>
+        {membersLoading && <p className="text-sm text-ink-muted">{t("loading")}</p>}
         {members && (
           <ul className="mb-3 flex flex-col gap-1.5">
             {members.map((m) => (
@@ -83,17 +85,17 @@ export function ProjectMembersView({ projectId }: { projectId: string }) {
           className="flex flex-wrap items-end gap-2 rounded-md border border-border p-3"
         >
           <label className="text-xs text-ink-secondary">
-            Email
+            {t("emailLabel")}
             <input
               type="email"
               value={memberEmail}
               onChange={(e) => setMemberEmail(e.target.value)}
-              placeholder="colleague@example.com"
+              placeholder={t("emailPlaceholder")}
               className="mt-1 block w-56 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
             />
           </label>
           <label className="text-xs text-ink-secondary">
-            Role
+            {t("roleLabel")}
             <select
               value={memberRole}
               onChange={(e) => setMemberRole(e.target.value as MembershipRole)}
@@ -111,29 +113,26 @@ export function ProjectMembersView({ projectId }: { projectId: string }) {
             disabled={addMemberMutation.isPending}
             className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
-            Grant / update access
+            {t("grantUpdate")}
           </button>
           {addMemberMutation.isError && (
             <p className="w-full text-xs text-critical">
-              {(addMemberMutation.error as { detail?: string })?.detail ??
-                "Could not grant access — is that email a known CUE user?"}
+              {(addMemberMutation.error as { detail?: string })?.detail ?? t("grantErrorFallback")}
             </p>
           )}
         </form>
       </SectionPanel>
 
-      <SectionPanel title="Delegations">
-        {delegationsLoading && <p className="text-sm text-ink-muted">Loading…</p>}
+      <SectionPanel title={t("delegationsTitle")}>
+        {delegationsLoading && <p className="text-sm text-ink-muted">{t("delegationsLoading")}</p>}
         {delegationsError &&
           (delegationsErrorValue instanceof AdminPermissionError ? (
-            <p className="text-sm text-ink-muted">
-              Viewing this project&apos;s delegation history is Administrator only.
-            </p>
+            <p className="text-sm text-ink-muted">{t("delegationsAdminOnly")}</p>
           ) : (
-            <p className="text-sm text-critical">Could not load delegations. Please retry.</p>
+            <p className="text-sm text-critical">{t("delegationsLoadError")}</p>
           ))}
         {delegations && delegations.length === 0 && (
-          <p className="mb-3 text-sm text-ink-muted">No delegations on this project yet.</p>
+          <p className="mb-3 text-sm text-ink-muted">{t("delegationsEmpty")}</p>
         )}
         {delegations && delegations.length > 0 && (
           <ul className="mb-3 flex flex-col gap-1.5">
@@ -167,17 +166,17 @@ export function ProjectMembersView({ projectId }: { projectId: string }) {
           className="flex flex-wrap items-end gap-2 rounded-md border border-border p-3"
         >
           <label className="text-xs text-ink-secondary">
-            Delegate email
+            {t("delegateEmailLabel")}
             <input
               type="email"
               value={delegateEmail}
               onChange={(e) => setDelegateEmail(e.target.value)}
-              placeholder="colleague@example.com"
+              placeholder={t("emailPlaceholder")}
               className="mt-1 block w-56 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
             />
           </label>
           <label className="text-xs text-ink-secondary">
-            Role
+            {t("roleLabel")}
             <select
               value={delegateRole}
               onChange={(e) => setDelegateRole(e.target.value as MembershipRole)}
@@ -191,7 +190,7 @@ export function ProjectMembersView({ projectId }: { projectId: string }) {
             </select>
           </label>
           <label className="text-xs text-ink-secondary">
-            Expires
+            {t("expiresLabel")}
             <input
               required
               type="datetime-local"
@@ -205,11 +204,12 @@ export function ProjectMembersView({ projectId }: { projectId: string }) {
             disabled={grantMutation.isPending}
             className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
-            Grant delegation
+            {t("grantDelegation")}
           </button>
           {grantMutation.isError && (
             <p className="w-full text-xs text-critical">
-              {(grantMutation.error as { detail?: string })?.detail ?? "Could not grant delegation."}
+              {(grantMutation.error as { detail?: string })?.detail ??
+                t("grantDelegationErrorFallback")}
             </p>
           )}
         </form>

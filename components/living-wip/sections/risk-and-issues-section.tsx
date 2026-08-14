@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import type { MembershipRole, RiskAndIssuesSection as RiskAndIssuesSectionT } from "@/lib/api/types";
 
 import { DeviationRow } from "../deviation-row";
@@ -25,17 +27,18 @@ export function RiskAndIssuesPanel({
   effectiveRoles: MembershipRole[] | undefined;
   onOpenCommitment: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("livingWip.riskAndIssues");
   const empty = section.risks.length === 0 && section.deviations.length === 0;
 
   return (
-    <SectionPanel title="Risk and issues">
+    <SectionPanel title={t("title")}>
       {empty ? (
-        <EmptyState message="No open risks or deviations on this project right now." />
+        <EmptyState message={t("empty")} />
       ) : (
         <div className="flex flex-col gap-4">
           {section.risks.length > 0 && (
             <div>
-              <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">Risks</p>
+              <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">{t("risks")}</p>
               <ul className="flex flex-col gap-1.5">
                 {section.risks.map((r) => (
                   <RiskLogRow key={r.risk_id} risk={r} onOpenCommitment={onOpenCommitment} />
@@ -46,7 +49,9 @@ export function RiskAndIssuesPanel({
 
           {section.deviations.length > 0 && (
             <div>
-              <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">Deviations</p>
+              <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">
+                {t("deviations")}
+              </p>
               <ul className="flex flex-col gap-1.5">
                 {section.deviations.map((d) => (
                   <DeviationRow

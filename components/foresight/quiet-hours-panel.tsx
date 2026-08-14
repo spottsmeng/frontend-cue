@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useQuietHoursQuery, useSetQuietHoursMutation } from "@/lib/foresight/hooks";
 import type { MembershipRole, QuietHoursConfigOut, RiskSeverity } from "@/lib/api/types";
 import { hasAnyRole, WRITE_ROLES } from "@/lib/roles";
@@ -23,10 +25,11 @@ export function QuietHoursPanel({
   projectId: string;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("foresight.quietHoursPanel");
   const { data: config, isLoading, isError } = useQuietHoursQuery(projectId);
 
-  if (isLoading) return <p className="text-sm text-ink-muted">Loading quiet hours…</p>;
-  if (isError) return <p className="text-sm text-critical">Could not load quiet hours. Please retry.</p>;
+  if (isLoading) return <p className="text-sm text-ink-muted">{t("loading")}</p>;
+  if (isError) return <p className="text-sm text-critical">{t("error")}</p>;
 
   // Keyed by whether a row exists yet, so the form's own uncontrolled
   // defaultValue inputs (below) remount and re-derive from the just-loaded
@@ -52,6 +55,7 @@ function QuietHoursForm({
   config: QuietHoursConfigOut | null;
   canWrite: boolean;
 }) {
+  const t = useTranslations("foresight.quietHoursPanel");
   const setMutation = useSetQuietHoursMutation(projectId);
 
   return (
@@ -69,12 +73,12 @@ function QuietHoursForm({
     >
       {!config && (
         <p className="text-xs text-ink-muted">
-          Nothing configured yet — Foresight notifications are always eligible to send, at any hour.
+          {t("nothingConfigured")}
         </p>
       )}
       <div className="flex flex-wrap items-end gap-3">
         <label className="text-xs text-ink-secondary">
-          Quiet hours start (project local time)
+          {t("startLabel")}
           <input
             name="start"
             type="time"
@@ -85,7 +89,7 @@ function QuietHoursForm({
           />
         </label>
         <label className="text-xs text-ink-secondary">
-          Quiet hours end
+          {t("endLabel")}
           <input
             name="end"
             type="time"
@@ -96,7 +100,7 @@ function QuietHoursForm({
           />
         </label>
         <label className="text-xs text-ink-secondary">
-          Live-event override threshold
+          {t("thresholdLabel")}
           <select
             name="threshold"
             disabled={!canWrite}
@@ -112,8 +116,7 @@ function QuietHoursForm({
         </label>
       </div>
       <p className="text-[11px] text-ink-muted">
-        During this project&apos;s declared live-event window, a finding at or above the override
-        threshold bypasses quiet hours and is deliverable immediately.
+        {t("explanation")}
       </p>
       {canWrite && (
         <button
@@ -121,10 +124,10 @@ function QuietHoursForm({
           disabled={setMutation.isPending}
           className="self-start rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
         >
-          {setMutation.isPending ? "Saving…" : "Save quiet hours"}
+          {setMutation.isPending ? t("saving") : t("save")}
         </button>
       )}
-      {setMutation.isError && <p className="text-xs text-critical">Could not save — please retry.</p>}
+      {setMutation.isError && <p className="text-xs text-critical">{t("saveError")}</p>}
     </form>
   );
 }

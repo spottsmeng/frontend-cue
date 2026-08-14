@@ -1,18 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { DeviationLogRow, MembershipRole } from "@/lib/api/types";
 import { useConfirmDeviationMutation } from "@/lib/deviations/hooks";
 import { hasAnyRole, WRITE_ROLES } from "@/lib/roles";
 
 import { ProvenanceChip } from "./provenance-chip";
-
-const STATUS_LABEL: Record<string, string> = {
-  auto_drafted: "Auto-drafted — needs review",
-  confirmed: "Confirmed",
-  resolved: "Resolved",
-};
 
 /**
  * FR-DEV-04/05: an auto-drafted deviation surfaced in the risk-and-issues
@@ -32,19 +27,28 @@ export function DeviationRow({
   effectiveRoles: MembershipRole[] | undefined;
   onOpenCommitment?: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("livingWip.deviationRow");
   const [editing, setEditing] = useState(false);
   const [description, setDescription] = useState(deviation.description_en);
   const confirmMutation = useConfirmDeviationMutation(projectId);
   const canConfirm = hasAnyRole(effectiveRoles, WRITE_ROLES);
   const needsReview = deviation.status === "auto_drafted";
 
+  const STATUS_LABEL: Record<string, string> = {
+    auto_drafted: t("statusAutoDrafted"),
+    confirmed: t("statusConfirmed"),
+    resolved: t("statusResolved"),
+  };
+
   return (
     <li className="rounded-md border border-border p-3">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-sm text-ink">{deviation.description_en}</p>
+          <p lang="en" className="text-sm text-ink">
+            {deviation.description_en}
+          </p>
           <p className="mt-1 font-mono text-xs text-ink-muted">
-            {deviation.class_code ?? "uncategorised"} · {STATUS_LABEL[deviation.status] ?? deviation.status}
+            {deviation.class_code ?? t("uncategorised")} · {STATUS_LABEL[deviation.status] ?? deviation.status}
           </p>
         </div>
         <ProvenanceChip provenance={[deviation.provenance]} onOpenCommitment={onOpenCommitment} />
@@ -73,14 +77,14 @@ export function DeviationRow({
                   }
                   className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
                 >
-                  Confirm
+                  {t("confirm")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setEditing(false)}
                   className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
               </div>
             </div>
@@ -92,19 +96,19 @@ export function DeviationRow({
                 onClick={() => confirmMutation.mutate({ deviationId: deviation.deviation_id })}
                 className="rounded-md border border-signal px-3 py-1.5 text-xs font-medium text-signal hover:bg-signal-soft disabled:opacity-50"
               >
-                Confirm as-is
+                {t("confirmAsIs")}
               </button>
               <button
                 type="button"
                 onClick={() => setEditing(true)}
                 className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary hover:border-signal hover:text-signal"
               >
-                Edit &amp; confirm
+                {t("editAndConfirm")}
               </button>
             </div>
           )}
           {confirmMutation.isError && (
-            <p className="mt-2 text-xs text-critical">Could not confirm — please try again.</p>
+            <p className="mt-2 text-xs text-critical">{t("confirmError")}</p>
           )}
         </div>
       )}

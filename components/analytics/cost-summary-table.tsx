@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { CostSummaryPermissionError, useCostSummaryQuery } from "@/lib/analytics/hooks";
 import { formatMoney } from "@/lib/format";
 import type { CostSummaryRow } from "@/lib/api/types";
@@ -17,29 +19,38 @@ import type { CostSummaryRow } from "@/lib/api/types";
  * charts already need, not a second endpoint.
  */
 export function CostSummaryTable({ projectsById }: { projectsById: Map<string, string> }) {
+  const t = useTranslations("analytics.costSummaryTable");
   const { data, isLoading, isError, error } = useCostSummaryQuery();
 
   if (isError) {
     if (error instanceof CostSummaryPermissionError) {
       return (
         <p className="text-sm text-ink-muted">
-          Cost per project is administrator only. You don&apos;t hold that role on any project in
-          this organisation, so there&apos;s nothing here for you to see.
+          {t("adminOnly")}
         </p>
       );
     }
-    return <p className="text-sm text-critical">Could not load cost summary. Please retry.</p>;
+    return <p className="text-sm text-critical">{t("loadError")}</p>;
   }
   if (isLoading) {
-    return <p className="text-sm text-ink-muted">Loading cost summary…</p>;
+    return <p className="text-sm text-ink-muted">{t("loading")}</p>;
   }
   if (!data || data.rows.length === 0) {
-    return <p className="text-sm text-ink-muted">No LLM usage recorded yet.</p>;
+    return <p className="text-sm text-ink-muted">{t("empty")}</p>;
   }
 
+  const projectLabel = (row: CostSummaryRow) => {
+    if (row.project_id === null) return t("unattributed");
+    return projectsById.get(row.project_id) ?? t("unknownProject");
+  };
+  const costLabel = (value: number | null) => {
+    if (value === null) return t("unknownCost");
+    return formatMoney(value, "USD");
+  };
+
   const rows = [...data.rows].sort((a, b) => {
-    const nameA = projectLabel(a, projectsById);
-    const nameB = projectLabel(b, projectsById);
+    const nameA = projectLabel(a);
+    const nameB = projectLabel(b);
     return nameA.localeCompare(nameB) || a.provider.localeCompare(b.provider);
   });
 
@@ -49,19 +60,19 @@ export function CostSummaryTable({ projectsById }: { projectsById: Map<string, s
         <table className="w-full text-left text-xs">
           <thead>
             <tr className="text-ink-muted">
-              <th className="py-1 pr-4 font-medium">Project</th>
-              <th className="py-1 pr-4 font-medium">Provider</th>
-              <th className="py-1 pr-4 font-medium">Model</th>
-              <th className="py-1 pr-4 font-medium">Calls</th>
-              <th className="py-1 pr-4 font-medium">Tokens in</th>
-              <th className="py-1 pr-4 font-medium">Tokens out</th>
-              <th className="py-1 font-medium">Estimated cost</th>
+              <th className="py-1 pr-4 font-medium">{t("headers.project")}</th>
+              <th className="py-1 pr-4 font-medium">{t("headers.provider")}</th>
+              <th className="py-1 pr-4 font-medium">{t("headers.model")}</th>
+              <th className="py-1 pr-4 font-medium">{t("headers.calls")}</th>
+              <th className="py-1 pr-4 font-medium">{t("headers.tokensIn")}</th>
+              <th className="py-1 pr-4 font-medium">{t("headers.tokensOut")}</th>
+              <th className="py-1 font-medium">{t("headers.estimatedCost")}</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row, i) => (
               <tr key={i} className="border-t border-border">
-                <td className="py-1 pr-4 text-ink">{projectLabel(row, projectsById)}</td>
+                <td className="py-1 pr-4 text-ink">{projectLabel(row)}</td>
                 <td className="py-1 pr-4 text-ink-secondary">{row.provider}</td>
                 <td className="py-1 pr-4 font-mono text-ink-secondary">{row.model}</td>
                 <td className="py-1 pr-4 font-mono text-ink">{row.call_count}</td>
@@ -74,7 +85,7 @@ export function CostSummaryTable({ projectsById }: { projectsById: Map<string, s
           <tfoot>
             <tr className="border-t border-border-strong font-medium">
               <td className="py-1.5 pr-4 text-ink" colSpan={3}>
-                Total
+                {t("total")}
               </td>
               <td className="py-1.5 pr-4 font-mono text-ink">{data.total_calls}</td>
               <td className="py-1.5 pr-4" />
@@ -86,20 +97,9 @@ export function CostSummaryTable({ projectsById }: { projectsById: Map<string, s
       </div>
       {data.total_estimated_cost_usd === null && (
         <p className="text-xs text-ink-muted">
-          Total cost is unknown, not zero — every call so far used a model this system doesn&apos;t
-          recognise for pricing.
+          {t("unknownCostNote")}
         </p>
       )}
     </div>
   );
-}
-
-function projectLabel(row: CostSummaryRow, projectsById: Map<string, string>): string {
-  if (row.project_id === null) return "Unattributed";
-  return projectsById.get(row.project_id) ?? "Unknown project";
-}
-
-function costLabel(value: number | null): string {
-  if (value === null) return "unknown";
-  return formatMoney(value, "USD");
 }

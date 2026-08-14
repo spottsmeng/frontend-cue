@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { formatDateTime } from "@/lib/format";
 import { ForesightConflictError, useAcknowledgeRiskMutation, useResolveRiskMutation } from "@/lib/foresight/hooks";
@@ -27,6 +28,7 @@ export function RiskCard({
   risk: RiskOut;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("foresight.riskCard");
   const [showDetail, setShowDetail] = useState(false);
   const canWrite = hasAnyRole(effectiveRoles, WRITE_ROLES);
   const acknowledgeMutation = useAcknowledgeRiskMutation(projectId);
@@ -36,8 +38,8 @@ export function RiskCard({
   const canResolve = risk.status === "open" || risk.status === "acknowledged";
   const conflictMessage = (error: unknown) =>
     error instanceof ForesightConflictError
-      ? `${error.message} — refreshed to this risk's current status.`
-      : "Could not update this risk — please retry.";
+      ? t("conflictSuffix", { message: error.message })
+      : t("updateError");
 
   return (
     <li className="rounded-md border border-border p-3">
@@ -52,19 +54,19 @@ export function RiskCard({
       <p className="mt-1.5 font-mono text-xs text-ink-muted">
         {risk.source} ·{" "}
         {risk.base_rate !== null
-          ? `historical base rate ${(risk.base_rate * 100).toFixed(0)}%`
-          : "not enough history yet"}
+          ? t("baseRate", { percent: (risk.base_rate * 100).toFixed(0) })
+          : t("notEnoughHistory")}
       </p>
 
       <div className="mt-1.5 flex flex-wrap gap-3 text-xs">
         {risk.commitment_id && (
           <Link href={`/projects/${projectId}`} className="text-signal hover:underline">
-            View in Living WIP →
+            {t("viewInLivingWip")}
           </Link>
         )}
         {risk.milestone_id && (
           <Link href={`/projects/${projectId}/twin`} className="text-signal hover:underline">
-            View in Twin →
+            {t("viewInTwin")}
           </Link>
         )}
         {risk.spec_claim_id && <SpecClaimLink projectId={projectId} specClaimId={risk.spec_claim_id} />}
@@ -76,15 +78,15 @@ export function RiskCard({
         aria-expanded={showDetail}
         className="mt-2 text-xs text-ink-muted hover:text-signal"
       >
-        {showDetail ? "Hide details" : "Details"}
+        {showDetail ? t("hideDetails") : t("details")}
       </button>
 
       {showDetail && (
         <div className="mt-2 flex flex-col gap-1 rounded-md bg-surface-sunk p-2 font-mono text-xs text-ink-secondary">
-          <span>finding_key: {risk.finding_key}</span>
-          <span>created: {formatDateTime(risk.created_at)}</span>
+          <span>{t("findingKey", { key: risk.finding_key })}</span>
+          <span>{t("created", { date: formatDateTime(risk.created_at) })}</span>
           {risk.acknowledged_at && (
-            <span>acknowledged: {formatDateTime(risk.acknowledged_at)}</span>
+            <span>{t("acknowledged", { date: formatDateTime(risk.acknowledged_at) })}</span>
           )}
           {/* Escalation is a periodic sweep that happened to this Risk over
               time, not an action a user triggers here — rendered as a
@@ -92,14 +94,18 @@ export function RiskCard({
               NON-OBVIOUS note). */}
           {risk.escalated_to_role && (
             <span>
-              escalated to {risk.escalated_to_role}
-              {risk.escalated_at && ` on ${formatDateTime(risk.escalated_at)}`}
+              {risk.escalated_at
+                ? t("escalatedToOnDate", {
+                    role: risk.escalated_to_role,
+                    date: formatDateTime(risk.escalated_at),
+                  })
+                : t("escalatedTo", { role: risk.escalated_to_role })}
             </span>
           )}
-          {risk.resolved_at && <span>resolved: {formatDateTime(risk.resolved_at)}</span>}
-          {risk.superseded_by && <span>superseded by a newer finding for the same condition</span>}
+          {risk.resolved_at && <span>{t("resolved", { date: formatDateTime(risk.resolved_at) })}</span>}
+          {risk.superseded_by && <span>{t("superseded")}</span>}
           {Object.keys(risk.detail).length > 0 && (
-            <span>detail: {JSON.stringify(risk.detail)}</span>
+            <span>{t("detail", { json: JSON.stringify(risk.detail) })}</span>
           )}
         </div>
       )}
@@ -114,7 +120,7 @@ export function RiskCard({
                 onClick={() => acknowledgeMutation.mutate(risk.id)}
                 className="rounded-md border border-signal px-3 py-1.5 text-xs font-medium text-signal hover:bg-signal-soft disabled:opacity-50"
               >
-                Acknowledge — pause escalation
+                {t("acknowledgeAction")}
               </button>
             )}
             {canResolve && (
@@ -124,13 +130,12 @@ export function RiskCard({
                 onClick={() => resolveMutation.mutate(risk.id)}
                 className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
               >
-                Mark condition resolved
+                {t("resolveAction")}
               </button>
             )}
           </div>
           <p className="text-[11px] text-ink-muted">
-            Acknowledging only pauses escalation — it does not mean this is handled. Only Resolve
-            records the underlying condition as actually addressed.
+            {t("acknowledgeNote")}
           </p>
         </div>
       )}
@@ -160,11 +165,12 @@ export function RiskCard({
  * milestone_id above.
  */
 function SpecClaimLink({ projectId, specClaimId }: { projectId: string; specClaimId: string }) {
+  const t = useTranslations("foresight.riskCard");
   const { data: claim } = useResolveSpecClaimQuery(projectId, specClaimId);
   if (!claim) return null;
   return (
     <Link href={`/projects/${projectId}/documents/${claim.document_id}`} className="text-signal hover:underline">
-      View spec claim in Documents →
+      {t("viewSpecClaim")}
     </Link>
   );
 }

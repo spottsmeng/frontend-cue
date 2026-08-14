@@ -1,12 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
-import type { DependencyOut, MembershipRole, MilestoneOut, MilestoneUpdate } from "@/lib/api/types";
+import type {
+  DependencyOut,
+  MembershipRole,
+  MilestoneOut,
+  MilestoneUpdate,
+  OntologyTermOut,
+} from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format";
 import { hasAnyRole, WRITE_ROLES } from "@/lib/roles";
 import { formatSlackDays, type TimelineNode } from "@/lib/twin/presentation";
 import {
+  resolveTermLabel,
   useDeleteDependencyMutation,
   useDeleteMilestoneMutation,
   useUpdateMilestoneMutation,
@@ -52,6 +60,7 @@ export function MilestoneDetailPanel({
   node,
   dependencies,
   milestonesById,
+  milestoneTypes,
   effectiveRoles,
   onClose,
 }: {
@@ -60,10 +69,15 @@ export function MilestoneDetailPanel({
   node: TimelineNode | undefined;
   dependencies: DependencyOut[];
   milestonesById: Map<string, MilestoneOut>;
+  milestoneTypes: OntologyTermOut[] | undefined;
   effectiveRoles: MembershipRole[] | undefined;
   onClose: () => void;
 }) {
+  const t = useTranslations("twin.milestoneDetailPanel");
   const [form, setForm] = useState<FormState>(() => formFromMilestone(milestone));
+  // F9 gap-audit fix — see components/twin/timeline-node.tsx's own comment
+  // for the full history of this gap.
+  const type = resolveTermLabel(milestoneTypes, milestone.type_term_id);
   const [loadedFor, setLoadedFor] = useState(milestone.updated_at);
   if (milestone.updated_at !== loadedFor) {
     setLoadedFor(milestone.updated_at);
@@ -93,41 +107,46 @@ export function MilestoneDetailPanel({
   }
 
   return (
-    <DetailDrawer title="Milestone" onClose={onClose}>
+    <DetailDrawer title={t("drawerTitle")} onClose={onClose}>
       <div>
         <div className="flex items-center gap-2">
           <h3 className="text-base font-semibold text-ink">{milestone.name}</h3>
+          {type && (
+            <span className="rounded-full bg-surface-sunk px-1.5 py-0.5 text-[10px] font-medium text-ink-muted">
+              {type.label_en}
+            </span>
+          )}
           {milestone.is_fixed && (
             <span className="rounded-full bg-surface-sunk px-1.5 py-0.5 text-[10px] font-medium text-ink-muted">
-              🔒 fixed
+              {t("fixedBadge")}
             </span>
           )}
           {node?.isCritical && (
             <span className="rounded-full bg-critical-soft px-1.5 py-0.5 text-[10px] font-medium text-critical">
-              critical path
+              {t("criticalPath")}
             </span>
           )}
         </div>
         <p className="mt-1 font-mono text-xs text-ink-muted">
-          earliest {formatDateTime(node?.earliest ?? null)} · latest {formatDateTime(node?.latest ?? null)} ·{" "}
+          {t("earliest", { date: formatDateTime(node?.earliest ?? null) })} ·{" "}
+          {t("latest", { date: formatDateTime(node?.latest ?? null) })} ·{" "}
           <span className={node?.isCritical ? "text-critical" : undefined}>
             {formatSlackDays(node?.slackDays ?? null)}
           </span>
         </p>
         <p className="mt-1 text-xs text-ink-muted">
-          Slack and critical-path status come from the seeded archetype plus any PM overrides —
-          CUE hasn&rsquo;t learned duration distributions from history (FR-TWN-08 is not built).
+          {t("slackExplanation")}
         </p>
       </div>
 
       <section>
         <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-muted">
-          {canWrite ? "Edit (recorded as an override)" : "Details"}
+          {canWrite ? t("editHeading") : t("detailsHeading")}
         </h4>
         {canWrite ? (
           <div className="flex flex-col gap-2">
             <label className="text-xs text-ink-secondary">
-              Name
+              {t("name")}
               <input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -136,7 +155,7 @@ export function MilestoneDetailPanel({
             </label>
             <div className="flex gap-2">
               <label className="flex-1 text-xs text-ink-secondary">
-                Planned
+                {t("planned")}
                 <input
                   type="datetime-local"
                   value={form.planned_at}
@@ -145,7 +164,7 @@ export function MilestoneDetailPanel({
                 />
               </label>
               <label className="flex-1 text-xs text-ink-secondary">
-                Actual
+                {t("actual")}
                 <input
                   type="datetime-local"
                   value={form.actual_at}
@@ -160,7 +179,7 @@ export function MilestoneDetailPanel({
                 checked={form.is_fixed}
                 onChange={(e) => setForm({ ...form, is_fixed: e.target.checked })}
               />
-              Fixed — cannot be pushed by an upstream slip (FR-TWN-11)
+              {t("fixedCheckbox")}
             </label>
             <button
               type="button"
@@ -172,27 +191,25 @@ export function MilestoneDetailPanel({
               }}
               className="mt-1 self-start rounded-md bg-signal px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
             >
-              {updateMutation.isPending ? "Saving override…" : "Save override"}
+              {updateMutation.isPending ? t("savingOverride") : t("saveOverride")}
             </button>
-            {updateMutation.isError && <p className="text-xs text-critical">Could not save.</p>}
-            {updateMutation.isSuccess && <p className="text-xs text-good">Saved — recorded in the Twin audit trail.</p>}
+            {updateMutation.isError && <p className="text-xs text-critical">{t("saveError")}</p>}
+            {updateMutation.isSuccess && <p className="text-xs text-good">{t("saveSuccess")}</p>}
           </div>
         ) : (
           <p className="text-sm text-ink-secondary">
-            Project-manager, producer, finance, account-manager, designer or administrator role
-            required to override.
+            {t("noWritePermission")}
           </p>
         )}
       </section>
 
       {canWrite && (
         <section>
-          <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-muted">Delete</h4>
+          <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-muted">{t("deleteHeading")}</h4>
           {blockingEdges.length > 0 ? (
             <div className="flex flex-col gap-2">
               <p className="text-xs text-warning">
-                Remove {blockingEdges.length} dependent {blockingEdges.length === 1 ? "edge" : "edges"} first —
-                a milestone still referenced by a dependency can&rsquo;t be deleted (a deliberate, separate step).
+                {t("blockingEdges", { count: blockingEdges.length })}
               </p>
               <ul className="flex flex-col gap-1">
                 {blockingEdges.map((edge) => {
@@ -207,7 +224,7 @@ export function MilestoneDetailPanel({
                       className="flex items-center justify-between rounded-md border border-border p-2 text-xs"
                     >
                       <span className="text-ink-secondary">
-                        {direction} {other?.name ?? "unknown milestone"} (lag {edge.lag_days}d)
+                        {direction} {other?.name ?? t("unknownMilestone")} ({t("lagDays", { days: edge.lag_days })})
                       </span>
                       <button
                         type="button"
@@ -215,7 +232,7 @@ export function MilestoneDetailPanel({
                         disabled={deleteEdgeMutation.isPending}
                         className="rounded-md border border-border-strong px-2 py-1 text-critical hover:border-critical disabled:opacity-50"
                       >
-                        Remove edge
+                        {t("removeEdge")}
                       </button>
                     </li>
                   );
@@ -229,12 +246,12 @@ export function MilestoneDetailPanel({
               onClick={() => deleteMutation.mutate(milestone.id, { onSuccess: onClose })}
               className="rounded-md border border-critical px-3 py-1.5 text-xs text-critical hover:bg-critical-soft disabled:opacity-50"
             >
-              {deleteMutation.isPending ? "Deleting…" : "Delete milestone"}
+              {deleteMutation.isPending ? t("deleting") : t("delete")}
             </button>
           )}
           {deleteMutation.isError && (
             <p className="mt-2 text-xs text-critical">
-              Could not delete — it may still be referenced by a dependency.
+              {t("deleteError")}
             </p>
           )}
         </section>

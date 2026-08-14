@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import type { BudgetSummarySection as BudgetSummarySectionT, MembershipRole } from "@/lib/api/types";
 
 import { BudgetReviseForm } from "../budget-revise-form";
@@ -19,9 +21,10 @@ export function BudgetSummaryPanel({
   effectiveRoles: MembershipRole[] | undefined;
   onOpenCommitment: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("livingWip.budgetSummarySection");
   return (
     <SectionPanel
-      title="Budget summary"
+      title={t("title")}
       action={
         <BudgetReviseForm
           projectId={projectId}
@@ -32,7 +35,7 @@ export function BudgetSummaryPanel({
     >
       <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
         <div>
-          <dt className="text-xs text-ink-muted">Approved budget</dt>
+          <dt className="text-xs text-ink-muted">{t("approvedBudget")}</dt>
           <dd className="mt-0.5">
             <ReportField
               field={section.approved_budget}
@@ -43,7 +46,7 @@ export function BudgetSummaryPanel({
           </dd>
         </div>
         <div>
-          <dt className="text-xs text-ink-muted">Committed spend</dt>
+          <dt className="text-xs text-ink-muted">{t("committedSpend")}</dt>
           <dd className="mt-0.5">
             <ReportField
               field={section.committed_spend}
@@ -54,7 +57,7 @@ export function BudgetSummaryPanel({
           </dd>
         </div>
         <div>
-          <dt className="text-xs text-ink-muted">Outstanding payments</dt>
+          <dt className="text-xs text-ink-muted">{t("outstandingPayments")}</dt>
           <dd className="mt-0.5">
             <ReportField
               field={section.outstanding_payments}
@@ -65,7 +68,7 @@ export function BudgetSummaryPanel({
           </dd>
         </div>
         <div>
-          <dt className="text-xs text-ink-muted">Variance</dt>
+          <dt className="text-xs text-ink-muted">{t("variance")}</dt>
           <dd className="mt-0.5">
             <ReportField
               field={section.variance}

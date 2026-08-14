@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { formatDateTime } from "@/lib/format";
 import { useEffectiveRoles } from "@/lib/roles";
@@ -31,22 +32,23 @@ import { SupersessionReviewPanel } from "./supersession-review-panel";
  * frontend/PROGRESS.md's F1 notes.
  */
 export function LivingWipView({ projectId }: { projectId: string }) {
+  const t = useTranslations("livingWip.view");
   const { data: report, isLoading, isError } = useReportQuery(projectId);
   const { data: roles } = useEffectiveRoles(projectId);
   const [openCommitmentId, setOpenCommitmentId] = useState<string | null>(null);
 
   if (isLoading) {
-    return <p className="p-6 text-sm text-ink-muted">Loading Living WIP…</p>;
+    return <p className="p-6 text-sm text-ink-muted">{t("loading")}</p>;
   }
   if (isError || !report) {
-    return <p className="p-6 text-sm text-critical">Could not load the report. Please retry.</p>;
+    return <p className="p-6 text-sm text-critical">{t("loadError")}</p>;
   }
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface/95 px-4 py-2.5 backdrop-blur">
         <span className="font-mono text-xs text-ink-muted">
-          Last ledger change: {formatDateTime(report.generated_at)}
+          {t("lastLedgerChange", { date: formatDateTime(report.generated_at) })}
         </span>
         <FreezeExportControl
           projectId={projectId}

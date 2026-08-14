@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useDeviationsQuery } from "@/lib/deviations/hooks";
 import { useDeviationClassTermsQuery } from "@/lib/foresight/hooks";
@@ -26,6 +27,7 @@ export function DeviationList({
   projectId: string;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("foresight.deviationList");
   const [status, setStatus] = useState<DeviationStatus | undefined>(undefined);
   const { data: deviations, isLoading, isError } = useDeviationsQuery(projectId, status);
   const { data: classTerms } = useDeviationClassTermsQuery(projectId);
@@ -34,13 +36,13 @@ export function DeviationList({
   return (
     <div className="flex flex-col gap-3">
       <label className="text-xs text-ink-secondary">
-        Status
+        {t("status")}
         <select
           value={status ?? ""}
           onChange={(e) => setStatus((e.target.value || undefined) as DeviationStatus | undefined)}
           className="mt-1 block w-48 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
         >
-          <option value="">All statuses</option>
+          <option value="">{t("allStatuses")}</option>
           {STATUS_OPTIONS.map((s) => (
             <option key={s} value={s}>
               {s}
@@ -49,10 +51,10 @@ export function DeviationList({
         </select>
       </label>
 
-      {isLoading && <p className="text-sm text-ink-muted">Loading deviations…</p>}
-      {isError && <p className="text-sm text-critical">Could not load deviations. Please retry.</p>}
+      {isLoading && <p className="text-sm text-ink-muted">{t("loading")}</p>}
+      {isError && <p className="text-sm text-critical">{t("error")}</p>}
       {deviations && deviations.length === 0 && (
-        <EmptyState message="No deviations match these filters right now." />
+        <EmptyState message={t("empty")} />
       )}
       {deviations && deviations.length > 0 && (
         <ul className="flex flex-col gap-2">

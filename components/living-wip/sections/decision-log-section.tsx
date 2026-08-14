@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { formatDate } from "@/lib/format";
 import type { DecisionAndApprovalLogSection as DecisionAndApprovalLogSectionT } from "@/lib/api/types";
 
@@ -13,18 +15,19 @@ export function DecisionLogPanel({
   section: DecisionAndApprovalLogSectionT;
   onOpenCommitment: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("livingWip.decisionLogSection");
   const empty = section.decisions.length === 0 && section.outstanding_approvals.length === 0;
 
   return (
-    <SectionPanel title="Decision and approval log">
+    <SectionPanel title={t("title")}>
       {empty ? (
-        <EmptyState message="No decisions or outstanding approvals recorded yet." />
+        <EmptyState message={t("empty")} />
       ) : (
         <div className="flex flex-col gap-4">
           {section.outstanding_approvals.length > 0 && (
             <div>
               <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">
-                Outstanding approvals
+                {t("outstandingApprovals")}
               </p>
               <ul className="flex flex-col gap-1.5">
                 {section.outstanding_approvals.map((a) => (
@@ -35,12 +38,13 @@ export function DecisionLogPanel({
                     <button
                       type="button"
                       onClick={() => onOpenCommitment(a.commitment_id)}
+                      lang="en"
                       className="text-left text-sm text-signal hover:underline"
                     >
                       {a.deliverable_en}
                     </button>
                     <span className="flex items-center gap-2 font-mono text-xs text-ink-muted">
-                      {a.due_at && `due ${formatDate(a.due_at)}`}
+                      {a.due_at && t("due", { date: formatDate(a.due_at) })}
                       <ProvenanceChip provenance={[a.provenance]} onOpenCommitment={onOpenCommitment} />
                     </span>
                   </li>
@@ -52,7 +56,7 @@ export function DecisionLogPanel({
           {section.decisions.length > 0 && (
             <div>
               <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">
-                Recent decisions
+                {t("recentDecisions")}
               </p>
               <ul className="flex flex-col gap-1.5">
                 {section.decisions.map((d) => (

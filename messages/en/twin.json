@@ -1,0 +1,105 @@
+{
+  "view": {
+    "title": "Production Twin",
+    "loading": "Loading Production Twin…",
+    "error": "Could not load the Twin. Please retry.",
+    "sections": {
+      "timeline": "Timeline",
+      "dependencies": "Dependencies",
+      "propagationSimulator": "Propagation simulator"
+    }
+  },
+  "addMilestoneForm": {
+    "addMilestone": "+ Add milestone",
+    "type": "Type",
+    "selectAType": "Select a type…",
+    "name": "Name",
+    "plannedDate": "Planned date",
+    "fixed": "Fixed (cannot be pushed)",
+    "adding": "Adding…",
+    "add": "Add milestone",
+    "cancel": "Cancel",
+    "error": "Could not add milestone."
+  },
+  "constraintBanner": {
+    "label": "Current binding constraint:",
+    "none": "none — every milestone has open slack"
+  },
+  "dependencyPanel": {
+    "empty": "No dependency edges on this project's Twin yet.",
+    "unknownMilestone": "unknown",
+    "lagPrefix": "lag",
+    "lagSuffix": "d",
+    "save": "Save",
+    "remove": "Remove",
+    "lagDays": "lag {days}d",
+    "upstream": "Upstream",
+    "downstream": "Downstream",
+    "select": "Select…",
+    "lagDaysLabel": "Lag (days)",
+    "adding": "Adding…",
+    "add": "Add dependency",
+    "rejected": "Rejected — {error} Remove or rewire an existing edge before retrying."
+  },
+  "milestoneDetailPanel": {
+    "drawerTitle": "Milestone",
+    "fixedBadge": "🔒 fixed",
+    "criticalPath": "critical path",
+    "earliest": "earliest {date}",
+    "latest": "latest {date}",
+    "slackExplanation": "Slack and critical-path status come from the seeded archetype plus any PM overrides — CUE hasn't learned duration distributions from history (FR-TWN-08 is not built).",
+    "editHeading": "Edit (recorded as an override)",
+    "detailsHeading": "Details",
+    "name": "Name",
+    "planned": "Planned",
+    "actual": "Actual",
+    "fixedCheckbox": "Fixed — cannot be pushed by an upstream slip (FR-TWN-11)",
+    "savingOverride": "Saving override…",
+    "saveOverride": "Save override",
+    "saveError": "Could not save.",
+    "saveSuccess": "Saved — recorded in the Twin audit trail.",
+    "noWritePermission": "Project-manager, producer, finance, account-manager, designer or administrator role required to override.",
+    "deleteHeading": "Delete",
+    "blockingEdges": "Remove {count, plural, one {# dependent edge} other {# dependent edges}} first — a milestone still referenced by a dependency can't be deleted (a deliberate, separate step).",
+    "unknownMilestone": "unknown milestone",
+    "lagDays": "lag {days}d",
+    "removeEdge": "Remove edge",
+    "deleteError": "Could not delete — it may still be referenced by a dependency.",
+    "deleting": "Deleting…",
+    "delete": "Delete milestone"
+  },
+  "propagationSimulator": {
+    "simulationOnly": "Simulation only — this never writes anything. Every candidate below is explored, not saved; nothing on this project changes until a PM edits a milestone directly.",
+    "ifMilestone": "If milestone",
+    "select": "Select…",
+    "landsOn": "lands on",
+    "remove": "Remove",
+    "addAnother": "+ Add another candidate (compare side by side)",
+    "simulating": "Simulating…",
+    "runSimulation": "Run simulation",
+    "runError": "Could not run the simulation.",
+    "unnamedMilestone": "milestone",
+    "bindingConstraintAfter": "Binding constraint after this shift:",
+    "none": "none",
+    "changedFromCurrent": "(changed from the current graph)",
+    "unknownMilestone": "unknown",
+    "stoppedHere": "🔒 stopped here (fixed)",
+    "consumedSlack": "consumed {days}d slack",
+    "consumedSlackUnknown": "consumed — slack"
+  },
+  "recomputeButton": {
+    "title": "Force a fresh CPM pass and record it in the Twin audit trail",
+    "recomputing": "Recomputing…",
+    "recompute": "Recompute"
+  },
+  "timelineNode": {
+    "fixedTitle": "Fixed — cannot be pushed by an upstream slip",
+    "fixed": "fixed",
+    "criticalPath": "critical path",
+    "planned": "planned {date}",
+    "actual": "actual {date}"
+  },
+  "timeline": {
+    "empty": "No milestones on this project's Twin yet."
+  }
+}

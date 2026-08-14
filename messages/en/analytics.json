@@ -1,0 +1,90 @@
+{
+  "analyticsView": {
+    "loadError": "Could not load your projects. Please retry.",
+    "loading": "Loading your projects…",
+    "noProjects": "You aren't a member of any project yet, so there's nothing to chart here.",
+    "verificationBurdenTitle": "Verification burden",
+    "writebackReplyRateTitle": "Write-back reply rate",
+    "costPerProjectTitle": "Cost per active project",
+    "notYetMeasurableTitle": "Not yet measurable"
+  },
+  "costSummaryTable": {
+    "adminOnly": "Cost per project is administrator only. You don't hold that role on any project in this organisation, so there's nothing here for you to see.",
+    "loadError": "Could not load cost summary. Please retry.",
+    "loading": "Loading cost summary…",
+    "empty": "No LLM usage recorded yet.",
+    "headers": {
+      "project": "Project",
+      "provider": "Provider",
+      "model": "Model",
+      "calls": "Calls",
+      "tokensIn": "Tokens in",
+      "tokensOut": "Tokens out",
+      "estimatedCost": "Estimated cost"
+    },
+    "total": "Total",
+    "unknownCostNote": "Total cost is unknown, not zero — every call so far used a model this system doesn't recognise for pricing.",
+    "unattributed": "Unattributed",
+    "unknownProject": "Unknown project",
+    "unknownCost": "unknown"
+  },
+  "verificationBurdenChart": {
+    "loadError": "Could not load commitments. Please retry.",
+    "loading": "Loading verification burden…",
+    "empty": "No commitments have ever required human verification yet on any project you can see.",
+    "chartAriaLabel": "Verification burden: commitments requiring human verification, per project per week",
+    "headers": {
+      "weekOf": "Week of",
+      "project": "Project",
+      "commitmentsNeedingVerification": "Commitments needing verification"
+    }
+  },
+  "writebackReplyRateChart": {
+    "loadError": "Could not load write-back history. Please retry.",
+    "loading": "Loading write-back reply rate…",
+    "empty": "No write-back messages have been sent yet on any project you can see.",
+    "chartAriaLabel": "Write-back reply rate: vendor confirmations received vs. sent, per project per week",
+    "headers": {
+      "weekOf": "Week of",
+      "project": "Project",
+      "sent": "Sent",
+      "replied": "Replied",
+      "rate": "Rate"
+    }
+  },
+  "methodologyFootnote": {
+    "title": "What this dashboard can and can't show yet, and why",
+    "paragraph1": "PRD §13 commits CUE to shipping a metrics dashboard so Pico can verify its own claimed value independently, not take it on faith. Three of the ten §13 metrics are real, live numbers on this page: verification burden and write-back reply rate are computed here from the same commitment and write-back records you can inspect on each project's own Living WIP page; cost per project is read directly from the LLM usage ledger every extraction call writes to.",
+    "paragraph2": "The remaining seven are shown below with the specific, real reason they aren't measurable yet — a missing telemetry pipeline, a missing calendar integration, a schema decision nobody has made, or a ground-truth corpus that doesn't exist because Phase 0 discovery hasn't run. None of them are hidden, and none of them are a fabricated number. A chart with no data looks unfinished; a chart with a fabricated number looks finished and lies — this dashboard chooses the former every time."
+  },
+  "unmeasurableMetricsPanel": {
+    "coordinationOverhead": {
+      "metric": "Coordination overhead (PM minutes on relay activity)",
+      "blocker": "needs product-usage telemetry — no frontend usage-event pipeline exists anywhere in this codebase yet."
+    },
+    "statusMeetingDuration": {
+      "metric": "Status meeting duration",
+      "blocker": "needs a calendar/Teams-meeting-duration integration — FR-CAP-13's transcript ingestion captures meeting content, not duration."
+    },
+    "reportPreparationTime": {
+      "metric": "Report preparation time (WIP opened → exported)",
+      "blocker": "needs a \"WIP page opened\" usage event — only the export half is timestamped today (ReportSnapshot.generated_at)."
+    },
+    "activeChatsPerPm": {
+      "metric": "Active chats per PM per day",
+      "blocker": "needs product-usage telemetry for CUE's own UI — the same gap as coordination overhead above."
+    },
+    "contingencyDrawn": {
+      "metric": "Contingency drawn",
+      "blocker": "Budget only carries approved_amount/currency — no contingency-vs-base split exists in the data model. This is a schema/product decision for Finance or a future backend session, not one this dashboard makes unilaterally."
+    },
+    "captureRate": {
+      "metric": "Commitment capture rate (detected vs. ground truth)",
+      "blocker": "no real ground-truth corpus exists yet — Phase 0 discovery (PRD §15) hasn't run for any live project; cue-eval's ten synthetic cases are a regression smoke test, not an accuracy measurement."
+    },
+    "extractionAccuracy": {
+      "metric": "Extraction accuracy by slice (language / channel / vendor category)",
+      "blocker": "drift-check results aren't persisted to a queryable table yet — only available via an offline cue-eval/run_eval.py --json run, not a live endpoint (re-running eval on every dashboard load was judged a design smell, not built)."
+    }
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { useEffectiveRoles } from "@/lib/roles";
 import { useDocumentLineageQuery, useDocumentQuery } from "@/lib/documents/hooks";
@@ -17,6 +18,7 @@ export function DocumentDetailView({
   projectId: string;
   documentId: string;
 }) {
+  const t = useTranslations("documents.detail");
   const { data: roles } = useEffectiveRoles(projectId);
   const { data: document, isLoading, isError } = useDocumentQuery(projectId, documentId);
   const { data: lineage } = useDocumentLineageQuery(projectId, documentId);
@@ -25,23 +27,23 @@ export function DocumentDetailView({
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface/95 px-4 py-2.5 backdrop-blur">
         <Link href={`/projects/${projectId}/documents`} className="text-sm text-ink-muted hover:text-signal">
-          ← Documents
+          {t("back")}
         </Link>
-        <span className="text-sm font-medium text-ink">{document?.name ?? "Document"}</span>
+        <span className="text-sm font-medium text-ink">{document?.name ?? t("fallbackName")}</span>
       </div>
 
       <div className="flex flex-col gap-4 px-4 py-4">
-        {isLoading && <p className="text-sm text-ink-muted">Loading…</p>}
-        {isError && <p className="text-sm text-critical">Could not load this document.</p>}
+        {isLoading && <p className="text-sm text-ink-muted">{t("loading")}</p>}
+        {isError && <p className="text-sm text-critical">{t("loadError")}</p>}
 
         {document && (
-          <SectionPanel title="Tags">
+          <SectionPanel title={t("tagsSectionTitle")}>
             <DocumentTagForm projectId={projectId} document={document} effectiveRoles={roles?.roles} />
           </SectionPanel>
         )}
 
         <SectionPanel
-          title="Versions"
+          title={t("versionsSectionTitle")}
           action={<AddVersionForm projectId={projectId} documentId={documentId} effectiveRoles={roles?.roles} />}
         >
           {lineage ? (
@@ -52,7 +54,7 @@ export function DocumentDetailView({
               effectiveRoles={roles?.roles}
             />
           ) : (
-            <p className="text-sm text-ink-muted">Loading version history…</p>
+            <p className="text-sm text-ink-muted">{t("loadingVersionHistory")}</p>
           )}
         </SectionPanel>
       </div>

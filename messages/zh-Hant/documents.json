@@ -1,0 +1,91 @@
+{
+  "overview": {
+    "title": "文件",
+    "searchSectionTitle": "搜尋",
+    "allDocumentsSectionTitle": "全部文件",
+    "filterByClass": "依類別篩選",
+    "allClasses": "全部"
+  },
+  "list": {
+    "loading": "正在載入文件……",
+    "loadError": "無法載入文件。",
+    "empty": "尚未上傳任何文件。",
+    "noMatch": "沒有符合此篩選條件的文件。",
+    "noVersionYet": "尚無版本",
+    "untagged": "未分類",
+    "updated": "· 更新於 {date}"
+  },
+  "search": {
+    "placeholder": "搜尋文件擷取文字——關鍵字比對,非語意搜尋",
+    "hint": "輸入關鍵字以搜尋已上傳的文件文字。",
+    "searching": "搜尋中……",
+    "error": "搜尋失敗,請重試。",
+    "noMatches": "找不到相符結果。",
+    "rank": "相關度 {rank}"
+  },
+  "upload": {
+    "openButton": "+ 上傳文件",
+    "fileLabel": "檔案",
+    "nameLabel": "名稱",
+    "classLabel": "類別",
+    "untagged": "未分類",
+    "languageLabel": "語言(BCP 47)",
+    "extractedTextLabel": "擷取文字(選填——留空則由 CUE 自動從 PDF、Office 檔案及圖片中擷取;並非所有檔案類型都支援自動擷取,若未提供擷取文字,該文件在擷取成功前將無法被搜尋到)",
+    "submit": "上傳",
+    "submitting": "上傳中……",
+    "cancel": "取消",
+    "error": "無法上傳此文件。"
+  },
+  "detail": {
+    "back": "← 文件",
+    "fallbackName": "文件",
+    "tagsSectionTitle": "標籤",
+    "versionsSectionTitle": "版本",
+    "loading": "載入中……",
+    "loadError": "無法載入此文件。",
+    "loadingVersionHistory": "正在載入版本歷史……"
+  },
+  "versionHistory": {
+    "empty": "尚未上傳任何版本。",
+    "current": "目前版本",
+    "superseded": "已被取代",
+    "download": "下載 →",
+    "approvedBy": "由 {name} 於 {date} 核准。寫回 SharePoint/Nextcloud 的作業可能已在背景執行——本版本未顯示其結果(詳見 frontend/PROGRESS.md)。",
+    "notApproved": "尚未核准。",
+    "notIndexed": "尚未建立索引——無法從此檔案擷取文字。請重新上傳並附上擷取文字,以便本文件可被搜尋。",
+    "approve": "核准——將此版本設為已核准版本",
+    "approving": "核准中……",
+    "hideSpecClaims": "隱藏規格聲明",
+    "viewSpecClaims": "檢視規格聲明",
+    "approveError": "無法核准此版本。",
+    "addForm": {
+      "openButton": "+ 新增版本",
+      "fileLabel": "檔案",
+      "extractedTextLabel": "擷取文字(選填——留空則由 CUE 自動從 PDF、Office 檔案及圖片中擷取)",
+      "submit": "上傳新版本",
+      "submitting": "上傳中……",
+      "cancel": "取消",
+      "error": "無法上傳此版本。"
+    }
+  },
+  "specClaims": {
+    "loading": "正在載入規格聲明……",
+    "loadError": "無法載入規格聲明。",
+    "empty": "此版本尚未擷取到規格聲明。",
+    "resolvingConflict": "正在解析衝突聲明……",
+    "unresolvableConflict": "與另一項聲明衝突(無法解析)。",
+    "conflictsWith": "衝突:",
+    "at": "位於",
+    "from": "——來自"
+  },
+  "tagging": {
+    "loading": "正在載入標籤選項……",
+    "classLabel": "類別",
+    "untagged": "未分類",
+    "milestoneTypeLabel": "里程碑類型",
+    "phaseLabel": "階段",
+    "submit": "儲存標籤",
+    "submitting": "儲存中……",
+    "error": "無法儲存標籤。"
+  }
+}

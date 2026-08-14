@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { formatDateTime } from "@/lib/format";
 import { useAcknowledgeNotificationMutation, useNotificationsQuery } from "@/lib/foresight/hooks";
 import type { NotificationOut } from "@/lib/api/types";
@@ -18,13 +20,14 @@ import { SeverityBadge } from "./severity-badge";
  * client-side, only reads what's already collapsed.
  */
 export function NotificationList({ projectId }: { projectId: string }) {
+  const t = useTranslations("foresight.notificationList");
   const { data: notifications, isLoading, isError } = useNotificationsQuery(projectId);
   const acknowledgeMutation = useAcknowledgeNotificationMutation(projectId);
 
-  if (isLoading) return <p className="text-sm text-ink-muted">Loading notifications…</p>;
-  if (isError) return <p className="text-sm text-critical">Could not load notifications. Please retry.</p>;
+  if (isLoading) return <p className="text-sm text-ink-muted">{t("loading")}</p>;
+  if (isError) return <p className="text-sm text-critical">{t("error")}</p>;
   if (!notifications || notifications.length === 0) {
-    return <EmptyState message="No notifications for you on this project right now." />;
+    return <EmptyState message={t("empty")} />;
   }
 
   return (
@@ -51,6 +54,7 @@ export function NotificationRow({
   onAcknowledge: () => void;
   isAcknowledging: boolean;
 }) {
+  const t = useTranslations("foresight.notificationList");
   const n = notification;
   return (
     <li className="rounded-md border border-border p-3">
@@ -60,18 +64,18 @@ export function NotificationRow({
       </div>
 
       {n.collapsed_count > 1 && (
-        <p className="mt-1 text-xs text-ink-secondary">{n.collapsed_count} related findings</p>
+        <p className="mt-1 text-xs text-ink-secondary">{t("relatedFindings", { count: n.collapsed_count })}</p>
       )}
 
       <p className="mt-1.5 font-mono text-xs text-ink-muted">
         {formatDateTime(n.created_at)} ·{" "}
         {n.delivered_via === "webhook" && n.sent_at
-          ? `delivered via webhook at ${formatDateTime(n.sent_at)}`
-          : "not yet delivered"}
+          ? t("deliveredViaWebhook", { date: formatDateTime(n.sent_at) })
+          : t("notYetDelivered")}
       </p>
 
       {n.acknowledged_at ? (
-        <p className="mt-2 text-xs text-ink-muted">Acknowledged {formatDateTime(n.acknowledged_at)}</p>
+        <p className="mt-2 text-xs text-ink-muted">{t("acknowledgedAt", { date: formatDateTime(n.acknowledged_at) })}</p>
       ) : (
         <button
           type="button"
@@ -79,7 +83,7 @@ export function NotificationRow({
           onClick={onAcknowledge}
           className="mt-2 rounded-md border border-signal px-3 py-1.5 text-xs font-medium text-signal hover:bg-signal-soft disabled:opacity-50"
         >
-          Acknowledge
+          {t("acknowledge")}
         </button>
       )}
     </li>

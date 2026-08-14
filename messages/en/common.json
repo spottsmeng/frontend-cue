@@ -1,0 +1,16 @@
+{
+  "loading": "Loading…",
+  "error": "Something went wrong",
+  "retry": "Retry",
+  "cancel": "Cancel",
+  "save": "Save",
+  "close": "Close",
+  "confirm": "Confirm",
+  "reject": "Reject",
+  "edit": "Edit",
+  "delete": "Delete",
+  "back": "Back",
+  "next": "Next",
+  "noPermission": "You don't have permission to view this.",
+  "notYetMeasurable": "Not yet measurable"
+}

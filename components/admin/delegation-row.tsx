@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { ROLE_LABEL } from "@/lib/admin/constants";
 import { formatDateTime } from "@/lib/format";
 import type { DelegationOut } from "@/lib/api/types";
@@ -34,6 +36,7 @@ export function DelegationRow({
   onRevoke?: () => void;
   revoking?: boolean;
 }) {
+  const t = useTranslations("admin.delegationRow");
   const expired = new Date(delegation.expires_at).getTime() <= new Date().getTime();
   const status = delegation.revoked_at ? "revoked" : expired ? "expired" : "active";
 
@@ -41,8 +44,10 @@ export function DelegationRow({
     <li className="rounded-md border border-border px-3 py-2 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-ink">
-          {delegatorLabel} → {delegateLabel}{" "}
-          <span className="text-ink-muted">as {ROLE_LABEL[delegation.role]}</span>
+          {t("summary", { delegator: delegatorLabel, delegate: delegateLabel })}{" "}
+          <span className="text-ink-muted">
+            {t("asRole", { role: ROLE_LABEL[delegation.role] })}
+          </span>
         </span>
         {status === "active" && onRevoke ? (
           <button
@@ -51,7 +56,7 @@ export function DelegationRow({
             onClick={onRevoke}
             className="rounded-md border border-border-strong px-2 py-1 text-xs text-critical hover:border-critical disabled:opacity-50"
           >
-            Revoke
+            {t("revoke")}
           </button>
         ) : (
           <span
@@ -63,16 +68,23 @@ export function DelegationRow({
                   : "bg-critical-soft text-critical"
             }`}
           >
-            {status}
+            {t(`status.${status}`)}
           </span>
         )}
       </div>
       <p className="mt-1 font-mono text-xs text-ink-muted">
         {projectLabel && <>{projectLabel} · </>}
-        granted by {grantedByLabel} on {formatDateTime(delegation.granted_at)} · expires{" "}
-        {formatDateTime(delegation.expires_at)}
+        {t("grantedByOn", { name: grantedByLabel, date: formatDateTime(delegation.granted_at) })}
+        {" · "}
+        {t("expiresOn", { date: formatDateTime(delegation.expires_at) })}
         {delegation.revoked_at && (
-          <> · revoked by {revokedByLabel} on {formatDateTime(delegation.revoked_at)}</>
+          <>
+            {" · "}
+            {t("revokedByOn", {
+              name: revokedByLabel,
+              date: formatDateTime(delegation.revoked_at),
+            })}
+          </>
         )}
       </p>
     </li>

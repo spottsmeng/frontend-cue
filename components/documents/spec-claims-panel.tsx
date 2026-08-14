@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { useResolveSpecClaimQuery, useSpecClaimsQuery } from "@/lib/documents/hooks";
 import type { SpecClaimOut } from "@/lib/api/types";
@@ -23,12 +24,13 @@ export function SpecClaimsPanel({
   documentId: string;
   versionId: string;
 }) {
+  const t = useTranslations("documents.specClaims");
   const { data: claims, isLoading, isError } = useSpecClaimsQuery(projectId, documentId, versionId);
 
-  if (isLoading) return <p className="text-xs text-ink-muted">Loading spec claims…</p>;
-  if (isError) return <p className="text-xs text-critical">Could not load spec claims.</p>;
+  if (isLoading) return <p className="text-xs text-ink-muted">{t("loading")}</p>;
+  if (isError) return <p className="text-xs text-critical">{t("loadError")}</p>;
   if (!claims || claims.length === 0) {
-    return <p className="text-xs text-ink-muted">No spec claims extracted for this version yet.</p>;
+    return <p className="text-xs text-ink-muted">{t("empty")}</p>;
   }
 
   return (
@@ -61,19 +63,26 @@ function SpecClaimRow({ projectId, claim }: { projectId: string; claim: SpecClai
 }
 
 function ContradictsLink({ projectId, claimId }: { projectId: string; claimId: string }) {
+  const t = useTranslations("documents.specClaims");
   const { data: target, isLoading, isError } = useResolveSpecClaimQuery(projectId, claimId);
 
   if (isLoading) {
-    return <p className="mt-1.5 text-xs text-ink-muted">Resolving conflicting claim…</p>;
+    return <p className="mt-1.5 text-xs text-ink-muted">{t("resolvingConflict")}</p>;
   }
   if (isError || !target) {
-    return <p className="mt-1.5 text-xs text-critical">Conflicts with another claim (unresolvable).</p>;
+    return <p className="mt-1.5 text-xs text-critical">{t("unresolvableConflict")}</p>;
   }
 
   return (
     <p className="mt-1.5 rounded-md bg-critical-soft px-2 py-1.5 text-xs text-critical">
-      Conflicts with {target.attribute} = <span className="font-mono">{target.value}</span>
-      {target.location_code && <> at {target.location_code}</>} — from{" "}
+      {t("conflictsWith")} {target.attribute} = <span className="font-mono">{target.value}</span>
+      {target.location_code && (
+        <>
+          {" "}
+          {t("at")} {target.location_code}
+        </>
+      )}{" "}
+      {t("from")}{" "}
       <Link
         href={`/projects/${projectId}/documents/${target.document_id}`}
         className="underline hover:no-underline"

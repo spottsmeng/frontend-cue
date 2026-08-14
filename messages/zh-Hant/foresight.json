@@ -1,0 +1,156 @@
+{
+  "view": {
+    "title": "預警",
+    "sections": {
+      "risks": "風險",
+      "deviations": "偏差",
+      "notifications": "通知",
+      "webhooks": "Webhook 訂閱",
+      "quietHours": "免打擾時段",
+      "thresholds": "預警閾值"
+    }
+  },
+  "deviationList": {
+    "status": "狀態",
+    "allStatuses": "所有狀態",
+    "loading": "正在載入偏差…",
+    "error": "無法載入偏差，請重試。",
+    "empty": "沒有符合目前篩選條件的偏差。"
+  },
+  "deviationRow": {
+    "status": {
+      "autoDrafted": "自動產生 — 待審核",
+      "confirmed": "已確認",
+      "resolved": "已解決"
+    },
+    "classFallback": "分類 {id}",
+    "viewInLivingWip": "在即時進度中查看 →",
+    "viewInTwin": "在數位孿生中查看 →",
+    "resolvedFor": "解決日期 {date}，負責人 {owner}",
+    "confirm": "確認",
+    "cancel": "取消",
+    "confirmAsIs": "原樣確認",
+    "editAndConfirm": "編輯後確認",
+    "confirmError": "確認失敗，請重試。",
+    "resolutionDate": "解決日期",
+    "owner": "負責人",
+    "selectAProjectMember": "選擇專案成員…",
+    "loadingMembers": "正在載入成員…",
+    "memberOption": "{name} — {role}",
+    "saveResolution": "儲存解決方案",
+    "resolveError": "記錄解決方案失敗，請重試。",
+    "recordResolution": "記錄解決方案"
+  },
+  "notificationList": {
+    "loading": "正在載入通知…",
+    "error": "無法載入通知，請重試。",
+    "empty": "此專案目前沒有通知。",
+    "relatedFindings": "{count} 則相關發現",
+    "deliveredViaWebhook": "已於 {date} 透過 Webhook 送達",
+    "notYetDelivered": "尚未送達",
+    "acknowledgedAt": "已於 {date} 確認知悉",
+    "acknowledge": "確認知悉"
+  },
+  "quietHoursPanel": {
+    "loading": "正在載入免打擾時段…",
+    "error": "無法載入免打擾時段，請重試。",
+    "nothingConfigured": "尚未設定 — 預警通知目前可於任何時段發送。",
+    "startLabel": "免打擾開始時間（專案當地時間）",
+    "endLabel": "免打擾結束時間",
+    "thresholdLabel": "現場活動例外閾值",
+    "explanation": "在專案宣告的現場活動期間，達到或超過例外閾值的發現將略過免打擾時段，立即送達。",
+    "saving": "正在儲存…",
+    "save": "儲存免打擾設定",
+    "saveError": "儲存失敗，請重試。"
+  },
+  "riskCard": {
+    "viewInLivingWip": "在即時進度中查看 →",
+    "viewInTwin": "在數位孿生中查看 →",
+    "viewSpecClaim": "在文件中查看規格聲明 →",
+    "conflictSuffix": "{message} — 已重新整理為此風險目前的狀態。",
+    "updateError": "無法更新此風險，請重試。",
+    "baseRate": "歷史基準發生率 {percent}%",
+    "notEnoughHistory": "歷史資料尚不充分",
+    "hideDetails": "隱藏詳情",
+    "details": "詳情",
+    "findingKey": "發現識別碼：{key}",
+    "created": "建立時間：{date}",
+    "acknowledged": "確認時間：{date}",
+    "escalatedTo": "已升級至 {role}",
+    "escalatedToOnDate": "已於 {date} 升級至 {role}",
+    "resolved": "解決時間：{date}",
+    "superseded": "已被同一狀況的最新發現取代",
+    "detail": "詳細資訊：{json}",
+    "acknowledgeAction": "確認知悉 — 暫停升級",
+    "resolveAction": "標記狀況已解決",
+    "acknowledgeNote": "確認知悉僅會暫停升級，並不代表已處理。只有「解決」才會記錄該狀況已實際處理。"
+  },
+  "riskFeed": {
+    "status": "狀態",
+    "allStatuses": "所有狀態",
+    "source": "來源",
+    "allSources": "所有來源",
+    "severity": "嚴重程度",
+    "allSeverities": "所有嚴重程度",
+    "loading": "正在載入風險…",
+    "error": "無法載入風險清單，請重試。",
+    "empty": "沒有符合目前篩選條件的風險。"
+  },
+  "riskStatusBadge": {
+    "open": "待處理",
+    "acknowledged": "已確認知悉",
+    "resolved": "已解決",
+    "superseded": "已被取代"
+  },
+  "severityBadge": {
+    "low": "低",
+    "medium": "中",
+    "high": "高",
+    "critical": "嚴重"
+  },
+  "thresholdConfigPanel": {
+    "loading": "正在載入閾值…",
+    "permissionError": "閾值設定僅限機構管理員操作。在本機構的任何專案中均未持有該角色，因此此處內容不可編輯。",
+    "loadError": "無法載入閾值，請重試。",
+    "metricLabel": {
+      "silenceMultiplier": "靜默雷達 — 相對於供應商自身回應基準的倍數",
+      "escalationHours": "升級 — 未確認知悉即升級前的小時數",
+      "forecastSlackDays": "預測 — 視為高失約可能性的里程碑寬鬆天數"
+    },
+    "save": "儲存",
+    "removeOverride": "移除覆蓋項",
+    "orgWideDefaults": "機構層級預設值",
+    "notConfigured": "{label} — 尚未設定，目前生效的內建預設值為 {value}",
+    "thisProjectOverrides": "本專案的覆蓋項",
+    "otherProjectOverrides": "其他專案的覆蓋項",
+    "metric": "指標",
+    "scope": "適用範圍",
+    "scopeProject": "僅本專案",
+    "scopeOrg": "機構層級",
+    "value": "數值",
+    "addOverride": "新增覆蓋項",
+    "saveError": "儲存失敗，請重試。"
+  },
+  "webhookAdminPanel": {
+    "loading": "正在載入 Webhook…",
+    "error": "無法載入 Webhook，請重試。",
+    "empty": "此專案尚無 Webhook 訂閱。",
+    "active": "已啟用",
+    "inactive": "已停用",
+    "created": "建立於 {date}",
+    "delete": "刪除",
+    "url": "URL",
+    "events": "事件",
+    "creating": "正在建立…",
+    "createWebhook": "建立 Webhook",
+    "createError": "建立 Webhook 失敗，請重試。"
+  },
+  "webhookSecretDialog": {
+    "dialogLabel": "Webhook 簽署密鑰",
+    "heading": "請立即儲存此簽署密鑰",
+    "explanation": "此密鑰僅顯示這一次。如果遺失，請刪除此 Webhook 後重新建立一個。",
+    "copied": "已複製",
+    "copy": "複製",
+    "done": "完成 — 已儲存"
+  }
+}

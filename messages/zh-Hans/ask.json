@@ -1,0 +1,120 @@
+{
+  "tabs": {
+    "ask": "问答",
+    "summaries": "摘要",
+    "brief": "交接简报"
+  },
+  "chat": {
+    "contextHint": "追问将沿用本次对话的上下文。",
+    "freshHint": "可用中文或英文询问本项目的任何问题。",
+    "newConversation": "新建对话",
+    "error": "无法连接 CUE,请重试。",
+    "thinking": "思考中——通常几秒钟,最长可能需要 8 秒……",
+    "placeholder": "询问与本项目相关的问题……",
+    "inputLabel": "提问",
+    "submit": "提问",
+    "submitting": "提问中……"
+  },
+  "citations": {
+    "sourceLabel": {
+      "commitment": "承诺事项",
+      "evidence": "证据",
+      "budget": "预算",
+      "document_version": "文档",
+      "audit_log": "决策记录",
+      "deviation": "偏差"
+    },
+    "open": "{label} ↗",
+    "notYetAvailable": "{label}(暂不可用)",
+    "resolving": "{label}——解析中……",
+    "unresolvable": "{label}(无法解析)",
+    "versionOpen": "{label}(第 {versionNo} 版) ↗"
+  },
+  "refusal": {
+    "cantDoYetTitle": "CUE 尚不支持此操作",
+    "openInLivingWip": "前往实时 WIP 直接处理该承诺事项 →",
+    "noEvidenceTitle": "暂无可引用的证据"
+  },
+  "summaries": {
+    "tabs": {
+      "projectStatus": "项目状态",
+      "vendorStatus": "供应商状态",
+      "periodDigest": "周期摘要",
+      "decisionHistory": "决策历史",
+      "outstandingActions": "待办事项"
+    },
+    "loading": "加载中……",
+    "loadError": "无法加载此摘要。",
+    "decisionHistory": {
+      "empty": "本项目尚无决策记录。"
+    },
+    "outstandingActions": {
+      "byOwner": "按负责人",
+      "byDueWindow": "按到期区间",
+      "empty": "暂无待办事项。",
+      "window": {
+        "overdue": "已逾期",
+        "due_within_7_days": "7 天内到期",
+        "due_within_30_days": "30 天内到期",
+        "due_later": "稍后到期",
+        "no_due_date": "无到期日"
+      }
+    },
+    "periodDigest": {
+      "from": "起始日期",
+      "to": "结束日期",
+      "generate": "生成摘要",
+      "loading": "加载中……",
+      "loadError": "无法加载该周期的摘要。",
+      "range": "{start} – {end}",
+      "commitmentsCreated": "新建承诺事项",
+      "commitmentsResolved": "已完成承诺事项",
+      "decisions": "决策",
+      "emptyPeriod": "该周期内无记录。"
+    },
+    "projectStatus": {
+      "project": "项目",
+      "openCommitments": "未结承诺事项",
+      "atRiskCommitments": "存在风险的承诺事项",
+      "openRisks": "未结风险",
+      "openDeviations": "未结偏差",
+      "nextMilestone": "下一里程碑",
+      "nextMilestoneDue": "下一里程碑到期日"
+    }
+  },
+  "successorBrief": {
+    "description": "生成面向接任项目经理的完整交接简报——涵盖未结承诺事项、决策历史、风险、关键文档、供应商联系方式,以及每一项偏差及其处理结果(不仅限于尚未处理的部分)。",
+    "generate": "生成交接简报",
+    "generating": "生成中……",
+    "generateError": "无法生成简报,请重试。",
+    "generatedAt": "生成于 {date}",
+    "regenerate": "重新生成",
+    "sections": {
+      "openCommitments": "未结承诺事项",
+      "decisionHistory": "决策历史",
+      "risks": "风险",
+      "keyDocuments": "关键文档",
+      "vendorContacts": "供应商联系方式",
+      "deviationsAndResolutions": "偏差与处理结果"
+    },
+    "empty": {
+      "openCommitments": "暂无未结承诺事项。",
+      "decisionHistory": "尚无决策记录。",
+      "risks": "暂无未结风险。",
+      "keyDocuments": "尚无文档记录。",
+      "vendorContacts": "尚无供应商记录。",
+      "deviationsAndResolutions": "尚无偏差记录。"
+    },
+    "documentApproved": "已批准",
+    "documentNotApproved": "尚未批准",
+    "openCommitmentCount": "{count} 项未结承诺事项",
+    "deviationsHint": "本项目的全部偏差记录,无论是否已处理——交接需要完整历史,而非仅有尚未处理的部分。",
+    "deviationStatus": {
+      "auto_drafted": "自动生成——待审核",
+      "confirmed": "已确认",
+      "resolved": "已处理"
+    },
+    "resolvedFor": "处理日期 {date},负责人 {owner}",
+    "viewInForesight": "在前瞻分析中查看 →"
+  }
+}

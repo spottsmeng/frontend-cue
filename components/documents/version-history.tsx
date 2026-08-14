@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { formatDateTime } from "@/lib/format";
 import { useApproveVersionMutation } from "@/lib/documents/hooks";
@@ -28,13 +29,14 @@ export function VersionHistory({
   lineage: DocumentLineageOut;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("documents.versionHistory");
   const { data: members } = useProjectMembersQuery(projectId);
   const approveMutation = useApproveVersionMutation(projectId);
   const [expandedClaims, setExpandedClaims] = useState<string | null>(null);
   const canWrite = hasAnyRole(effectiveRoles, WRITE_ROLES);
 
   if (lineage.versions.length === 0) {
-    return <p className="text-sm text-ink-muted">No versions uploaded yet.</p>;
+    return <p className="text-sm text-ink-muted">{t("empty")}</p>;
   }
 
   return (
@@ -46,11 +48,11 @@ export function VersionHistory({
               <span className="font-mono text-sm text-ink">v{v.version_no}</span>
               {v.is_current ? (
                 <span className="rounded-full bg-signal-soft px-2 py-0.5 text-xs font-medium text-signal">
-                  Current
+                  {t("current")}
                 </span>
               ) : (
                 <span className="rounded-full bg-surface-sunk px-2 py-0.5 text-xs font-medium text-ink-muted">
-                  Superseded
+                  {t("superseded")}
                 </span>
               )}
             </div>
@@ -61,7 +63,7 @@ export function VersionHistory({
                 rel="noreferrer"
                 className="text-xs text-signal hover:underline"
               >
-                Download →
+                {t("download")}
               </a>
             )}
           </div>
@@ -69,13 +71,13 @@ export function VersionHistory({
           <div className="mt-2 text-xs text-ink-muted">
             {v.approved_by ? (
               <span>
-                Approved by {resolveMemberLabel(members, v.approved_by)} on{" "}
-                {formatDateTime(v.approved_at)}. Write-back to SharePoint/Nextcloud may have run
-                in the background &mdash; its outcome isn&rsquo;t surfaced by this build (see
-                frontend/PROGRESS.md).
+                {t("approvedBy", {
+                  name: resolveMemberLabel(members, v.approved_by),
+                  date: formatDateTime(v.approved_at),
+                })}
               </span>
             ) : (
-              <span>Not yet approved.</span>
+              <span>{t("notApproved")}</span>
             )}
           </div>
 
@@ -86,8 +88,7 @@ export function VersionHistory({
               </p>
             ) : (
               <p className="rounded-md bg-warning-soft p-2 text-xs text-warning">
-                Not yet indexed — no text could be extracted from this file. Re-upload a version
-                with extracted text supplied to fix search for this document.
+                {t("notIndexed")}
               </p>
             )}
           </div>
@@ -100,7 +101,7 @@ export function VersionHistory({
                 onClick={() => approveMutation.mutate({ documentId, versionId: v.id })}
                 className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
               >
-                {approveMutation.isPending ? "Approving…" : "Approve — this becomes the approved version"}
+                {approveMutation.isPending ? t("approving") : t("approve")}
               </button>
             )}
             <button
@@ -108,12 +109,12 @@ export function VersionHistory({
               onClick={() => setExpandedClaims(expandedClaims === v.id ? null : v.id)}
               className="text-xs text-ink-muted hover:text-signal"
             >
-              {expandedClaims === v.id ? "Hide spec claims" : "View spec claims"}
+              {expandedClaims === v.id ? t("hideSpecClaims") : t("viewSpecClaims")}
             </button>
           </div>
 
           {approveMutation.isError && approveMutation.variables?.versionId === v.id && (
-            <p className="mt-1.5 text-xs text-critical">Could not approve this version.</p>
+            <p className="mt-1.5 text-xs text-critical">{t("approveError")}</p>
           )}
 
           {expandedClaims === v.id && (

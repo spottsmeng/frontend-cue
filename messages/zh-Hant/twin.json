@@ -1,0 +1,105 @@
+{
+  "view": {
+    "title": "數位孿生",
+    "loading": "正在載入數位孿生…",
+    "error": "無法載入數位孿生，請重試。",
+    "sections": {
+      "timeline": "時間軸",
+      "dependencies": "相依關係",
+      "propagationSimulator": "影響模擬器"
+    }
+  },
+  "addMilestoneForm": {
+    "addMilestone": "+ 新增里程碑",
+    "type": "類型",
+    "selectAType": "選擇類型…",
+    "name": "名稱",
+    "plannedDate": "預定日期",
+    "fixed": "固定（不可順延）",
+    "adding": "正在新增…",
+    "add": "新增里程碑",
+    "cancel": "取消",
+    "error": "新增里程碑失敗。"
+  },
+  "constraintBanner": {
+    "label": "目前瓶頸：",
+    "none": "無 — 所有里程碑均有寬鬆時間"
+  },
+  "dependencyPanel": {
+    "empty": "此專案的數位孿生中尚無相依關係。",
+    "unknownMilestone": "未知",
+    "lagPrefix": "延遲",
+    "lagSuffix": "天",
+    "save": "儲存",
+    "remove": "移除",
+    "lagDays": "延遲 {days} 天",
+    "upstream": "上游",
+    "downstream": "下游",
+    "select": "選擇…",
+    "lagDaysLabel": "延遲天數",
+    "adding": "正在新增…",
+    "add": "新增相依關係",
+    "rejected": "已拒絕 — {error} 請先移除或調整現有相依關係後再重試。"
+  },
+  "milestoneDetailPanel": {
+    "drawerTitle": "里程碑",
+    "fixedBadge": "🔒 固定",
+    "criticalPath": "關鍵路徑",
+    "earliest": "最早 {date}",
+    "latest": "最晚 {date}",
+    "slackExplanation": "寬鬆時間與關鍵路徑狀態來自預設原型加上專案經理的任何覆蓋設定 — CUE 尚未從歷史資料中學習工期分布（FR-TWN-08 尚未建置）。",
+    "editHeading": "編輯（將記錄為覆蓋設定）",
+    "detailsHeading": "詳情",
+    "name": "名稱",
+    "planned": "預定",
+    "actual": "實際",
+    "fixedCheckbox": "固定 — 不可因上游延誤而順延（FR-TWN-11）",
+    "savingOverride": "正在儲存覆蓋設定…",
+    "saveOverride": "儲存覆蓋設定",
+    "saveError": "儲存失敗。",
+    "saveSuccess": "已儲存 — 已記錄至數位孿生稽核記錄。",
+    "noWritePermission": "需具備專案經理、製作人、財務、客戶經理、設計師或管理員角色方可覆蓋。",
+    "deleteHeading": "刪除",
+    "blockingEdges": "請先移除 {count, plural, other {# 條相依關係}} — 仍被相依關係參照的里程碑無法刪除（這是刻意設計的獨立步驟）。",
+    "unknownMilestone": "未知里程碑",
+    "lagDays": "延遲 {days} 天",
+    "removeEdge": "移除相依關係",
+    "deleteError": "刪除失敗 — 該里程碑可能仍被某項相依關係參照。",
+    "deleting": "正在刪除…",
+    "delete": "刪除里程碑"
+  },
+  "propagationSimulator": {
+    "simulationOnly": "僅為模擬 — 不會寫入任何實際資料。下方每個候選方案都只是推演，不會被儲存；在專案經理直接編輯里程碑之前，此專案不會有任何變化。",
+    "ifMilestone": "若里程碑",
+    "select": "選擇…",
+    "landsOn": "調整為",
+    "remove": "移除",
+    "addAnother": "+ 新增另一候選方案（並排比較）",
+    "simulating": "正在模擬…",
+    "runSimulation": "執行模擬",
+    "runError": "模擬執行失敗。",
+    "unnamedMilestone": "里程碑",
+    "bindingConstraintAfter": "調整後的瓶頸：",
+    "none": "無",
+    "changedFromCurrent": "（與目前圖譜相比已變化）",
+    "unknownMilestone": "未知",
+    "stoppedHere": "🔒 因固定而在此止步",
+    "consumedSlack": "消耗寬鬆時間 {days} 天",
+    "consumedSlackUnknown": "消耗寬鬆時間 —"
+  },
+  "recomputeButton": {
+    "title": "強制執行一次全新的關鍵路徑計算，並記錄至數位孿生稽核記錄",
+    "recomputing": "正在重新計算…",
+    "recompute": "重新計算"
+  },
+  "timelineNode": {
+    "fixedTitle": "固定 — 不可因上游延誤而順延",
+    "fixed": "固定",
+    "criticalPath": "關鍵路徑",
+    "planned": "預定 {date}",
+    "actual": "實際 {date}"
+  },
+  "timeline": {
+    "empty": "此專案的數位孿生中尚無里程碑。"
+  }
+}

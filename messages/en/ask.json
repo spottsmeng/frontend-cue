@@ -1,0 +1,120 @@
+{
+  "tabs": {
+    "ask": "Ask",
+    "summaries": "Summaries",
+    "brief": "Successor brief"
+  },
+  "chat": {
+    "contextHint": "Follow-up questions use this conversation's own context.",
+    "freshHint": "Ask anything about this project — English or Chinese.",
+    "newConversation": "New conversation",
+    "error": "Could not reach CUE — please try again.",
+    "thinking": "Thinking — usually a few seconds, can take up to 8s…",
+    "placeholder": "Ask a question about this project…",
+    "inputLabel": "Ask a question",
+    "submit": "Ask",
+    "submitting": "Asking…"
+  },
+  "citations": {
+    "sourceLabel": {
+      "commitment": "Commitment",
+      "evidence": "Evidence",
+      "budget": "Budget",
+      "document_version": "Document",
+      "audit_log": "Decision log",
+      "deviation": "Deviation"
+    },
+    "open": "{label} ↗",
+    "notYetAvailable": "{label} (not yet available)",
+    "resolving": "{label} — resolving…",
+    "unresolvable": "{label} (unresolvable)",
+    "versionOpen": "{label} (v{versionNo}) ↗"
+  },
+  "refusal": {
+    "cantDoYetTitle": "CUE can’t do that yet",
+    "openInLivingWip": "Open the commitment in Living WIP to do it directly →",
+    "noEvidenceTitle": "I don’t have evidence for that"
+  },
+  "summaries": {
+    "tabs": {
+      "projectStatus": "Project status",
+      "vendorStatus": "Vendor status",
+      "periodDigest": "Period digest",
+      "decisionHistory": "Decision history",
+      "outstandingActions": "Outstanding actions"
+    },
+    "loading": "Loading…",
+    "loadError": "Could not load this summary.",
+    "decisionHistory": {
+      "empty": "No decisions recorded on this project yet."
+    },
+    "outstandingActions": {
+      "byOwner": "By owner",
+      "byDueWindow": "By due window",
+      "empty": "No outstanding actions.",
+      "window": {
+        "overdue": "Overdue",
+        "due_within_7_days": "Due within 7 days",
+        "due_within_30_days": "Due within 30 days",
+        "due_later": "Due later",
+        "no_due_date": "No due date"
+      }
+    },
+    "periodDigest": {
+      "from": "From",
+      "to": "To",
+      "generate": "Generate digest",
+      "loading": "Loading…",
+      "loadError": "Could not load this period’s digest.",
+      "range": "{start} – {end}",
+      "commitmentsCreated": "Commitments created",
+      "commitmentsResolved": "Commitments resolved",
+      "decisions": "Decisions",
+      "emptyPeriod": "None in this period."
+    },
+    "projectStatus": {
+      "project": "Project",
+      "openCommitments": "Open commitments",
+      "atRiskCommitments": "At-risk commitments",
+      "openRisks": "Open risks",
+      "openDeviations": "Open deviations",
+      "nextMilestone": "Next milestone",
+      "nextMilestoneDue": "Next milestone due"
+    }
+  },
+  "successorBrief": {
+    "description": "Generates a full handover pack for an incoming PM — open commitments, decision history, risks, key documents, vendor contacts, and every deviation with its resolution (not just the ones still open).",
+    "generate": "Generate successor brief",
+    "generating": "Generating…",
+    "generateError": "Could not generate the brief — please try again.",
+    "generatedAt": "Generated {date}",
+    "regenerate": "Regenerate",
+    "sections": {
+      "openCommitments": "Open commitments",
+      "decisionHistory": "Decision history",
+      "risks": "Risks",
+      "keyDocuments": "Key documents",
+      "vendorContacts": "Vendor contacts",
+      "deviationsAndResolutions": "Deviations and resolutions"
+    },
+    "empty": {
+      "openCommitments": "No open commitments.",
+      "decisionHistory": "No decisions recorded yet.",
+      "risks": "No open risks.",
+      "keyDocuments": "No documents recorded yet.",
+      "vendorContacts": "No vendors recorded yet.",
+      "deviationsAndResolutions": "No deviations recorded yet."
+    },
+    "documentApproved": "Approved",
+    "documentNotApproved": "Not yet approved",
+    "openCommitmentCount": "{count, plural, one {# open commitment} other {# open commitments}}",
+    "deviationsHint": "Every deviation on this project, resolved or not — a handover needs the history, not just what’s still open.",
+    "deviationStatus": {
+      "auto_drafted": "Auto-drafted — needs review",
+      "confirmed": "Confirmed",
+      "resolved": "Resolved"
+    },
+    "resolvedFor": "Resolved for {date}, owner {owner}",
+    "viewInForesight": "View in Foresight →"
+  }
+}

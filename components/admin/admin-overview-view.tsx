@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { AdminPermissionError } from "@/lib/admin/members-hooks";
 import { useAdminProjectsQuery } from "@/lib/admin/projects-hooks";
@@ -21,25 +22,24 @@ import { ProjectProvisioningForm } from "./project-provisioning-form";
  */
 export function AdminOverviewView() {
   const { data: projects, isLoading, isError, error } = useAdminProjectsQuery();
+  const t = useTranslations("admin.overview");
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
-      <SectionPanel title="Provision a new project">
+      <SectionPanel title={t("provisionTitle")}>
         <ProjectProvisioningForm />
       </SectionPanel>
 
-      <SectionPanel title="Manage an existing project">
-        {isLoading && <p className="text-sm text-ink-muted">Loading…</p>}
+      <SectionPanel title={t("manageTitle")}>
+        {isLoading && <p className="text-sm text-ink-muted">{t("loading")}</p>}
         {isError &&
           (error instanceof AdminPermissionError ? (
-            <p className="text-sm text-ink-muted">
-              You don&apos;t hold the Administrator role on any project in this organisation.
-            </p>
+            <p className="text-sm text-ink-muted">{t("noAdminRole")}</p>
           ) : (
-            <p className="text-sm text-critical">Could not load projects. Please retry.</p>
+            <p className="text-sm text-critical">{t("loadError")}</p>
           ))}
         {!isLoading && !isError && (projects ?? []).length === 0 && (
-          <p className="text-sm text-ink-muted">No projects yet — provision one above.</p>
+          <p className="text-sm text-ink-muted">{t("empty")}</p>
         )}
         <ul className="flex flex-col gap-1.5">
           {(projects ?? []).map((p) => (
@@ -50,7 +50,7 @@ export function AdminOverviewView() {
               >
                 <span className="text-ink">{p.name}</span>
                 <span className="font-mono text-xs text-ink-muted">
-                  {p.event_start ? formatDate(p.event_start) : "no event date"}
+                  {p.event_start ? formatDate(p.event_start) : t("noEventDate")}
                 </span>
               </Link>
             </li>

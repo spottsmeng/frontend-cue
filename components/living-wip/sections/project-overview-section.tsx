@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import type { ProjectOverviewSection as ProjectOverviewSectionT } from "@/lib/api/types";
 
 import { EmptyState } from "../empty-state";
@@ -11,20 +13,31 @@ export function ProjectOverviewPanel({
   section: ProjectOverviewSectionT;
   onOpenCommitment: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("livingWip.projectOverview");
   return (
-    <SectionPanel title="Project overview">
+    <SectionPanel title={t("title")}>
       <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
-        <Row label="Project" field={section.project_name} onOpenCommitment={onOpenCommitment} />
-        <Row label="Client" field={section.client_name} onOpenCommitment={onOpenCommitment} />
-        <Row label="Venue" field={section.venue} onOpenCommitment={onOpenCommitment} />
-        <Row label="Event start" field={section.event_start} kind="date" onOpenCommitment={onOpenCommitment} />
-        <Row label="Event end" field={section.event_end} kind="date" onOpenCommitment={onOpenCommitment} />
-        <Row label="Phase" field={section.current_phase} onOpenCommitment={onOpenCommitment} />
+        <Row label={t("project")} field={section.project_name} onOpenCommitment={onOpenCommitment} />
+        <Row label={t("client")} field={section.client_name} onOpenCommitment={onOpenCommitment} />
+        <Row label={t("venue")} field={section.venue} onOpenCommitment={onOpenCommitment} />
+        <Row
+          label={t("eventStart")}
+          field={section.event_start}
+          kind="date"
+          onOpenCommitment={onOpenCommitment}
+        />
+        <Row
+          label={t("eventEnd")}
+          field={section.event_end}
+          kind="date"
+          onOpenCommitment={onOpenCommitment}
+        />
+        <Row label={t("phase")} field={section.current_phase} onOpenCommitment={onOpenCommitment} />
       </dl>
 
       <div className="mt-4">
         {section.visual_references.length === 0 ? (
-          <EmptyState message="No visual references linked to any deliverable yet." />
+          <EmptyState message={t("noVisualReferences")} />
         ) : (
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {section.visual_references.map((ref) => (
@@ -38,7 +51,7 @@ export function ProjectOverviewPanel({
                   />
                 ) : (
                   <p className="mb-1 text-xs italic text-ink-muted">
-                    Not available — {ref.unavailable_reason ?? "no source recorded"}
+                    {t("notAvailable", { reason: ref.unavailable_reason ?? t("noSourceRecorded") })}
                   </p>
                 )}
                 <p className="truncate text-xs text-ink-secondary">{ref.deliverable_name}</p>
@@ -48,9 +61,9 @@ export function ProjectOverviewPanel({
         )}
         {section.deliverables_without_visual_reference > 0 && (
           <p className="mt-2 text-xs text-ink-muted">
-            {section.deliverables_without_visual_reference} deliverable
-            {section.deliverables_without_visual_reference === 1 ? "" : "s"} still without a linked
-            visual reference.
+            {t("deliverablesWithoutVisual", {
+              count: section.deliverables_without_visual_reference,
+            })}
           </p>
         )}
       </div>

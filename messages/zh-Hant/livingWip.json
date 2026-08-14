@@ -1,0 +1,190 @@
+{
+  "verification": {
+    "auto": "自動",
+    "pendingVerification": "待核實",
+    "verified": "已核實",
+    "corrected": "已更正"
+  },
+  "reportField": {
+    "notAvailable": "不可用",
+    "noSourceRecorded": "未記錄來源"
+  },
+  "budgetReviseForm": {
+    "reviseBudget": "修訂預算",
+    "newApprovedAmount": "新核准金額",
+    "currency": "幣別",
+    "save": "儲存",
+    "cancel": "取消",
+    "saveError": "儲存失敗。"
+  },
+  "commitmentDetail": {
+    "title": "承諾",
+    "loading": "載入中…",
+    "statePrefix": "狀態：",
+    "verifiedAt": "已於 {date} 核實",
+    "evidence": "證據",
+    "correctAndConfirm": "更正並確認",
+    "deliverable": "交付項目",
+    "deliverableOriginal": "交付項目（原始語言）",
+    "due": "截止時間",
+    "amount": "金額",
+    "currency": "幣別",
+    "saving": "儲存中…",
+    "confirm": "確認",
+    "saveError": "儲存失敗，請重試。",
+    "saved": "已儲存。",
+    "paymentStatus": "付款狀態",
+    "notSet": "未設定",
+    "unpaid": "未付款",
+    "invoiced": "已請款",
+    "paid": "已付款",
+    "roleRequired": "（需財務或製片角色權限才能變更）",
+    "writeback": "回寫"
+  },
+  "commitmentSummaryRow": {
+    "due": "截止 {date}"
+  },
+  "detailDrawer": {
+    "close": "關閉"
+  },
+  "deviationRow": {
+    "statusAutoDrafted": "自動產生——待審核",
+    "statusConfirmed": "已確認",
+    "statusResolved": "已解決",
+    "uncategorised": "未分類",
+    "confirm": "確認",
+    "cancel": "取消",
+    "confirmAsIs": "直接確認",
+    "editAndConfirm": "編輯並確認",
+    "confirmError": "確認失敗，請重試。"
+  },
+  "exportHistory": {
+    "title": "匯出歷史",
+    "loading": "載入中…",
+    "empty": "尚無匯出紀錄——報告備妥後，可使用上方的「凍結並匯出」。",
+    "download": "下載 →"
+  },
+  "freezeExport": {
+    "pptx": "凍結並匯出 PPTX",
+    "pdf": "PDF",
+    "exporting": "匯出中…",
+    "composing": "正在產生快照——大型專案最長可能需要 30 秒。",
+    "ready": "匯出已完成——此快照為特定時間點的存檔，與上方的即時報告不同。",
+    "download": "下載 →"
+  },
+  "view": {
+    "loading": "正在載入即時進度…",
+    "loadError": "無法載入報告，請重試。",
+    "lastLedgerChange": "帳冊最近異動：{date}"
+  },
+  "provenanceChip": {
+    "viewSourceCount": "查看來源（{count}）",
+    "viewSource": "查看來源",
+    "provenance": "來源",
+    "commitment": "承諾"
+  },
+  "riskLogRow": {
+    "baseRate": "基準比率 {pct}%"
+  },
+  "supersessionCandidate": {
+    "loadingName": "載入中…",
+    "loadingAmount": "…",
+    "was": "原為 {amount}",
+    "now": "現為 {amount}",
+    "notSpecified": "未指定",
+    "confirmed": "已確認",
+    "rejected": "已拒絕",
+    "confirmAction": "確認——這是一次修訂",
+    "rejectAction": "拒絕——兩項承諾無關",
+    "saveError": "儲存失敗，請重試。"
+  },
+  "supersessionReview": {
+    "title": "承諾修訂",
+    "loading": "載入中…",
+    "loadError": "無法載入承諾修訂紀錄。",
+    "empty": "該專案從未提出過承諾修訂。",
+    "needsReview": "待審核",
+    "recentlyReviewed": "近期已審核"
+  },
+  "writeback": {
+    "loading": "正在載入回寫歷史…",
+    "draftNotSent": "草稿——尚未傳送",
+    "authorisedNotSent": "已授權——尚未傳送",
+    "draftMessageLabel": "訊息草稿",
+    "saveEdit": "儲存修改",
+    "authorise": "授權",
+    "send": "傳送",
+    "confirmWithVendor": "與供應商確認",
+    "priorMessages": "先前傳送的訊息",
+    "noReplyYet": "尚無回覆",
+    "noActivity": "此承諾尚無回寫紀錄。",
+    "genericError": "發生錯誤"
+  },
+  "evidenceViewer": {
+    "original": "原文",
+    "translation": "譯文",
+    "noEvidence": "尚無證據紀錄。",
+    "noAudioSupport": "此瀏覽器不支援內嵌音訊播放。"
+  },
+  "budgetSummarySection": {
+    "title": "預算摘要",
+    "approvedBudget": "核准預算",
+    "committedSpend": "已承諾支出",
+    "outstandingPayments": "未結清款項",
+    "variance": "差異"
+  },
+  "decisionLogSection": {
+    "title": "決策與核准紀錄",
+    "empty": "尚無決策或待處理核准紀錄。",
+    "outstandingApprovals": "待處理核准",
+    "due": "截止 {date}",
+    "recentDecisions": "近期決策"
+  },
+  "milestoneTracker": {
+    "title": "里程碑追蹤",
+    "empty": "該專案尚未設定里程碑。",
+    "statusCompleted": "已完成",
+    "statusOnTrack": "進度正常",
+    "statusAtRisk": "有風險",
+    "statusCritical": "關鍵",
+    "statusNoDate": "無日期",
+    "criticalPath": "關鍵路徑",
+    "planned": "計畫 {date}",
+    "actual": "實際 {date}",
+    "slack": "緩衝 {days} 天"
+  },
+  "nextSteps": {
+    "title": "下一步",
+    "empty": "目前無待辦事項——專案中的所有承諾與里程碑均已完成，供應商亦無任何未盡事宜。",
+    "openCommitments": "待辦承諾",
+    "openMilestones": "待辦里程碑",
+    "planned": "計畫 {date}"
+  },
+  "projectOverview": {
+    "title": "專案概覽",
+    "project": "專案",
+    "client": "客戶",
+    "venue": "場地",
+    "eventStart": "活動開始",
+    "eventEnd": "活動結束",
+    "phase": "階段",
+    "noVisualReferences": "尚無交付項目關聯視覺參考圖。",
+    "notAvailable": "不可用 — {reason}",
+    "noSourceRecorded": "未記錄來源",
+    "deliverablesWithoutVisual": "{count, plural, other {尚有 # 項交付項目未關聯視覺參考圖。}}"
+  },
+  "riskAndIssues": {
+    "title": "風險與問題",
+    "empty": "該專案目前沒有未解決的風險或偏差。",
+    "risks": "風險",
+    "deviations": "偏差"
+  },
+  "vendorStatus": {
+    "title": "供應商狀態",
+    "empty": "該專案尚無供應商動態紀錄。",
+    "noItems": "{name} 尚無待處理或已確認的事項。",
+    "outstanding": "待處理",
+    "confirmed": "已確認",
+    "reliabilityUnavailable": "供應商可靠度指標尚無法提供——供應商可靠度關係圖將於後續里程碑推出。"
+  }
+}

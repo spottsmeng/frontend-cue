@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { bucketVerificationBurdenByWeek } from "@/lib/analytics/aggregate";
 import { useAnalyticsCommitmentsQuery } from "@/lib/analytics/hooks";
 import { formatDate } from "@/lib/format";
@@ -22,13 +24,14 @@ export function VerificationBurdenChart({
   projectIds: string[];
   projectsById: Map<string, string>;
 }) {
+  const t = useTranslations("analytics.verificationBurdenChart");
   const { data, isLoading, isError } = useAnalyticsCommitmentsQuery(projectIds);
 
   if (isError) {
-    return <p className="text-sm text-critical">Could not load commitments. Please retry.</p>;
+    return <p className="text-sm text-critical">{t("loadError")}</p>;
   }
   if (isLoading) {
-    return <p className="text-sm text-ink-muted">Loading verification burden…</p>;
+    return <p className="text-sm text-ink-muted">{t("loading")}</p>;
   }
 
   const { series, rows } = bucketVerificationBurdenByWeek(data ?? [], projectsById);
@@ -36,7 +39,7 @@ export function VerificationBurdenChart({
   if (rows.length === 0) {
     return (
       <p className="text-sm text-ink-muted">
-        No commitments have ever required human verification yet on any project you can see.
+        {t("empty")}
       </p>
     );
   }
@@ -56,16 +59,16 @@ export function VerificationBurdenChart({
     <div className="flex flex-col gap-3">
       <ThemedLineChart
         series={chartSeries}
-        ariaLabel="Verification burden: commitments requiring human verification, per project per week"
+        ariaLabel={t("chartAriaLabel")}
       />
       <ChartLegend items={chartSeries.map((s) => ({ id: s.id, label: s.label }))} />
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs">
           <thead>
             <tr className="text-ink-muted">
-              <th className="py-1 pr-4 font-medium">Week of</th>
-              <th className="py-1 pr-4 font-medium">Project</th>
-              <th className="py-1 font-medium">Commitments needing verification</th>
+              <th className="py-1 pr-4 font-medium">{t("headers.weekOf")}</th>
+              <th className="py-1 pr-4 font-medium">{t("headers.project")}</th>
+              <th className="py-1 font-medium">{t("headers.commitmentsNeedingVerification")}</th>
             </tr>
           </thead>
           <tbody>

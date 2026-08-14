@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAskSummaryQuery } from "@/lib/ask/hooks";
 import type { AskSummaryVariant } from "@/lib/api/types";
@@ -10,14 +11,6 @@ import { OutstandingActionsSummaryView } from "./summaries/outstanding-actions-s
 import { PeriodDigestSummaryView } from "./summaries/period-digest-summary";
 import { ProjectStatusSummaryView } from "./summaries/project-status-summary";
 import { VendorStatusSummaryView } from "./summaries/vendor-status-summary";
-
-const VARIANTS: { variant: AskSummaryVariant; label: string }[] = [
-  { variant: "project_status", label: "Project status" },
-  { variant: "vendor_status", label: "Vendor status" },
-  { variant: "period_digest", label: "Period digest" },
-  { variant: "decision_history", label: "Decision history" },
-  { variant: "outstanding_actions", label: "Outstanding actions" },
-];
 
 /**
  * FR-ASK-04/05: five real views, each rendering its own typed response
@@ -32,7 +25,16 @@ export function SummaryTabs({
   projectId: string;
   onOpenCommitment: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("ask.summaries");
   const [active, setActive] = useState<AskSummaryVariant>("project_status");
+
+  const VARIANTS: { variant: AskSummaryVariant; label: string }[] = [
+    { variant: "project_status", label: t("tabs.projectStatus") },
+    { variant: "vendor_status", label: t("tabs.vendorStatus") },
+    { variant: "period_digest", label: t("tabs.periodDigest") },
+    { variant: "decision_history", label: t("tabs.decisionHistory") },
+    { variant: "outstanding_actions", label: t("tabs.outstandingActions") },
+  ];
 
   return (
     <div className="flex flex-col gap-4">
@@ -71,10 +73,11 @@ function QueryDrivenSummary({
   projectId: string;
   onOpenCommitment: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("ask.summaries");
   const { data, isLoading, isError } = useAskSummaryQuery(projectId, variant);
 
-  if (isLoading) return <p className="text-sm text-ink-muted">Loading…</p>;
-  if (isError) return <p className="text-sm text-critical">Could not load this summary.</p>;
+  if (isLoading) return <p className="text-sm text-ink-muted">{t("loading")}</p>;
+  if (isError) return <p className="text-sm text-critical">{t("loadError")}</p>;
   if (!data) return null;
 
   if (variant === "project_status" && data.project_status) {

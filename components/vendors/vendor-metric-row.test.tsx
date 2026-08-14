@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { renderWithIntl as render } from "@/lib/test-utils";
 import type { VendorMetricOut } from "@/lib/api/types";
 
 import { VendorMetricRow } from "./vendor-metric-row";
@@ -63,15 +64,25 @@ describe("VendorMetricRow", () => {
   });
 
   it("formats each metric's value with its own unit, never a shared raw-number format", () => {
-    const { rerender } = render(
+    // Separate render()/unmount() per case, not RTL's `rerender` — `render`
+    // here is `renderWithIntl`, which wraps `NextIntlClientProvider` around
+    // the element itself rather than via RTL's `wrapper` option, so a bare
+    // `rerender(...)` would replace the whole tree and drop the provider.
+    const first = render(
       <VendorMetricRow metric="median_response_time_days" snapshot={snapshot({ metric: "median_response_time_days", value: 6.0 })} />,
     );
     expect(screen.getByText("6.0 days")).toBeInTheDocument();
+    first.unmount();
 
-    rerender(<VendorMetricRow metric="price_drift_pct" snapshot={snapshot({ metric: "price_drift_pct", value: 12.5 })} />);
+    const second = render(
+      <VendorMetricRow metric="price_drift_pct" snapshot={snapshot({ metric: "price_drift_pct", value: 12.5 })} />,
+    );
     expect(screen.getByText("12.5%")).toBeInTheDocument();
+    second.unmount();
 
-    rerender(<VendorMetricRow metric="deviation_frequency" snapshot={snapshot({ metric: "deviation_frequency", value: 0.25 })} />);
+    render(
+      <VendorMetricRow metric="deviation_frequency" snapshot={snapshot({ metric: "deviation_frequency", value: 0.25 })} />,
+    );
     expect(screen.getByText("0.25 per commitment")).toBeInTheDocument();
   });
 });

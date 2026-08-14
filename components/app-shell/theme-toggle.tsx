@@ -1,14 +1,9 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
 
 import { type ThemePreference, useUIStore } from "@/lib/store/ui-store";
-
-const OPTIONS: { value: ThemePreference; label: string }[] = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-];
 
 // Zustand's initial `theme` is read from localStorage at module init, which
 // runs identically on server and client before hydration — but the
@@ -31,6 +26,13 @@ export function ThemeToggle() {
   const theme = useUIStore((s) => s.theme);
   const setTheme = useUIStore((s) => s.setTheme);
   const mounted = useHasMounted();
+  const t = useTranslations("nav");
+
+  const OPTIONS: { value: ThemePreference; label: string }[] = [
+    { value: "system", label: t("themeSystem") },
+    { value: "light", label: t("themeLight") },
+    { value: "dark", label: t("themeDark") },
+  ];
 
   return (
     <div

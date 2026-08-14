@@ -182,6 +182,10 @@ export type ProjectOut = components["schemas"]["ProjectOut"];
 
 export type UserOut = components["schemas"]["UserOut"];
 
+// --- Per-user preferences (F9, NFR-ACC-03) -------------------------------
+
+export type UserMeOut = components["schemas"]["UserMeOut"];
+
 export type MembershipOut = components["schemas"]["MembershipOut"];
 export type MembershipCreate = components["schemas"]["MembershipCreate"];
 export type DelegationOut = components["schemas"]["DelegationOut"];

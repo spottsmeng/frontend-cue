@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { AdminPermissionError } from "@/lib/admin/members-hooks";
 import {
@@ -23,35 +24,35 @@ import { SectionPanel } from "../living-wip/section-panel";
  * 7"), the same gate this whole screen already runs at.
  */
 export function ChannelIdentitiesView() {
+  const t = useTranslations("admin.channelIdentities");
   const { data: identities, isLoading, isError, error } = useChannelIdentitiesQuery({
     maxConfidence: 0.7,
   });
   const { data: parties } = useVendorListQuery({});
   const overrideMutation = useOverrideChannelIdentityMutation();
 
+  // F9 gap-audit fix: `party_id` was rendered as a raw UUID even though
+  // this same component already fetches the full `parties` list for its
+  // own picker just below — the resolver was sitting unused.
+  function resolvePartyName(partyId: string): string {
+    return parties?.find((p) => p.id === partyId)?.display_name ?? partyId;
+  }
+
   const [overrideParty, setOverrideParty] = useState<Record<string, string>>({});
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
-      <SectionPanel title="Channel identity overrides">
-        <p className="mb-3 text-xs text-ink-muted">
-          Auto-resolved (channel_type, external_id) → party mappings at or below 70% confidence —
-          correct a misresolved party here (FR-NRM-03).
-        </p>
-        {isLoading && <p className="text-sm text-ink-muted">Loading…</p>}
+      <SectionPanel title={t("title")}>
+        <p className="mb-3 text-xs text-ink-muted">{t("description")}</p>
+        {isLoading && <p className="text-sm text-ink-muted">{t("loading")}</p>}
         {isError &&
           (error instanceof AdminPermissionError ? (
-            <p className="text-sm text-ink-muted">
-              This page is Administrator only. You don&apos;t hold that role on any project in this
-              organisation.
-            </p>
+            <p className="text-sm text-ink-muted">{t("adminOnly")}</p>
           ) : (
-            <p className="text-sm text-critical">Could not load channel identities. Please retry.</p>
+            <p className="text-sm text-critical">{t("loadError")}</p>
           ))}
         {identities && identities.length === 0 && (
-          <p className="text-sm text-ink-muted">
-            No low-confidence or unverified identity resolutions to review right now.
-          </p>
+          <p className="text-sm text-ink-muted">{t("empty")}</p>
         )}
         {identities && identities.length > 0 && (
           <ul className="flex flex-col gap-2">
@@ -63,27 +64,30 @@ export function ChannelIdentitiesView() {
                   </span>
                   <span className="flex items-center gap-2">
                     <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs text-warning">
-                      confidence {(id.confidence * 100).toFixed(0)}%
+                      {t("confidence", { value: (id.confidence * 100).toFixed(0) })}
                     </span>
                     {id.manually_verified && (
                       <span className="rounded-full bg-signal-soft px-2 py-0.5 text-xs text-signal">
-                        manually verified
+                        {t("manuallyVerified")}
                       </span>
                     )}
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-ink-muted">
-                  currently resolved to party {id.party_id} · updated {formatDateTime(id.updated_at)}
+                  {t("resolvedTo", {
+                    party: resolvePartyName(id.party_id),
+                    date: formatDateTime(id.updated_at),
+                  })}
                 </p>
                 <div className="mt-2 flex flex-wrap items-end gap-2">
                   <label className="text-xs text-ink-secondary">
-                    Correct party
+                    {t("correctPartyLabel")}
                     <select
                       value={overrideParty[id.id] ?? ""}
                       onChange={(e) => setOverrideParty({ ...overrideParty, [id.id]: e.target.value })}
                       className="mt-1 block w-56 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
                     >
-                      <option value="">Select a party…</option>
+                      <option value="">{t("selectPartyPlaceholder")}</option>
                       {parties?.map((p) => (
                         <option key={p.id} value={p.id}>
                           {p.display_name}
@@ -103,7 +107,7 @@ export function ChannelIdentitiesView() {
                     }
                     className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
                   >
-                    Override
+                    {t("override")}
                   </button>
                 </div>
               </li>

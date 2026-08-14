@@ -2122,6 +2122,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Me */
+        get: operations["read_me_users_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Me */
+        patch: operations["update_me_users_me_patch"];
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -4715,6 +4733,26 @@ export interface components {
             is_critical: boolean;
         };
         /**
+         * UserMeOut
+         * @description `GET/PATCH /users/me` — F9's own per-user preference surface
+         *     (NFR-ACC-03). Deliberately not UserOut: this is "who am I and what are
+         *     my own settings," reachable by any authenticated user about themselves,
+         *     not the org-admin-gated directory listing.
+         */
+        UserMeOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Email */
+            email: string;
+            /** Display Name */
+            display_name: string | null;
+            /** High Contrast */
+            high_contrast: boolean;
+        };
+        /**
          * UserOut
          * @description §11.2's /admin/users — org-wide, not the project-scoped MembershipOut
          *     above. No SCIM pre-provisioning this session (out of scope, per the
@@ -4748,6 +4786,11 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** UserPreferencesUpdate */
+        UserPreferencesUpdate: {
+            /** High Contrast */
+            high_contrast: boolean;
         };
         /** ValidationError */
         ValidationError: {
@@ -8883,6 +8926,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OutboundMessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_me_users_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserMeOut"];
+                };
+            };
+        };
+    };
+    update_me_users_me_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserPreferencesUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserMeOut"];
                 };
             };
             /** @description Validation Error */

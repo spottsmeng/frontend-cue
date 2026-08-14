@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { formatDate, formatMoney } from "@/lib/format";
 import type { CommitmentSummary } from "@/lib/api/types";
 
@@ -16,6 +18,7 @@ export function CommitmentSummaryRow({
   summary: CommitmentSummary;
   onOpen: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("livingWip.commitmentSummaryRow");
   return (
     // A <button> wrapping the whole row (including ProvenanceChip's own
     // <button>) is invalid HTML — nested interactive elements — so only the
@@ -26,6 +29,7 @@ export function CommitmentSummaryRow({
       <button
         type="button"
         onClick={() => onOpen(summary.commitment_id)}
+        lang="en"
         className="text-left text-sm text-ink hover:text-signal hover:underline"
       >
         {summary.deliverable_en}
@@ -33,7 +37,9 @@ export function CommitmentSummaryRow({
       <span className="flex flex-wrap items-center gap-2">
         <span className="font-mono text-xs text-ink-muted">{summary.state}</span>
         {summary.due_at && (
-          <span className="font-mono text-xs text-ink-muted">due {formatDate(summary.due_at)}</span>
+          <span className="font-mono text-xs text-ink-muted">
+            {t("due", { date: formatDate(summary.due_at) })}
+          </span>
         )}
         {summary.amount !== null && (
           <span className="font-mono text-xs text-ink">

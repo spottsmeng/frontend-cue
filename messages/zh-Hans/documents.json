@@ -1,0 +1,91 @@
+{
+  "overview": {
+    "title": "文档",
+    "searchSectionTitle": "搜索",
+    "allDocumentsSectionTitle": "全部文档",
+    "filterByClass": "按类别筛选",
+    "allClasses": "全部"
+  },
+  "list": {
+    "loading": "正在加载文档……",
+    "loadError": "无法加载文档。",
+    "empty": "尚未上传任何文档。",
+    "noMatch": "没有符合此筛选条件的文档。",
+    "noVersionYet": "尚无版本",
+    "untagged": "未分类",
+    "updated": "· 更新于 {date}"
+  },
+  "search": {
+    "placeholder": "搜索文档提取文本——关键词匹配,非语义搜索",
+    "hint": "输入关键词以搜索已上传的文档文本。",
+    "searching": "搜索中……",
+    "error": "搜索失败,请重试。",
+    "noMatches": "未找到匹配结果。",
+    "rank": "相关度 {rank}"
+  },
+  "upload": {
+    "openButton": "+ 上传文档",
+    "fileLabel": "文件",
+    "nameLabel": "名称",
+    "classLabel": "类别",
+    "untagged": "未分类",
+    "languageLabel": "语言(BCP 47)",
+    "extractedTextLabel": "提取文本(可选——留空则由 CUE 自动从 PDF、Office 文件及图片中提取;并非所有文件类型都支持自动提取,若未提供提取文本,该文档在提取成功前将无法被搜索到)",
+    "submit": "上传",
+    "submitting": "上传中……",
+    "cancel": "取消",
+    "error": "无法上传此文档。"
+  },
+  "detail": {
+    "back": "← 文档",
+    "fallbackName": "文档",
+    "tagsSectionTitle": "标签",
+    "versionsSectionTitle": "版本",
+    "loading": "加载中……",
+    "loadError": "无法加载此文档。",
+    "loadingVersionHistory": "正在加载版本历史……"
+  },
+  "versionHistory": {
+    "empty": "尚未上传任何版本。",
+    "current": "当前版本",
+    "superseded": "已被替代",
+    "download": "下载 →",
+    "approvedBy": "由 {name} 于 {date} 批准。写回 SharePoint/Nextcloud 的操作可能已在后台执行——本版本未显示其结果(详见 frontend/PROGRESS.md)。",
+    "notApproved": "尚未批准。",
+    "notIndexed": "尚未建立索引——无法从此文件中提取文本。请重新上传并附上提取文本,以便本文档可被搜索。",
+    "approve": "批准——将此版本设为已批准版本",
+    "approving": "批准中……",
+    "hideSpecClaims": "隐藏规格声明",
+    "viewSpecClaims": "查看规格声明",
+    "approveError": "无法批准此版本。",
+    "addForm": {
+      "openButton": "+ 新增版本",
+      "fileLabel": "文件",
+      "extractedTextLabel": "提取文本(可选——留空则由 CUE 自动从 PDF、Office 文件及图片中提取)",
+      "submit": "上传新版本",
+      "submitting": "上传中……",
+      "cancel": "取消",
+      "error": "无法上传此版本。"
+    }
+  },
+  "specClaims": {
+    "loading": "正在加载规格声明……",
+    "loadError": "无法加载规格声明。",
+    "empty": "此版本尚未提取到规格声明。",
+    "resolvingConflict": "正在解析冲突声明……",
+    "unresolvableConflict": "与另一项声明冲突(无法解析)。",
+    "conflictsWith": "冲突:",
+    "at": "位于",
+    "from": "——来自"
+  },
+  "tagging": {
+    "loading": "正在加载标签选项……",
+    "classLabel": "类别",
+    "untagged": "未分类",
+    "milestoneTypeLabel": "里程碑类型",
+    "phaseLabel": "阶段",
+    "submit": "保存标签",
+    "submitting": "保存中……",
+    "error": "无法保存标签。"
+  }
+}

@@ -34,7 +34,7 @@ session's job, triggered by real mobile work starting, not by convenience.
 | F6 | Vendor Reliability Graph | `Prompt F6 — Vendor Reliability Graph.txt` | FR-VRG | F0 | Done (2026-08-10) |
 | F7 | Admin console | `Prompt F7 — Admin console.txt` | §6.14 FR-ADM; channel/consent/retention | F0 | Done (2026-08-11) |
 | F8 | Analytics dashboard | `Prompt F8 — Analytics dashboard.txt` | §13 | F0, and partially F1/F3/F6 for data sources | Done (2026-08-11) |
-| F9 | Hardening — accessibility, localisation, perf | `Prompt F9 — Hardening, accessibility and localisation.txt` | §7.6 NFR-ACC; §7.1 NFR-PRF (web-applicable subset) | all of the above | Not started |
+| F9 | Hardening — accessibility, localisation, perf | `Prompt F9 — Hardening, accessibility and localisation.txt` | §7.6 NFR-ACC; §7.1 NFR-PRF (web-applicable subset) | all of the above | Done (2026-08-11) |
 
 F1–F8 do not strictly have to run in table order after F0 — each depends only on F0, not on each
 other, since every backend surface they read already exists and is independently REST-addressable.
@@ -1205,6 +1205,332 @@ scoping that spec's assertions to the snapshot `<ul>` specifically, not the sect
 real, live-caught interaction between this retrofit and existing test coverage, not a hypothetical
 one left for a future session to discover. `e2e/vendors.spec.ts` (4 specs) and `e2e/analytics.spec.ts`
 (2 specs) both green afterward, against the real backend.
+
+## F9 notes (2026-08-11)
+
+Mirrors `backend/PROGRESS.md`'s own M10 (Hardening) session in shape: real evidence, honest gaps,
+no capability claimed that wasn't actually run. Two architecture decisions were confirmed with the
+user directly before building, rather than assumed:
+
+1. **High-contrast persistence is backend, per-user** (`User.high_contrast`, a new migration,
+   `GET/PATCH /users/me`) — deliberately distinct from the theme toggle's own device-local
+   `localStorage` design (`lib/store/ui-store.ts`'s own comment: "a device preference, not project
+   data... nor should there be" a per-user row). The prompt's own wording ("persisted per-user, not
+   just per-session") was different on purpose, and a low-vision user's contrast need should follow
+   them across devices.
+2. **`next-intl` without i18n routing** — locale in a cookie, resolved server-side per request, no
+   `[locale]` URL segment. Chosen over locale-prefixed URLs specifically to leave every existing
+   route, every existing e2e spec's navigation, and this app's own "stable per-project URL" design
+   principle untouched — a fully-supported next-intl mode, not a workaround.
+
+### 1. Backend gap closure — `GET/PATCH /users/me`
+
+New `app/api/users.py`, `User.high_contrast` (migration `5d68b34f2fa8`), `UserMeOut`/
+`UserPreferencesUpdate` schemas. `tests/test_users_me.py` (4 tests: default value, flip-and-persist,
+no cross-user leakage, 401 unauthenticated).
+
+**A real bug found and fixed, not caught by this session's own unit test.** The endpoint originally
+called `session.commit()` then `session.refresh(user)` — backwards. `app/core/db.py`'s own
+`get_session` docstring: `app.current_org_id` is set `is_local=true`, scoped to the request's
+transaction; `commit()` ends that transaction, so a `refresh()` called *after* it runs its SELECT
+with no RLS context and finds zero rows (`sqlalchemy.exc.InvalidRequestError: Could not refresh
+instance`). In the browser this surfaced as an opaque CORS failure (a 500 response carries no CORS
+headers here, and Chrome reports "blocked by CORS policy" for any cross-origin response missing
+them, masking the real 500 until the server's own log was read directly). `app/api/milestones.py`'s
+`update_milestone` already established the correct order (flush, refresh, *then* commit) for exactly
+this reason — this endpoint just hadn't followed it. Fixed by matching that order.
+**This session's own in-process `ASGITransport` test (`test_users_me.py`) never reproduced this bug
+at all** — only a real e2e run against a real running server did, the same category of test-vs-real-
+server divergence `backend/PROGRESS.md`'s own M10 notes already document for a different fixture
+(`app_session` transaction scoping). Confirms the point of running real e2e verification rather than
+trusting unit coverage alone. `uv run pytest`: 555 passing throughout.
+
+### 2. High-contrast mode
+
+`[data-contrast="high"]` slots into `app/globals.css`'s existing three-block cascade
+(unqualified default / `@media (prefers-color-scheme: dark)` / explicit `[data-theme="dark"]`), each
+block additionally qualified with `[data-contrast="high"]`, exactly as `frontend/DESIGN.md` already
+named as the intended seam. Resolved server-side in `app/layout.tsx` (a real `GET /users/me` call,
+gated on a real session) and painted directly into the SSR'd `<html>` attribute — no flash at all,
+cleaner than the theme toggle's own `beforeInteractive`-script workaround, since this value never
+depends on client-only storage. `components/app-shell/contrast-toggle.tsx` (TanStack Query, not the
+zustand `ui-store` — this is server state now, per that store's own stated boundary), added to
+`UserMenu` alongside `ThemeToggle`/`LocaleSwitcher`.
+
+**Real WCAG contrast fixes, found by this session's own axe-core run** (§7 below), not eyeballed —
+every value below is a genuinely different check from the "under 3:1 fill contrast by design"
+tradeoff `frontend/DESIGN.md` already documented and explicitly told this session not to "fix" by
+changing fills: that one was about a raw swatch as a *large solid fill*; this is small *pill text*
+(`VerificationBadge`/`SeverityBadge`'s own shape), which WCAG 1.4.3 does not exempt regardless of an
+adjacent icon:
+
+| Token | Old (light) | New (light) | Old ratio (worst case) | New ratio (worst case) |
+|---|---|---|---|---|
+| `ink-muted` | `#7C8494` | `#5F6779` | 3.38–3.75:1 | 5.10–5.67:1 |
+| `signal` | `#2A78D6` / `#3987E5` dark | `#1F68B8` / `#5A9AE8` dark | 3.99–4.42:1 | 4.84–6.29:1 |
+| `good` | `#0CA30C` | `#067D06` | 2.96:1 (pill text) | 4.71–5.32:1 |
+| `warning` | `#C97D00` | `#8F5800` | 2.82:1 (pill text) | 5.09–5.89:1 |
+| `serious` | `#C1552C` | `#96401F` | 3.74:1 (pill text) | 5.64–6.89:1 |
+| `critical` | `#D03B3B` | `#B3201F` | 3.88:1 (pill text) | 5.40–6.68:1 |
+
+Ran the `dataviz` skill's own `validate_palette.js` against the new set first, per `DESIGN.md`'s
+"Changing this later" rule — it correctly FAILed the categorical-adjacent-pair CVD check and named
+the reason itself: that check is for series shown side-by-side in one chart, not independently-
+labelled status pills never shown adjacent to each other as a decoded sequence. Its own error message
+named the right tool instead ("for a lone status/text color check WCAG text contrast"), which is what
+the table above is. `frontend/DESIGN.md` updated to match — its own stale "`warning`/`serious` sit
+under 3:1... by design" claim no longer describes the re-stepped tokens, corrected in the same change
+per that file's own "if the two ever disagree, the CSS is correct" rule.
+
+High-contrast mode's own override values were re-stepped too, since several sat too close to the
+*improved* base to still read as a real further step (e.g. `warning`'s old HC override, `#8A5700`,
+was barely darker than the new base `#8F5800`) — re-picked to clear AAA (7:1+, several 8.4–10.7:1)
+against the new base rather than the old one.
+
+### 3–4. Localisation — `next-intl`, EN / 简体中文 / 繁體中文
+
+`next-intl@4.13.6` (confirmed compatible: `next: ^16.0.0`, `react: ^19.0.0`, matching this app's
+Next 16.3.0/React 19.2.8). Messages split one file per surface —
+`messages/{en,zh-Hans,zh-Hant}/{common,nav,livingWip,twin,foresight,documents,ask,vendors,admin,
+analytics}.json`, 30 files — not one giant per-locale file, specifically so this session's own large
+mechanical conversion pass could run as five independent, conflict-free parallel edits instead of
+one session serially touching ~106 component files. `i18n/request.ts` (server, cookie-driven
+locale), `i18n/namespaces.ts` (the one list both that file and `lib/test-utils.tsx` read from),
+`lib/i18n/set-locale.ts` (Server Action setting the cookie), `components/app-shell/locale-switcher.tsx`
+(EN / 简体 / 繁體, native-script labels — a switcher naming its own options in English defeats the
+point for a reader who can't read English yet). `messages/messages.test.ts`: key-parity across all
+three locales for every namespace, plus an empty-string guard — a permanent regression test, not a
+one-off check.
+
+**Execution**: did the reference conversion myself first (`components/living-wip/verification-badge.tsx`,
+`report-field.tsx`, `components/app-shell/*`) to establish the real pattern, then delegated the
+remaining ~100 files to five parallel background agents, each owning a disjoint surface (and its own
+namespace's 3 message files, never another surface's): living-wip (27 files), admin (15), foresight+
+twin (21), ask+documents (20), vendors+analytics (14). Every agent was given the same explicit
+do-not-touch list — components rendering vendor content inline with chrome
+(`evidence-viewer.tsx`, `commitment-detail-panel.tsx`, `commitment-summary-row.tsx`, both
+`deviation-row.tsx` copies, `sections/decision-log-section.tsx`, `supersession-candidate-row.tsx`,
+`freeze-export-control.tsx`, `successor-brief-view.tsx`) — only chrome around the content gets
+translated, never `deliverable_en`/`description_en`/`original_text`/`translation`/evidence quotes
+themselves (P7). `lib/test-utils.tsx`'s `renderWithIntl` (real `en` bundles, not a hand-picked stub)
+uses testing-library's own `wrapper` option rather than manually nesting the provider — a real bug
+one agent found and fixed: a manually-nested provider is only present on the first render, so a
+test's own `rerender()` call silently drops it and every `useTranslations()` call downstream throws.
+
+Real, fluent Simplified **and** Traditional Chinese throughout, not a character-set conversion of
+one from the other — distinct register/vocabulary in many places (保存/儲存, 导出/匯出, 计划/計畫,
+已开票/已請款, etc.), each locale's own bundle authored independently. Deleted
+`components/app-shell/surface-placeholder.tsx` as genuinely dead code found along the way (zero
+import sites anywhere — every surface has had real content since F1–F8; not localised, since
+localising unused code is pointless work).
+
+**`lang` attribute audit**: `components/living-wip/evidence-viewer.tsx` was already correct
+(`lang={displayingTranslation ? "en" : evidence.language}`), used as the reference pattern for the
+rest. Fixed a real bug: `commitment-detail-panel.tsx`'s `deliverable_original` span hardcoded
+`lang="zh"` regardless of the commitment's actual source language. New `contentLang()` helper
+(`lib/format.ts`) resolves from the commitment's own linked evidence (`evidence[0]?.language`, real
+bcp47, already `zh-Hans`/`zh-Hant`-capable) instead, falling back to `undefined` (no attribute) over
+a wrong guess. Applied the same helper/pattern to the seven other content-mixing components in the
+do-not-touch list above, all of which had no `lang` attribute on their vendor-content span at all.
+3 new unit tests (`lib/format.test.ts`).
+
+### 5. Non-colour-signal audit — confirmed clean, no code change
+
+Audited every status/severity/verification colour usage across all 8 surfaces (an Explore agent's
+thorough sweep, plus my own direct spot-check of the four shared primitives —
+`StatusDot`/`VerificationBadge`/`SeverityBadge`/`RiskStatusBadge` — and 2–3 call sites per surface).
+Every one already pairs colour with a text label, icon, or shape change, several with comments
+explicitly citing PRD §12.1, with existing tests asserting on label text rather than colour class.
+**No colour-only gap found** — the prompt's own worry that this would be "likely the largest single
+chunk of real work" didn't hold; the shared primitives already enforce the discipline by
+construction, and no surface had rolled its own status colour outside them. Recorded here as a real,
+audited finding rather than manufactured busywork to look more thorough — an honest "audited, found
+already compliant" is a legitimate outcome.
+
+### 6. Raw-id / gap sweep
+
+Three real Class A fixes, no Class B (missing-picker) gaps found anywhere:
+- `components/admin/channel-identities-view.tsx` and `project-consent-view.tsx` both rendered
+  `party_id` as a raw UUID despite already fetching the full `parties` list for their own picker
+  right below — the resolver was sitting unused in the same file. Fixed with a small
+  `resolvePartyName` helper in each.
+- **Closed F2's own documented, still-open debt**: `MilestoneOut.type_term_id` had no resolver
+  anywhere, so a milestone's type was never displayed at all (F2's notes: "this session works around
+  it by simply never displaying a milestone's type"). `lib/twin/hooks.ts` gained its own
+  `resolveTermLabel` copy (matching the per-surface-owns-its-copy convention `lib/foresight/hooks.ts`
+  /`lib/documents/hooks.ts`/`lib/vendors/hooks.ts` already established), backed by the
+  `milestone_type`-category terms `AddMilestoneForm`'s own picker was already fetching — threaded
+  into `TimelineNodeRow` and `MilestoneDetailPanel` as a small type badge. Zero backend cost.
+
+### 7. Loading-state honesty
+
+**Ask**: already had a vague "Thinking — this can take a few seconds…" — tightened to name the real
+budget (NFR-PRF-04: p50 ≤3s/p95 ≤8s): "usually a few seconds, can take up to 8s."
+**Export**: the weakest of the two before this session — a bare `disabled` button with zero text/
+visual change. Now shows "Exporting…" on the button itself plus a message naming the real budget
+(NFR-PRF-05: "can take up to 30 seconds for a large project").
+
+### 8. Real axe-core + Lighthouse run, and what they actually caught
+
+`e2e/a11y.spec.ts`: `@axe-core/playwright` against all 8 surfaces (project-scoped: living-wip, twin,
+foresight, documents, ask; org-scoped: admin, vendors, analytics), asserting zero critical/serious
+violations — moderate/minor findings are recorded, not gated to zero (axe-core's own docs: "a real
+subset of WCAG failures," not a full AA guarantee).
+
+**Before fixes**: every one of the 8 surfaces failed with a real `color-contrast` (serious) violation
+— the base-theme WCAG fixes in §2 above, found by this exact run, not invented ahead of time.
+**After fixes**: 8/8 clean.
+
+**Lighthouse**: `scripts/lighthouse-audit.mjs`, a standalone one-off script rather than baked into
+the parallel Playwright suite — `playwright-lighthouse` needs a fixed `--remote-debugging-port`,
+which fights this project's own multi-worker e2e run; kept separate the same "real but occasional,
+not CI-gated" posture `backend/PROGRESS.md`'s own `loadtest/` (k6) already established for a
+different NFR. Found and fixed a real methodological bug in the harness itself: a plain (non-
+persistent) browser context shares no storage with the fresh page Lighthouse opens internally to
+gather each audit, so every "authenticated" page audit was silently redirecting to `/login` and
+scoring *that* page instead — caught by checking `lhr.finalDisplayedUrl` directly rather than trusting
+the score (a re-audited `/login` coincidentally also scores 100 after the fix below, which would have
+hidden the mismatch). Fixed per `playwright-lighthouse`'s own documented pattern
+(`chromium.launchPersistentContext`, sharing storage with Lighthouse's own internal page).
+
+That same debugging pass caught one more real, standalone bug: **`/login` had no `<main>` landmark at
+all** — it sits outside `app/(shell)/layout.tsx`'s own `<main>` wrapper entirely (deliberately, per
+F0's routing notes), and had never been given its own. Fixed (wrapped the page body in `<main>`).
+
+**Final, real, verified scores** (persistent-context run, `lhr.finalDisplayedUrl` confirmed matching
+the intended page for every row):
+
+| Page | Accessibility | Performance | Best Practices | SEO |
+|---|---|---|---|---|
+| `/login` | 100 | 100 | 100 | 91 |
+| Living WIP | 100 | 99 | 96 | 100 |
+| Twin | 100 | 100 | 96 | 100 |
+| Admin | 100 | 100 | 96 | 100 |
+
+Accessibility 100/100 on every page audited, matching axe-core's own 0/8 violation count. SEO/
+performance/best-practices are recorded honestly but were never this session's own NFR target (F9
+owns NFR-ACC/the web-applicable NFR-PRF subset, not Lighthouse's SEO category); the SEO 91 on
+`/login` and best-practices 96 on authenticated pages are real numbers, not investigated further —
+out of this session's own scope.
+
+### 9. Keyboard-only pass, one flow per named role
+
+`e2e/hardening.spec.ts`'s own `tabTo()` helper: a real, bounded `Tab`-press walk from the current
+focus position (never a `.focus()` shortcut) until the target receives focus — proves both keyboard
+reachability *and* that nothing upstream traps or skips it, the two failure shapes axe/Lighthouse
+cannot catch alone. Explicitly named as the honest substitute for a literal screen-reader session
+this environment has no assistive-tech software installed to run — the same "genuine substitute, not
+a claim of equivalence" posture this project already holds for FasterWhisper/Tesseract elsewhere.
+
+**Two real, load-bearing bugs found this way, neither caught by the axe-core scan above** (both scan
+runs happened as the seeded Administrator — neither bug's affected control ever renders for that
+role):
+
+1. **`DetailDrawer` (`components/living-wip/detail-drawer.tsx`) claimed `aria-modal="true"` with
+   neither half of what that claim requires** (WAI-ARIA APG's dialog pattern): focus never moved
+   into it on open, and `Tab` was never trapped inside it — a keyboard user opening any commitment/
+   milestone detail panel could `Tab` straight past its own Confirm/Close buttons into the rest of
+   the page behind it, an unreachable-in-practice modal despite being visibly on screen. Found when
+   the PM keyboard-verify flow's own `tabTo()` call, walking for the "Confirm" button, ran out of its
+   budget — the ARIA snapshot at failure showed the dialog open but focus still on background page
+   content. Fixed: focus moves onto the dialog's own heading on mount (`tabIndex={-1}` +
+   `.focus()`), `Tab`/`Shift+Tab` trapped within it while open, focus restored to the trigger element
+   on close. Same bug, same fix, applied to `components/foresight/webhook-secret-dialog.tsx` (the
+   only other `aria-modal="true"` surface in the app).
+2. **The commitment detail panel's Payment status `<select>` had no programmatic label at all** — no
+   `<label>`, no `htmlFor`, no `aria-label`/`aria-labelledby`, only a visually-adjacent `<h4>`
+   heading. A screen-reader user tabbing to it would hear "combobox," nothing else. Found by the
+   Finance-role keyboard flow specifically — `dialog.getByLabel("Payment status")` never resolved,
+   hanging the test for its full budget rather than failing fast (Playwright's own `.evaluate()`
+   waits for a matching element before either succeeding or timing out). Fixed: `aria-labelledby`
+   pointing at the section heading's own new `id`. Swept the rest of the codebase for the same shape
+   (33 `<select>` elements, checked via the 6 lines preceding each for `<label>`/`aria-label`/
+   `aria-labelledby`/`htmlFor`) — confirmed isolated, every other `<select>` already wraps in a real
+   `<label>`.
+
+The four flows themselves, all passing keyboard-only end to end: a Project Manager opening and
+verifying a commitment; a Producer triggering Freeze & Export; a Finance user changing payment
+status (the flow that found bug #2 above); an Administrator provisioning a new project. Plus two more
+hardening-specific keyboard/real-round-trip checks: high-contrast persisting across a reload via the
+real `PATCH /users/me` (not localStorage — `page.waitForResponse` tied to the actual network call,
+not raced against the UI's own `expect` poll), and switching locale to 简体 changing chrome while the
+vendor's own English deliverable name and Chinese evidence quote both stay byte-identical.
+
+**A real cross-spec-file race found and fixed, not just documented**: the PM keyboard-verify flow
+originally targeted the same shared `pending_verification` commitment ("LED wall rental — main
+stage") `e2e/living-wip.spec.ts`'s own first test asserts starts (and briefly stays) unverified.
+Under `fullyParallel` + multiple workers — this project's own real CI concurrency, per F5's notes —
+the two files' tests can interleave in either order; a real run showed `living-wip.spec.ts` losing
+that race. Fixed the same way `e2e/vendors.spec.ts`'s own second seeded vendor already set the
+precedent for: `scripts/seed_dev_data.py` gained a second, dedicated `pending_verification`
+commitment ("Stage power distribution board") for `hardening.spec.ts`'s own exclusive use, not shared
+with any other spec file's own assertions.
+
+### Testing
+
+`uv run pytest` (backend): 555 passing. `pnpm typecheck` / `pnpm lint` / `pnpm test` (122 passing,
+24 files) / `pnpm build`: all clean. `pnpm test:e2e` (full suite, `--workers=2` matching CI's own
+concurrency): 44 passed, 3 failed, 6 didn't run (cascading skips from `describe.serial` blocks after
+their own file's one failure) — every one of the 3 failures is a pre-existing, already-documented
+flakiness class this session's own changes didn't cause and confirmed doesn't touch:
+- `e2e/analytics.spec.ts` racing `e2e/admin.spec.ts`'s own "F7 E2E Project" creation (an F7/F8-owned
+  cross-file interaction, unrelated to any F9 surface).
+- `e2e/ask.spec.ts` and `e2e/living-wip.spec.ts`'s write-back-draft spec both hitting the real-Ollama
+  timing flakiness `backend/PROGRESS.md`'s and this file's own F7 notes already document at length
+  (this session ran locally against real Ollama, per this project's own dev-cost posture — CI's own
+  `FakeClient` provider doesn't have this problem).
+
+`e2e/hardening.spec.ts` (8 specs) and `e2e/a11y.spec.ts` (8 specs) — the 16 specs this session itself
+added — all pass cleanly and reproducibly (re-run clean 3 times during debugging, not a one-off
+green).
+
+### Explicitly out of scope, as the prompt itself named
+
+Mobile-specific NFRs (NFR-PRF-03, NFR-ACC-04's touch-target bar as a phone-sized audit, NFR-AVL-04's
+offline queue) — the mobile plane doesn't exist in this project. A fourth locale or any language
+beyond EN/简体/繁體 — CUE-PRD.md §3.2 names this explicitly out of v1 scope. A formal penetration
+test or WCAG conformance audit by an external firm — this session's own axe/Lighthouse/manual pass is
+the honest substitute available at this stage, not represented as equivalent to a real audit.
+
+## Overall state — end of F9, the last milestone in this plan
+
+F0–F9 all Done. Every surface CUE-PRD.md §12 names for the web plane (Living WIP, Production Twin,
+Foresight, Documents, Ask/Successor Brief, Vendor Reliability Graph, Admin console, Analytics
+dashboard) has real, tested content behind it — none is a stub or a fabricated-looking demo path —
+and this milestone's own pass closed the accessibility/localisation/hardening gaps every prior
+milestone's own prompt explicitly deferred to it (F0's reserved-but-unimplemented high-contrast CSS
+seam, every surface's colour-only-signal risk, the single-locale UI chrome, the honest-loading-state
+gap on Ask/Export). Real, current evidence: `uv run pytest` 555 passing (backend), `pnpm test` 122
+passing across 24 files (frontend), `pnpm test:e2e` 44/47 passing with the 3 remaining failures each
+a pre-existing, named, unrelated flakiness class — not this session's own regression — a real axe-
+core scan (0/8 critical/serious violations, down from a real, found-and-fixed color-contrast failure
+on every surface) and a real Lighthouse run (100/100 accessibility on every page audited, `finalDisplayedUrl`-verified as the real intended page each time), and two genuine keyboard-accessibility bugs
+(an unmanaged focus trap on every detail drawer in the app, an unlabelled form control gated to a
+role the automated scan never exercised) found by an actual role-based keyboard walkthrough and
+fixed, not just documented.
+
+What remains genuinely open, by design, not oversight:
+- **The mobile plane doesn't exist in this project** — CUE-Tech-Stack.md §7's `apps/web`/
+  `apps/mobile`/`packages/domain-types` monorepo layout is a documented mechanical move for whenever
+  real mobile work starts, deliberately not done pre-emptively (this plan's own scope note, repeated
+  every session it was relevant). NFR-PRF-03 (The Line's mobile load time), NFR-ACC-04 (Onsite Mode's
+  touch-target bar), and NFR-AVL-04 (the mobile offline queue) are all mobile-owned NFRs this plan
+  was never going to close.
+- **F8's own honestly-blocked §13 metrics stay blocked** — coordination overhead, status meeting
+  duration, report preparation time, active chats per PM per day, contingency drawn, commitment
+  capture rate, and extraction accuracy by slice all still need either a telemetry pipeline that
+  doesn't exist yet or a real Phase 0 discovery corpus this project has never had access to. Named
+  again here rather than silently dropped from the record now that F8 itself is several milestones
+  back.
+- **Deployment/infrastructure NFRs remain backend/M10's own named gap**, unchanged by any frontend
+  work: multi-region data planes, confirmed production volume + headroom, 99.5%/99.9% measured
+  availability, RPO/RTO, and the annual penetration test / formal WCAG conformance audit this
+  session's own axe/Lighthouse/manual pass is an honest substitute for, not an equivalent to.
+- **The `e2e/ask.spec.ts` / `e2e/living-wip.spec.ts` write-back real-Ollama timing flakiness** (this
+  file's own F7 notes first named it) is still unresolved for *local* runs specifically — CI itself
+  is unaffected (real `FakeClient`, no Ollama in the loop there), so this has never blocked a real CI
+  run, but a future session touching either surface locally should expect it and not mistake it for
+  a regression of its own.
 
 ## Updating this file
 

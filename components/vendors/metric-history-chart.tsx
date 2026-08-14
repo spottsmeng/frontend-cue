@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { formatDateTime } from "@/lib/format";
 import { VendorPermissionError, useVendorReliabilityHistoryQuery } from "@/lib/vendors/hooks";
@@ -30,6 +31,7 @@ export function MetricHistoryChart({
   partyId: string;
   eventArchetype: string | undefined;
 }) {
+  const t = useTranslations("vendors.metricHistoryChart");
   const [metric, setMetric] = useState<VendorMetricName>("on_time_rate");
   const { data, isLoading, isError, error } = useVendorReliabilityHistoryQuery(
     partyId,
@@ -41,11 +43,11 @@ export function MetricHistoryChart({
     if (error instanceof VendorPermissionError) {
       return (
         <p className="text-sm text-ink-muted">
-          Vendor reliability history is Finance/Procurement only.
+          {t("financeOnly")}
         </p>
       );
     }
-    return <p className="text-sm text-critical">Could not load history. Please retry.</p>;
+    return <p className="text-sm text-critical">{t("loadError")}</p>;
   }
 
   const history = data?.history ?? [];
@@ -56,7 +58,7 @@ export function MetricHistoryChart({
   return (
     <div className="flex flex-col gap-3">
       <label className="text-xs text-ink-secondary">
-        Metric
+        {t("metricLabel")}
         <select
           value={metric}
           onChange={(e) => setMetric(e.target.value as VendorMetricName)}
@@ -71,20 +73,20 @@ export function MetricHistoryChart({
       </label>
 
       {isLoading ? (
-        <p className="text-sm text-ink-muted">Loading history…</p>
+        <p className="text-sm text-ink-muted">{t("loading")}</p>
       ) : history.length === 0 ? (
-        <p className="text-sm text-ink-muted">No snapshots recorded yet for this metric/segment.</p>
+        <p className="text-sm text-ink-muted">{t("noSnapshots")}</p>
       ) : (
         <>
           {points.length >= 2 ? (
             <ThemedLineChart
               series={[{ id: metric, label: METRIC_LABEL[metric], points }]}
               valueFormat={(v) => formatMetricValue(metric, v)}
-              ariaLabel="Metric trend over time"
+              ariaLabel={t("chartAriaLabel")}
             />
           ) : (
             <p className="text-xs text-ink-muted">
-              Fewer than two available snapshots — not enough to draw a trend line yet.
+              {t("notEnoughPoints")}
             </p>
           )}
           <ul className="flex flex-col gap-1.5">
@@ -97,7 +99,7 @@ export function MetricHistoryChart({
                 {h.available && h.value !== null ? (
                   <span className="font-mono font-medium text-ink">{formatMetricValue(metric, h.value)}</span>
                 ) : (
-                  <span className="text-ink-muted">not available — {h.unavailable_reason}</span>
+                  <span className="text-ink-muted">{t("notAvailable")} — {h.unavailable_reason}</span>
                 )}
               </li>
             ))}

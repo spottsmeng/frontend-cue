@@ -1,5 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+
+import { renderWithIntl as render } from "@/lib/test-utils";
 
 import { VerificationBadge } from "./verification-badge";
 

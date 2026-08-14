@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { renderWithIntl as render } from "@/lib/test-utils";
 import type { DocumentLineageOut } from "@/lib/api/types";
 
 import { VersionHistory } from "./version-history";
@@ -122,14 +123,19 @@ describe("VersionHistory", () => {
     useApproveVersionMutation.mockReturnValue(baseMutation());
     useProjectMembersQuery.mockReturnValue({ data: [] });
 
-    const { rerender } = render(
+    // Separate render()/unmount() per case, not RTL's `rerender` — `render`
+    // here is `renderWithIntl`, which wraps `NextIntlClientProvider` around
+    // the element itself rather than via RTL's `wrapper` option, so a bare
+    // `rerender(...)` would replace the whole tree and drop the provider.
+    const first = render(
       <VersionHistory projectId="p1" documentId="doc-1" lineage={makeLineage()} effectiveRoles={["producer"]} />,
     );
     // v1 already approved, v2 isn't — exactly one Approve button, on v2's row.
     const approveButtons = screen.getAllByRole("button", { name: /^Approve/ });
     expect(approveButtons).toHaveLength(1);
+    first.unmount();
 
-    rerender(
+    render(
       <VersionHistory projectId="p1" documentId="doc-1" lineage={makeLineage()} effectiveRoles={["read_only"]} />,
     );
     expect(screen.queryByRole("button", { name: /^Approve/ })).not.toBeInTheDocument();

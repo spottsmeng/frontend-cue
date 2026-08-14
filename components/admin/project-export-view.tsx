@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useExportProjectMutation } from "@/lib/admin/export-hooks";
 
 import { SectionPanel } from "../living-wip/section-panel";
@@ -12,16 +14,13 @@ import { SectionPanel } from "../living-wip/section-panel";
  * own bearer token (`lib/admin/download.ts`'s own note on why).
  */
 export function ProjectExportView({ projectId }: { projectId: string }) {
+  const t = useTranslations("admin.export");
   const exportMutation = useExportProjectMutation();
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
-      <SectionPanel title="Full project export">
-        <p className="mb-3 text-sm text-ink-muted">
-          FR-ADM-10&apos;s complete project record — ledger, budgets, audit log. Documents are not
-          yet included in this bundle, a real, currently-open gap on the backend side (not something
-          this screen routes around).
-        </p>
+      <SectionPanel title={t("title")}>
+        <p className="mb-3 text-sm text-ink-muted">{t("description")}</p>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -29,7 +28,7 @@ export function ProjectExportView({ projectId }: { projectId: string }) {
             onClick={() => exportMutation.mutate({ projectId, format: "json" })}
             className="rounded-md border border-border-strong px-3 py-1.5 text-sm text-ink-secondary hover:border-signal disabled:opacity-50"
           >
-            Download JSON
+            {t("downloadJson")}
           </button>
           <button
             type="button"
@@ -37,11 +36,11 @@ export function ProjectExportView({ projectId }: { projectId: string }) {
             onClick={() => exportMutation.mutate({ projectId, format: "csv" })}
             className="rounded-md border border-border-strong px-3 py-1.5 text-sm text-ink-secondary hover:border-signal disabled:opacity-50"
           >
-            Download CSV (zip)
+            {t("downloadCsv")}
           </button>
         </div>
         {exportMutation.isError && (
-          <p className="mt-2 text-xs text-critical">Export failed — please retry.</p>
+          <p className="mt-2 text-xs text-critical">{t("exportError")}</p>
         )}
       </SectionPanel>
     </div>

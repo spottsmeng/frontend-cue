@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { useDocumentSearchQuery } from "@/lib/documents/hooks";
 
@@ -13,6 +14,7 @@ import { useDocumentSearchQuery } from "@/lib/documents/hooks";
  * index separately).
  */
 export function DocumentSearchPanel({ projectId }: { projectId: string }) {
+  const t = useTranslations("documents.search");
   const [query, setQuery] = useState("");
   const { data: results, isFetching, isError } = useDocumentSearchQuery(projectId, query);
 
@@ -22,17 +24,17 @@ export function DocumentSearchPanel({ projectId }: { projectId: string }) {
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search extracted document text — keyword match, not semantic"
+        placeholder={t("placeholder")}
         className="w-full rounded-md border border-border bg-surface p-2 text-sm text-ink"
       />
 
       {query.trim().length === 0 && (
-        <p className="text-xs text-ink-muted">Type a keyword to search uploaded document text.</p>
+        <p className="text-xs text-ink-muted">{t("hint")}</p>
       )}
-      {isFetching && <p className="text-xs text-ink-muted">Searching…</p>}
-      {isError && <p className="text-xs text-critical">Search failed — please retry.</p>}
+      {isFetching && <p className="text-xs text-ink-muted">{t("searching")}</p>}
+      {isError && <p className="text-xs text-critical">{t("error")}</p>}
       {results && results.length === 0 && query.trim().length > 0 && !isFetching && (
-        <p className="text-xs text-ink-muted">No matches.</p>
+        <p className="text-xs text-ink-muted">{t("noMatches")}</p>
       )}
 
       {results && results.length > 0 && (
@@ -46,7 +48,7 @@ export function DocumentSearchPanel({ projectId }: { projectId: string }) {
                 >
                   {r.document.name}
                 </Link>
-                <span className="font-mono text-xs text-ink-muted">rank {r.rank.toFixed(3)}</span>
+                <span className="font-mono text-xs text-ink-muted">{t("rank", { rank: r.rank.toFixed(3) })}</span>
               </div>
               {r.version.extracted_text && (
                 <p className="mt-1.5 line-clamp-2 text-xs text-ink-secondary">

@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { formatDate, formatMoney } from "@/lib/format";
 import type { ReportFieldT } from "@/lib/api/types";
 
@@ -25,10 +27,18 @@ export function ReportField({
   currency?: string | null;
   onOpenCommitment?: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("livingWip.reportField");
+
   if (!field.available) {
+    // `field.unavailable_reason` is the backend's own generated diagnostic
+    // text (app/reports/schema.py), never a static UI string — left
+    // untranslated like every other server-generated message in this app,
+    // same reasoning error messages elsewhere in this codebase already
+    // follow (there is no message-bundle key for text CUE itself didn't
+    // author).
     return (
       <span className="inline-flex items-center gap-1.5 text-sm italic text-ink-muted">
-        Not available — {field.unavailable_reason ?? "no source recorded"}
+        {t("notAvailable")} — {field.unavailable_reason ?? t("noSourceRecorded")}
       </span>
     );
   }

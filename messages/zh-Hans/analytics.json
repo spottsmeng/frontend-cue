@@ -1,0 +1,90 @@
+{
+  "analyticsView": {
+    "loadError": "无法加载项目列表，请重试。",
+    "loading": "正在加载项目…",
+    "noProjects": "尚未加入任何项目，此处暂无可显示的图表。",
+    "verificationBurdenTitle": "验证负担",
+    "writebackReplyRateTitle": "回传回复率",
+    "costPerProjectTitle": "各活跃项目成本",
+    "notYetMeasurableTitle": "尚无法衡量"
+  },
+  "costSummaryTable": {
+    "adminOnly": "项目成本仅限管理员查看，未在本组织任何项目中担任该角色，此处暂无可查看内容。",
+    "loadError": "无法加载成本汇总，请重试。",
+    "loading": "正在加载成本汇总…",
+    "empty": "尚无大语言模型使用记录。",
+    "headers": {
+      "project": "项目",
+      "provider": "服务商",
+      "model": "模型",
+      "calls": "调用次数",
+      "tokensIn": "输入 Token 数",
+      "tokensOut": "输出 Token 数",
+      "estimatedCost": "预估成本"
+    },
+    "total": "总计",
+    "unknownCostNote": "总成本为未知而非零——目前所有调用均使用了本系统无法识别定价的模型。",
+    "unattributed": "未归属",
+    "unknownProject": "未知项目",
+    "unknownCost": "未知"
+  },
+  "verificationBurdenChart": {
+    "loadError": "无法加载承诺事项，请重试。",
+    "loading": "正在加载验证负担…",
+    "empty": "在可查看的项目中，尚无需要人工验证的承诺事项。",
+    "chartAriaLabel": "验证负担：各项目每周需要人工验证的承诺事项数",
+    "headers": {
+      "weekOf": "周起始日",
+      "project": "项目",
+      "commitmentsNeedingVerification": "需验证的承诺事项数"
+    }
+  },
+  "writebackReplyRateChart": {
+    "loadError": "无法加载回传消息记录，请重试。",
+    "loading": "正在加载回传回复率…",
+    "empty": "在可查看的项目中，尚未发送过回传消息。",
+    "chartAriaLabel": "回传回复率：各项目每周供应商确认回复数与发送数对比",
+    "headers": {
+      "weekOf": "周起始日",
+      "project": "项目",
+      "sent": "已发送",
+      "replied": "已回复",
+      "rate": "比率"
+    }
+  },
+  "methodologyFootnote": {
+    "title": "本仪表板目前能展示与尚不能展示的内容及原因",
+    "paragraph1": "PRD 第13节承诺 CUE 会随产品一同提供指标仪表板，使 Pico 能够独立核实其宣称的价值，而非仅凭信任。第13节所列十项指标中，有三项是本页面上真实、实时的数据：验证负担与回传回复率均由与各项目 Living WIP 页面上可查证的相同承诺事项及回传记录计算得出；各项目成本则直接读取自每次抽取调用写入的大语言模型使用台账。",
+    "paragraph2": "其余七项指标列示于下方，并附具体、真实的暂不可衡量原因——或缺少遥测管道，或缺少日历集成，或存在尚无人做出的架构决策，或因第0阶段调研尚未开展而缺少真值语料库。这些指标均未被隐藏，也没有一项是虚构数据。没有数据的图表看起来未完成；有虚构数据的图表看起来完成了，却是谎言——本仪表板始终选择前者。"
+  },
+  "unmeasurableMetricsPanel": {
+    "coordinationOverhead": {
+      "metric": "协调开销（项目经理用于转达沟通的分钟数）",
+      "blocker": "需要产品使用遥测数据——本代码库目前尚无任何前端使用事件采集管道。"
+    },
+    "statusMeetingDuration": {
+      "metric": "状态会议时长",
+      "blocker": "需要日历/Teams 会议时长集成——FR-CAP-13 的转录摄取功能捕获的是会议内容，而非时长。"
+    },
+    "reportPreparationTime": {
+      "metric": "报告准备时间（打开 WIP → 导出）",
+      "blocker": "需要「打开 WIP 页面」使用事件——目前只有导出这一半流程带有时间戳（ReportSnapshot.generated_at）。"
+    },
+    "activeChatsPerPm": {
+      "metric": "每位项目经理每日活跃聊天数",
+      "blocker": "需要针对 CUE 自身界面的产品使用遥测数据——与上方「协调开销」存在相同缺口。"
+    },
+    "contingencyDrawn": {
+      "metric": "已动用应急预备金",
+      "blocker": "预算数据仅包含 approved_amount/currency 字段——数据模型中并未区分应急预备金与基础预算。这是需要财务部门或后续后端工作会议做出的架构/产品决策，本仪表板不会擅自设定。"
+    },
+    "captureRate": {
+      "metric": "承诺事项捕获率（检测结果对比真值）",
+      "blocker": "尚无真实的真值语料库——第0阶段调研（PRD 第15节）尚未针对任何实际项目开展；cue-eval 的十个合成用例仅是回归冒烟测试，并非准确率评测。"
+    },
+    "extractionAccuracy": {
+      "metric": "按维度划分的抽取准确率（语言／渠道／供应商类别）",
+      "blocker": "漂移检测结果尚未持久化到可查询的数据表——目前仅能通过离线运行 cue-eval/run_eval.py --json 获取，尚无实时接口（每次加载仪表板都重新运行评测被判定为设计不良，因此未予实现）。"
+    }
+  }
+}

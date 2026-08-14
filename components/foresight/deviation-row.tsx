@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { formatDate, formatDateTime } from "@/lib/format";
 import { useConfirmDeviationMutation, useResolveDeviationMutation } from "@/lib/deviations/hooks";
@@ -11,12 +12,6 @@ import type { DeviationOut, MembershipRole, OntologyTermOut, ProjectMemberOut } 
 import { hasAnyRole, WRITE_ROLES } from "@/lib/roles";
 
 import { EvidenceViewer } from "../living-wip/evidence-viewer";
-
-const STATUS_LABEL: Record<string, string> = {
-  auto_drafted: "Auto-drafted — needs review",
-  confirmed: "Confirmed",
-  resolved: "Resolved",
-};
 
 /**
  * FR-DEV: this milestone's own list item for the real `DeviationOut`
@@ -45,6 +40,12 @@ export function DeviationRow({
   classTerms: OntologyTermOut[] | undefined;
   members: ProjectMemberOut[] | undefined;
 }) {
+  const t = useTranslations("foresight.deviationRow");
+  const STATUS_LABEL_KEY: Record<string, "autoDrafted" | "confirmed" | "resolved"> = {
+    auto_drafted: "autoDrafted",
+    confirmed: "confirmed",
+    resolved: "resolved",
+  };
   const [editing, setEditing] = useState(false);
   const [description, setDescription] = useState(deviation.description_en);
   const [resolving, setResolving] = useState(false);
@@ -62,9 +63,11 @@ export function DeviationRow({
   return (
     <li className="rounded-md border border-border p-3">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm text-ink">{deviation.description_en}</p>
+        <p lang="en" className="text-sm text-ink">
+          {deviation.description_en}
+        </p>
         <span className="shrink-0 rounded-full bg-surface-sunk px-2 py-0.5 text-xs font-medium text-ink-secondary">
-          {STATUS_LABEL[deviation.status] ?? deviation.status}
+          {STATUS_LABEL_KEY[deviation.status] ? t(`status.${STATUS_LABEL_KEY[deviation.status]}`) : deviation.status}
         </span>
       </div>
       <p className="mt-1 text-xs text-ink-muted">
@@ -73,7 +76,7 @@ export function DeviationRow({
             {classTerm.label_en} <span className="font-mono">({classTerm.code})</span>
           </>
         ) : (
-          <span className="font-mono">class {deviation.class_term_id}</span>
+          <span className="font-mono">{t("classFallback", { id: deviation.class_term_id })}</span>
         )}{" "}
         · <span className="font-mono">{formatDateTime(deviation.created_at)}</span>
       </p>
@@ -81,20 +84,22 @@ export function DeviationRow({
       <div className="mt-1.5 flex flex-wrap gap-3 text-xs">
         {deviation.commitment_id && (
           <Link href={`/projects/${projectId}`} className="text-signal hover:underline">
-            View in Living WIP →
+            {t("viewInLivingWip")}
           </Link>
         )}
         {deviation.milestone_id && (
           <Link href={`/projects/${projectId}/twin`} className="text-signal hover:underline">
-            View in Twin →
+            {t("viewInTwin")}
           </Link>
         )}
       </div>
 
       {deviation.resolution_date && deviation.resolution_owner && (
         <p className="mt-1.5 text-xs text-ink-secondary">
-          Resolved for {formatDate(deviation.resolution_date)}, owner{" "}
-          {resolveMemberLabel(members, deviation.resolution_owner)}
+          {t("resolvedFor", {
+            date: formatDate(deviation.resolution_date),
+            owner: resolveMemberLabel(members, deviation.resolution_owner),
+          })}
         </p>
       )}
 
@@ -124,14 +129,14 @@ export function DeviationRow({
                   }
                   className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
                 >
-                  Confirm
+                  {t("confirm")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setEditing(false)}
                   className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
               </div>
             </div>
@@ -143,19 +148,19 @@ export function DeviationRow({
                 onClick={() => confirmMutation.mutate({ deviationId: deviation.id })}
                 className="rounded-md border border-signal px-3 py-1.5 text-xs font-medium text-signal hover:bg-signal-soft disabled:opacity-50"
               >
-                Confirm as-is
+                {t("confirmAsIs")}
               </button>
               <button
                 type="button"
                 onClick={() => setEditing(true)}
                 className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary hover:border-signal hover:text-signal"
               >
-                Edit &amp; confirm
+                {t("editAndConfirm")}
               </button>
             </div>
           )}
           {confirmMutation.isError && (
-            <p className="mt-2 text-xs text-critical">Could not confirm — please try again.</p>
+            <p className="mt-2 text-xs text-critical">{t("confirmError")}</p>
           )}
         </div>
       )}
@@ -179,7 +184,7 @@ export function DeviationRow({
               className="flex flex-wrap items-end gap-2"
             >
               <label className="text-xs text-ink-secondary">
-                Resolution date
+                {t("resolutionDate")}
                 <input
                   required
                   type="date"
@@ -189,7 +194,7 @@ export function DeviationRow({
                 />
               </label>
               <label className="text-xs text-ink-secondary">
-                Owner
+                {t("owner")}
                 <select
                   required
                   value={resolutionOwner}
@@ -198,11 +203,11 @@ export function DeviationRow({
                   className="mt-1 block w-56 rounded-md border border-border bg-surface p-1.5 text-sm text-ink disabled:opacity-60"
                 >
                   <option value="" disabled>
-                    {members ? "Select a project member…" : "Loading members…"}
+                    {members ? t("selectAProjectMember") : t("loadingMembers")}
                   </option>
                   {members?.map((m) => (
                     <option key={m.user_id} value={m.user_id}>
-                      {m.display_name ?? m.email} — {m.role}
+                      {t("memberOption", { name: m.display_name ?? m.email, role: m.role })}
                     </option>
                   ))}
                 </select>
@@ -212,14 +217,14 @@ export function DeviationRow({
                 disabled={resolveMutation.isPending}
                 className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
               >
-                Save resolution
+                {t("saveResolution")}
               </button>
               <button
                 type="button"
                 onClick={() => setResolving(false)}
                 className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary"
               >
-                Cancel
+                {t("cancel")}
               </button>
             </form>
           ) : (
@@ -228,11 +233,11 @@ export function DeviationRow({
               onClick={() => setResolving(true)}
               className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary hover:border-signal hover:text-signal"
             >
-              Record resolution
+              {t("recordResolution")}
             </button>
           )}
           {resolveMutation.isError && (
-            <p className="mt-2 text-xs text-critical">Could not record resolution — please try again.</p>
+            <p className="mt-2 text-xs text-critical">{t("resolveError")}</p>
           )}
         </div>
       )}

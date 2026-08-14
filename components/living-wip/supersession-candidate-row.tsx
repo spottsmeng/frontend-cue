@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { formatMoney } from "@/lib/format";
 import {
   useCommitmentQuery,
@@ -29,6 +31,7 @@ export function SupersessionCandidateRow({
   candidate: CommitmentSupersessionCandidateOut;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("livingWip.supersessionCandidate");
   const { data: newer } = useCommitmentQuery(projectId, candidate.commitment_id);
   const { data: older } = useCommitmentQuery(projectId, candidate.supersedes_commitment_id);
   const confirmMutation = useConfirmSupersessionCandidateMutation(projectId);
@@ -36,27 +39,35 @@ export function SupersessionCandidateRow({
   const canWrite = hasAnyRole(effectiveRoles, WRITE_ROLES);
 
   function amountLabel(commitment: CommitmentOut | undefined): string {
-    if (!commitment) return "…";
-    return commitment.amount === null ? "not specified" : formatMoney(commitment.amount, commitment.currency);
+    if (!commitment) return t("loadingAmount");
+    return commitment.amount === null
+      ? t("notSpecified")
+      : formatMoney(commitment.amount, commitment.currency);
   }
 
   return (
     <li className="rounded-md border border-border p-3">
-      <p className="text-sm text-ink">{newer?.deliverable_en ?? "Loading…"}</p>
+      <p lang="en" className="text-sm text-ink">
+        {newer?.deliverable_en ?? t("loadingName")}
+      </p>
 
       <div className="mt-2 flex flex-wrap items-center gap-2 font-mono text-xs">
-        <span className="rounded-full bg-surface-sunk px-2 py-0.5 text-ink-muted">was {amountLabel(older)}</span>
+        <span className="rounded-full bg-surface-sunk px-2 py-0.5 text-ink-muted">
+          {t("was", { amount: amountLabel(older) })}
+        </span>
         <span aria-hidden className="text-ink-muted">
           →
         </span>
-        <span className="rounded-full bg-dusk-soft px-2 py-0.5 text-dusk">now {amountLabel(newer)}</span>
+        <span className="rounded-full bg-dusk-soft px-2 py-0.5 text-dusk">
+          {t("now", { amount: amountLabel(newer) })}
+        </span>
       </div>
 
       <p className="mt-2 text-xs text-ink-secondary">{candidate.reasoning}</p>
 
       {candidate.status !== "pending" && (
         <p className="mt-2 text-xs font-medium text-ink-muted">
-          {candidate.status === "confirmed" ? "Confirmed" : "Rejected"}
+          {candidate.status === "confirmed" ? t("confirmed") : t("rejected")}
         </p>
       )}
 
@@ -68,7 +79,7 @@ export function SupersessionCandidateRow({
             onClick={() => confirmMutation.mutate(candidate.id)}
             className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
-            Confirm — this is a revision
+            {t("confirmAction")}
           </button>
           <button
             type="button"
@@ -76,12 +87,12 @@ export function SupersessionCandidateRow({
             onClick={() => rejectMutation.mutate(candidate.id)}
             className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary hover:border-critical hover:text-critical disabled:opacity-50"
           >
-            Reject — unrelated commitments
+            {t("rejectAction")}
           </button>
         </div>
       )}
       {(confirmMutation.isError || rejectMutation.isError) && (
-        <p className="mt-2 text-xs text-critical">Could not save — please retry.</p>
+        <p className="mt-2 text-xs text-critical">{t("saveError")}</p>
       )}
     </li>
   );

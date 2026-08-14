@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 import { projectNameMap, useAnalyticsProjectsQuery } from "@/lib/analytics/hooks";
 
@@ -23,6 +24,7 @@ import { WritebackReplyRateChart } from "./writeback-reply-rate-chart";
  * fans its own requests out across the resulting project list.
  */
 export function AnalyticsView() {
+  const t = useTranslations("analytics.analyticsView");
   const { data: projects, isLoading, isError } = useAnalyticsProjectsQuery();
   const projectIds = useMemo(() => (projects ?? []).map((p) => p.id), [projects]);
   const projectsById = useMemo(() => projectNameMap(projects), [projects]);
@@ -30,7 +32,7 @@ export function AnalyticsView() {
   if (isError) {
     return (
       <div className="mx-auto w-full max-w-4xl px-4 py-4">
-        <p className="text-sm text-critical">Could not load your projects. Please retry.</p>
+        <p className="text-sm text-critical">{t("loadError")}</p>
       </div>
     );
   }
@@ -40,28 +42,28 @@ export function AnalyticsView() {
       <MethodologyFootnote />
 
       {isLoading ? (
-        <p className="text-sm text-ink-muted">Loading your projects…</p>
+        <p className="text-sm text-ink-muted">{t("loading")}</p>
       ) : projectIds.length === 0 ? (
         <p className="text-sm text-ink-muted">
-          You aren&apos;t a member of any project yet, so there&apos;s nothing to chart here.
+          {t("noProjects")}
         </p>
       ) : (
         <>
-          <SectionPanel title="Verification burden">
+          <SectionPanel title={t("verificationBurdenTitle")}>
             <VerificationBurdenChart projectIds={projectIds} projectsById={projectsById} />
           </SectionPanel>
 
-          <SectionPanel title="Write-back reply rate">
+          <SectionPanel title={t("writebackReplyRateTitle")}>
             <WritebackReplyRateChart projectIds={projectIds} projectsById={projectsById} />
           </SectionPanel>
         </>
       )}
 
-      <SectionPanel title="Cost per active project">
+      <SectionPanel title={t("costPerProjectTitle")}>
         <CostSummaryTable projectsById={projectsById} />
       </SectionPanel>
 
-      <SectionPanel title="Not yet measurable">
+      <SectionPanel title={t("notYetMeasurableTitle")}>
         <UnmeasurableMetricsPanel />
       </SectionPanel>
     </div>

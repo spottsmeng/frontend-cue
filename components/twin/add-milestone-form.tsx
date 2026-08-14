@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { MembershipRole } from "@/lib/api/types";
 import { hasAnyRole, WRITE_ROLES } from "@/lib/roles";
@@ -20,6 +21,7 @@ export function AddMilestoneForm({
   projectId: string;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("twin.addMilestoneForm");
   const [open, setOpen] = useState(false);
   const [typeCode, setTypeCode] = useState("");
   const [name, setName] = useState("");
@@ -37,7 +39,7 @@ export function AddMilestoneForm({
         onClick={() => setOpen(true)}
         className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary hover:border-signal hover:text-signal"
       >
-        + Add milestone
+        {t("addMilestone")}
       </button>
     );
   }
@@ -69,7 +71,7 @@ export function AddMilestoneForm({
     >
       <div className="flex flex-wrap items-end gap-2">
         <label className="text-xs text-ink-secondary">
-          Type
+          {t("type")}
           <select
             required
             value={typeCode}
@@ -77,17 +79,17 @@ export function AddMilestoneForm({
             className="mt-1 block w-56 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
           >
             <option value="" disabled>
-              Select a type…
+              {t("selectAType")}
             </option>
-            {types?.map((t) => (
-              <option key={t.code} value={t.code}>
-                {t.label_en}
+            {types?.map((type) => (
+              <option key={type.code} value={type.code}>
+                {type.label_en}
               </option>
             ))}
           </select>
         </label>
         <label className="flex-1 text-xs text-ink-secondary">
-          Name
+          {t("name")}
           <input
             required
             value={name}
@@ -96,7 +98,7 @@ export function AddMilestoneForm({
           />
         </label>
         <label className="text-xs text-ink-secondary">
-          Planned date
+          {t("plannedDate")}
           <input
             type="datetime-local"
             value={plannedAt}
@@ -110,7 +112,7 @@ export function AddMilestoneForm({
             checked={isFixed}
             onChange={(e) => setIsFixed(e.target.checked)}
           />
-          Fixed (cannot be pushed)
+          {t("fixed")}
         </label>
       </div>
       <div className="flex items-center gap-2">
@@ -119,16 +121,16 @@ export function AddMilestoneForm({
           disabled={createMutation.isPending}
           className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
         >
-          {createMutation.isPending ? "Adding…" : "Add milestone"}
+          {createMutation.isPending ? t("adding") : t("add")}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary"
         >
-          Cancel
+          {t("cancel")}
         </button>
-        {createMutation.isError && <p className="text-xs text-critical">Could not add milestone.</p>}
+        {createMutation.isError && <p className="text-xs text-critical">{t("error")}</p>}
       </div>
     </form>
   );

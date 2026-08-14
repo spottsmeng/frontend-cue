@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { MembershipRole } from "@/lib/api/types";
 import { hasAnyRole, WRITE_ROLES } from "@/lib/roles";
@@ -21,6 +22,7 @@ export function AddVersionForm({
   documentId: string;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("documents.versionHistory.addForm");
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [extractedText, setExtractedText] = useState("");
@@ -35,7 +37,7 @@ export function AddVersionForm({
         onClick={() => setOpen(true)}
         className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary hover:border-signal hover:text-signal"
       >
-        + New version
+        {t("openButton")}
       </button>
     );
   }
@@ -60,7 +62,7 @@ export function AddVersionForm({
     >
       <div className="flex flex-wrap items-end gap-2">
         <label className="text-xs text-ink-secondary">
-          File
+          {t("fileLabel")}
           <input
             required
             type="file"
@@ -70,8 +72,7 @@ export function AddVersionForm({
         </label>
       </div>
       <label className="text-xs text-ink-secondary">
-        Extracted text (optional — leave blank to let CUE auto-extract from PDF/Office files and
-        images)
+        {t("extractedTextLabel")}
         <textarea
           value={extractedText}
           onChange={(e) => setExtractedText(e.target.value)}
@@ -85,17 +86,17 @@ export function AddVersionForm({
           disabled={addVersionMutation.isPending}
           className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
         >
-          {addVersionMutation.isPending ? "Uploading…" : "Upload new version"}
+          {addVersionMutation.isPending ? t("submitting") : t("submit")}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary"
         >
-          Cancel
+          {t("cancel")}
         </button>
         {addVersionMutation.isError && (
-          <p className="text-xs text-critical">Could not upload this version.</p>
+          <p className="text-xs text-critical">{t("error")}</p>
         )}
       </div>
     </form>

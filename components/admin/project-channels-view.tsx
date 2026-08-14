@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   useAttachChannelMutation,
@@ -24,6 +25,7 @@ import { SectionPanel } from "../living-wip/section-panel";
  * there is no push mechanism to this UI.
  */
 export function ProjectChannelsView({ projectId }: { projectId: string }) {
+  const t = useTranslations("admin.channels");
   const { data: channels, isLoading } = useChannelsQuery(projectId);
   const { data: channelTypes } = useChannelTypesQuery();
   const attachMutation = useAttachChannelMutation(projectId);
@@ -38,10 +40,10 @@ export function ProjectChannelsView({ projectId }: { projectId: string }) {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
-      <SectionPanel title="Channels">
-        {isLoading && <p className="text-sm text-ink-muted">Loading…</p>}
+      <SectionPanel title={t("title")}>
+        {isLoading && <p className="text-sm text-ink-muted">{t("loading")}</p>}
         {channels && channels.length === 0 && (
-          <p className="mb-3 text-sm text-ink-muted">No channels attached yet.</p>
+          <p className="mb-3 text-sm text-ink-muted">{t("empty")}</p>
         )}
         {channels && channels.length > 0 && (
           <ul className="mb-3 flex flex-col gap-1.5">
@@ -60,7 +62,7 @@ export function ProjectChannelsView({ projectId }: { projectId: string }) {
                         c.healthy ? "bg-good-soft text-good" : "bg-critical-soft text-critical"
                       }`}
                     >
-                      {c.healthy ? "healthy" : "degraded"}
+                      {c.healthy ? t("healthy") : t("degraded")}
                     </span>
                     {!c.healthy && (
                       <button
@@ -69,7 +71,7 @@ export function ProjectChannelsView({ projectId }: { projectId: string }) {
                         onClick={() => reconnectMutation.mutate(c.id)}
                         className="rounded-md border border-border-strong px-2 py-1 text-xs text-ink-secondary hover:border-signal disabled:opacity-50"
                       >
-                        Reconnect
+                        {t("reconnect")}
                       </button>
                     )}
                     <button
@@ -77,7 +79,7 @@ export function ProjectChannelsView({ projectId }: { projectId: string }) {
                       onClick={() => setExpandedChannel(expandedChannel === c.id ? null : c.id)}
                       className="rounded-md border border-border-strong px-2 py-1 text-xs text-ink-secondary hover:border-signal"
                     >
-                      {expandedChannel === c.id ? "Hide history" : "Health history"}
+                      {expandedChannel === c.id ? t("hideHistory") : t("healthHistory")}
                     </button>
                     <button
                       type="button"
@@ -88,20 +90,18 @@ export function ProjectChannelsView({ projectId }: { projectId: string }) {
                       }}
                       className="rounded-md border border-border-strong px-2 py-1 text-xs text-critical hover:border-critical disabled:opacity-50"
                     >
-                      Detach
+                      {t("detach")}
                     </button>
                   </span>
                 </div>
                 {expandedChannel === c.id && (
                   <ul className="mt-2 flex flex-col gap-1 border-t border-border pt-2">
                     {(history ?? []).length === 0 && (
-                      <li className="text-xs text-ink-muted">
-                        No health checks recorded yet (checked every 15 minutes).
-                      </li>
+                      <li className="text-xs text-ink-muted">{t("noHealthChecks")}</li>
                     )}
                     {(history ?? []).map((h) => (
                       <li key={h.id} className="font-mono text-xs text-ink-muted">
-                        {formatDateTime(h.checked_at)} — {h.healthy ? "healthy" : "unhealthy"}
+                        {formatDateTime(h.checked_at)} — {h.healthy ? t("healthy") : t("unhealthy")}
                       </li>
                     ))}
                   </ul>
@@ -123,27 +123,27 @@ export function ProjectChannelsView({ projectId }: { projectId: string }) {
           className="flex flex-wrap items-end gap-2 rounded-md border border-border p-3"
         >
           <label className="text-xs text-ink-secondary">
-            Channel type
+            {t("channelTypeLabel")}
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
               className="mt-1 block w-48 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
             >
-              <option value="">Select…</option>
-              {channelTypes?.map((t) => (
-                <option key={t.code} value={t.code}>
-                  {t.code}
+              <option value="">{t("selectPlaceholder")}</option>
+              {channelTypes?.map((ct) => (
+                <option key={ct.code} value={ct.code}>
+                  {ct.code}
                 </option>
               ))}
             </select>
           </label>
           <label className="text-xs text-ink-secondary">
-            External reference (optional)
+            {t("externalRefLabel")}
             <input
               type="text"
               value={externalRef}
               onChange={(e) => setExternalRef(e.target.value)}
-              placeholder="e.g. group name, mailbox"
+              placeholder={t("externalRefPlaceholder")}
               className="mt-1 block w-56 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
             />
           </label>
@@ -152,10 +152,10 @@ export function ProjectChannelsView({ projectId }: { projectId: string }) {
             disabled={!type || attachMutation.isPending}
             className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
-            Attach channel
+            {t("attachChannel")}
           </button>
           {attachMutation.isError && (
-            <p className="w-full text-xs text-critical">Could not attach channel — please retry.</p>
+            <p className="w-full text-xs text-critical">{t("attachError")}</p>
           )}
         </form>
       </SectionPanel>

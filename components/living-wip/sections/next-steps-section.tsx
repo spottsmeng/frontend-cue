@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { formatDate } from "@/lib/format";
 import type { NextStepsSection as NextStepsSectionT } from "@/lib/api/types";
 
@@ -13,18 +15,19 @@ export function NextStepsPanel({
   section: NextStepsSectionT;
   onOpenCommitment: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("livingWip.nextSteps");
   const empty = section.open_commitments.length === 0 && section.open_milestones.length === 0;
 
   return (
-    <SectionPanel title="Next steps">
+    <SectionPanel title={t("title")}>
       {empty ? (
-        <EmptyState message="Nothing open — every commitment and milestone on this project is resolved, and no vendor currently owes anything." />
+        <EmptyState message={t("empty")} />
       ) : (
         <div className="flex flex-col gap-4">
           {section.open_commitments.length > 0 && (
             <div>
               <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">
-                Open commitments
+                {t("openCommitments")}
               </p>
               <ul className="flex flex-col gap-1">
                 {section.open_commitments.map((c) => (
@@ -36,7 +39,7 @@ export function NextStepsPanel({
           {section.open_milestones.length > 0 && (
             <div>
               <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">
-                Open milestones
+                {t("openMilestones")}
               </p>
               <ul className="flex flex-col gap-1">
                 {section.open_milestones.map((m) => (
@@ -46,7 +49,7 @@ export function NextStepsPanel({
                   >
                     <span className="text-ink">{m.name}</span>
                     <span className="flex items-center gap-2 font-mono text-xs text-ink-muted">
-                      {m.planned_at && `planned ${formatDate(m.planned_at)}`}
+                      {m.planned_at && t("planned", { date: formatDate(m.planned_at) })}
                       <ProvenanceChip provenance={[m.provenance]} />
                     </span>
                   </li>

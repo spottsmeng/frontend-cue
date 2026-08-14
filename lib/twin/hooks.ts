@@ -121,6 +121,26 @@ export function useMilestoneTypeTermsQuery(projectId: string) {
   });
 }
 
+/**
+ * F9 gap-audit fix (frontend/CLAUDE.md's Class A checklist) — closes F2's
+ * own documented, still-open debt: `MilestoneOut.type_term_id` had no
+ * resolver anywhere, so a milestone's type was never displayed at all
+ * (F2's own notes: "this session works around it by simply never
+ * displaying a milestone's type"). `useMilestoneTypeTermsQuery` above was
+ * already being fetched for the add-milestone picker — this just reuses
+ * it, same per-surface-owns-its-own-copy convention
+ * lib/foresight/hooks.ts's own `resolveTermLabel` already established (not
+ * imported cross-surface).
+ */
+export function resolveTermLabel(
+  terms: { id: string; code: string; label_en: string }[] | undefined,
+  termId: string | null | undefined,
+): { code: string; label_en: string } | null {
+  if (!termId) return null;
+  const term = terms?.find((t) => t.id === termId);
+  return term ? { code: term.code, label_en: term.label_en } : null;
+}
+
 export function useCreateMilestoneMutation(projectId: string) {
   const api = useApiClient();
   const queryClient = useQueryClient();

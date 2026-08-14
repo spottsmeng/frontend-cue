@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   ForesightPermissionError,
@@ -30,10 +31,10 @@ const DEFAULTS: Record<ForesightThresholdMetric, number> = {
   forecast_slack_days: 3.0,
 };
 
-const METRIC_LABEL: Record<ForesightThresholdMetric, string> = {
-  silence_multiplier: "Silence Radar — multiple of a vendor's own response baseline",
-  escalation_hours: "Escalation — hours unacknowledged before escalating",
-  forecast_slack_days: "Forecast — milestone slack (days) treated as high miss-likelihood",
+const METRIC_LABEL_KEY: Record<ForesightThresholdMetric, "silenceMultiplier" | "escalationHours" | "forecastSlackDays"> = {
+  silence_multiplier: "silenceMultiplier",
+  escalation_hours: "escalationHours",
+  forecast_slack_days: "forecastSlackDays",
 };
 
 /**
@@ -55,6 +56,7 @@ const METRIC_LABEL: Record<ForesightThresholdMetric, string> = {
  * own overrides so that relationship stays legible rather than a flat list.
  */
 export function ThresholdConfigPanel({ projectId }: { projectId: string }) {
+  const t = useTranslations("foresight.thresholdConfigPanel");
   const { data: thresholds, isLoading, isError, error } = useThresholdsQuery();
   const createMutation = useCreateThresholdMutation();
   const updateMutation = useUpdateThresholdMutation();
@@ -65,53 +67,52 @@ export function ThresholdConfigPanel({ projectId }: { projectId: string }) {
   const [scope, setScope] = useState<"org" | "project">("project");
   const [editingValue, setEditingValue] = useState<Record<string, string>>({});
 
-  if (isLoading) return <p className="text-sm text-ink-muted">Loading thresholds…</p>;
+  if (isLoading) return <p className="text-sm text-ink-muted">{t("loading")}</p>;
   if (isError) {
     if (error instanceof ForesightPermissionError) {
       return (
         <p className="text-sm text-ink-muted">
-          Threshold configuration is organisation-administrator only. You don&apos;t hold that role
-          on any project in this organisation, so nothing here is editable for you.
+          {t("permissionError")}
         </p>
       );
     }
-    return <p className="text-sm text-critical">Could not load thresholds. Please retry.</p>;
+    return <p className="text-sm text-critical">{t("loadError")}</p>;
   }
 
-  const orgWide = (thresholds ?? []).filter((t) => t.project_id === null);
-  const thisProject = (thresholds ?? []).filter((t) => t.project_id === projectId);
+  const orgWide = (thresholds ?? []).filter((th) => th.project_id === null);
+  const thisProject = (thresholds ?? []).filter((th) => th.project_id === projectId);
   const otherProjects = (thresholds ?? []).filter(
-    (t) => t.project_id !== null && t.project_id !== projectId,
+    (th) => th.project_id !== null && th.project_id !== projectId,
   );
 
-  function row(t: ForesightThresholdOut) {
-    const editValue = editingValue[t.id] ?? String(t.value);
+  function row(threshold: ForesightThresholdOut) {
+    const editValue = editingValue[threshold.id] ?? String(threshold.value);
     return (
-      <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-2 text-sm">
-        <span className="text-ink">{METRIC_LABEL[t.metric]}</span>
+      <li key={threshold.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-2 text-sm">
+        <span className="text-ink">{t(`metricLabel.${METRIC_LABEL_KEY[threshold.metric]}`)}</span>
         <span className="flex items-center gap-2">
           <input
             type="number"
             step="any"
             value={editValue}
-            onChange={(e) => setEditingValue({ ...editingValue, [t.id]: e.target.value })}
+            onChange={(e) => setEditingValue({ ...editingValue, [threshold.id]: e.target.value })}
             className="w-24 rounded-md border border-border bg-surface p-1 font-mono text-xs text-ink"
           />
           <button
             type="button"
-            disabled={updateMutation.isPending || Number(editValue) === t.value}
-            onClick={() => updateMutation.mutate({ thresholdId: t.id, value: Number(editValue) })}
+            disabled={updateMutation.isPending || Number(editValue) === threshold.value}
+            onClick={() => updateMutation.mutate({ thresholdId: threshold.id, value: Number(editValue) })}
             className="rounded-md border border-border-strong px-2 py-1 text-xs text-ink-secondary hover:border-signal disabled:opacity-50"
           >
-            Save
+            {t("save")}
           </button>
           <button
             type="button"
             disabled={deleteMutation.isPending}
-            onClick={() => deleteMutation.mutate(t.id)}
+            onClick={() => deleteMutation.mutate(threshold.id)}
             className="rounded-md border border-border-strong px-2 py-1 text-xs text-critical hover:border-critical disabled:opacity-50"
           >
-            Remove override
+            {t("removeOverride")}
           </button>
         </span>
       </li>
@@ -122,16 +123,16 @@ export function ThresholdConfigPanel({ projectId }: { projectId: string }) {
     <div className="flex flex-col gap-4">
       <div>
         <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">
-          Organisation-wide defaults
+          {t("orgWideDefaults")}
         </p>
         <ul className="flex flex-col gap-1.5">
           {METRICS.map((m) => {
-            const configured = orgWide.find((t) => t.metric === m);
+            const configured = orgWide.find((th) => th.metric === m);
             return configured ? (
               row(configured)
             ) : (
               <li key={m} className="rounded-md border border-dashed border-border p-2 text-sm text-ink-muted">
-                {METRIC_LABEL[m]} — not configured, built-in default {DEFAULTS[m]} in effect
+                {t("notConfigured", { label: t(`metricLabel.${METRIC_LABEL_KEY[m]}`), value: DEFAULTS[m] })}
               </li>
             );
           })}
@@ -140,7 +141,7 @@ export function ThresholdConfigPanel({ projectId }: { projectId: string }) {
 
       {thisProject.length > 0 && (
         <div>
-          <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">This project&apos;s overrides</p>
+          <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">{t("thisProjectOverrides")}</p>
           <ul className="flex flex-col gap-1.5">{thisProject.map(row)}</ul>
         </div>
       )}
@@ -148,7 +149,7 @@ export function ThresholdConfigPanel({ projectId }: { projectId: string }) {
       {otherProjects.length > 0 && (
         <div>
           <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">
-            Overrides on other projects
+            {t("otherProjectOverrides")}
           </p>
           <ul className="flex flex-col gap-1.5">{otherProjects.map(row)}</ul>
         </div>
@@ -166,7 +167,7 @@ export function ThresholdConfigPanel({ projectId }: { projectId: string }) {
         className="flex flex-wrap items-end gap-2 rounded-md border border-border p-3"
       >
         <label className="text-xs text-ink-secondary">
-          Metric
+          {t("metric")}
           <select
             value={metric}
             onChange={(e) => setMetric(e.target.value as ForesightThresholdMetric)}
@@ -180,18 +181,18 @@ export function ThresholdConfigPanel({ projectId }: { projectId: string }) {
           </select>
         </label>
         <label className="text-xs text-ink-secondary">
-          Scope
+          {t("scope")}
           <select
             value={scope}
             onChange={(e) => setScope(e.target.value as "org" | "project")}
             className="mt-1 block w-44 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
           >
-            <option value="project">This project only</option>
-            <option value="org">Organisation-wide</option>
+            <option value="project">{t("scopeProject")}</option>
+            <option value="org">{t("scopeOrg")}</option>
           </select>
         </label>
         <label className="text-xs text-ink-secondary">
-          Value
+          {t("value")}
           <input
             required
             type="number"
@@ -206,10 +207,10 @@ export function ThresholdConfigPanel({ projectId }: { projectId: string }) {
           disabled={createMutation.isPending}
           className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
         >
-          Add override
+          {t("addOverride")}
         </button>
         {createMutation.isError && (
-          <p className="w-full text-xs text-critical">Could not save — please retry.</p>
+          <p className="w-full text-xs text-critical">{t("saveError")}</p>
         )}
       </form>
     </div>

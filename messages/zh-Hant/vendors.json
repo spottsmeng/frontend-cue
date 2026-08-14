@@ -1,0 +1,81 @@
+{
+  "partyType": {
+    "person": "個人",
+    "vendorOrg": "供應商",
+    "internalStaff": "內部",
+    "allTypes": "全部類型"
+  },
+  "metricHistoryChart": {
+    "financeOnly": "供應商可靠性歷史記錄僅限財務/採購人員檢視。",
+    "loadError": "無法載入歷史記錄，請重試。",
+    "metricLabel": "指標",
+    "loading": "正在載入歷史記錄…",
+    "noSnapshots": "該指標/細分尚無記錄快照。",
+    "chartAriaLabel": "指標隨時間變化趨勢",
+    "notEnoughPoints": "可用快照少於兩個，暫不足以繪製趨勢線。",
+    "notAvailable": "不可用"
+  },
+  "organisationMappingPanel": {
+    "financeOnly": "目前未在本組織任何專案中擔任財務/採購或管理員角色，因此無法檢視此部分。",
+    "loadError": "無法載入組織歷史記錄，請重試。",
+    "loading": "正在載入…",
+    "empty": "該聯絡人尚無組織歸屬記錄。",
+    "represents": "代表",
+    "viewVendor": "檢視供應商",
+    "present": "至今",
+    "vendorLabel": "供應商",
+    "selectVendor": "請選擇供應商…",
+    "roleTitleLabel": "職稱（可選）",
+    "roleTitlePlaceholder": "例如：客戶總監",
+    "setOrganisation": "設定所屬組織",
+    "adminOnly": "設定此歸屬關係僅限管理員操作——未在本組織任何專案中擔任該角色。",
+    "saveError": "儲存失敗，請重試。"
+  },
+  "segmentPicker": {
+    "eventArchetype": "活動類型",
+    "allArchetypes": "全部活動類型",
+    "vendorCategory": "供應商類別",
+    "ownCategory": "該供應商自身類別",
+    "city": "城市",
+    "cityPlaceholder": "該供應商所在城市"
+  },
+  "vendorDetailView": {
+    "backToVendors": "供應商",
+    "defaultTitle": "供應商",
+    "noCity": "無城市資訊",
+    "addedOn": "新增於",
+    "loading": "正在載入…",
+    "financeOnly": "此頁面僅限財務/採購人員檢視，未在本組織任何專案中擔任該角色。",
+    "loadError": "無法載入該聯絡人資訊，請重試。",
+    "reliabilityMetrics": "可靠性指標",
+    "history": "歷史記錄",
+    "represents": "代表"
+  },
+  "vendorList": {
+    "financeOnly": "供應商目錄僅限財務/採購人員檢視，未在本組織任何專案中擔任該角色，此處暫無可檢視內容。",
+    "loadError": "無法載入供應商目錄，請重試。",
+    "loading": "正在載入供應商…",
+    "empty": "沒有符合此篩選條件的聯絡人。",
+    "uncategorised": "未分類"
+  },
+  "vendorMetricRow": {
+    "notYetComputed": "尚未計算",
+    "notAvailable": "不可用",
+    "neverComputed": "該供應商在此細分下從未執行過重新計算。",
+    "computedMeta": "n={count} · 計算於 {date}"
+  },
+  "vendorMetricsPanel": {
+    "financeOnly": "供應商可靠性指標僅限財務/採購人員檢視，未在本組織任何專案中擔任該角色，此處暫無可檢視內容。",
+    "loadError": "無法載入可靠性指標，請重試。",
+    "loading": "正在載入指標…"
+  },
+  "vendorsView": {
+    "title": "供應商",
+    "directoryTitle": "供應商目錄",
+    "type": "類型",
+    "category": "類別",
+    "allCategories": "全部類別",
+    "city": "城市",
+    "cityPlaceholder": "精確城市名稱"
+  }
+}

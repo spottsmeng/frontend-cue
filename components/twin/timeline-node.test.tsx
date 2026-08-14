@@ -1,7 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import { renderWithIntl as render } from "@/lib/test-utils";
+import type { OntologyTermOut } from "@/lib/api/types";
 import type { TimelineNode } from "@/lib/twin/presentation";
 
 import { TimelineNodeRow } from "./timeline-node";
@@ -22,6 +24,10 @@ function node(overrides: Partial<TimelineNode>): TimelineNode {
   };
 }
 
+const TYPES: OntologyTermOut[] = [
+  { id: "t1", code: "structural", label_en: "Structural", label_zh: "结构", sort_order: 0 },
+];
+
 // This milestone's own TESTING EXPECTATION names critical-path highlighting,
 // fixed-node styling and slack formatting explicitly — rendered against
 // hand-built TwinCurrentOut-shaped nodes (via lib/twin/presentation's own
@@ -30,7 +36,12 @@ describe("TimelineNodeRow", () => {
   it("renders a critical-path node with the critical badge and red slack text", () => {
     render(
       <ol>
-        <TimelineNodeRow node={node({ isCritical: true, slackDays: -4 })} isLast onSelect={() => {}} />
+        <TimelineNodeRow
+          node={node({ isCritical: true, slackDays: -4 })}
+          milestoneTypes={TYPES}
+          isLast
+          onSelect={() => {}}
+        />
       </ol>,
     );
     expect(screen.getByText("critical path")).toBeInTheDocument();
@@ -40,7 +51,12 @@ describe("TimelineNodeRow", () => {
   it("does not render the critical badge for an off-critical-path node", () => {
     render(
       <ol>
-        <TimelineNodeRow node={node({ isCritical: false, slackDays: 4 })} isLast onSelect={() => {}} />
+        <TimelineNodeRow
+          node={node({ isCritical: false, slackDays: 4 })}
+          milestoneTypes={TYPES}
+          isLast
+          onSelect={() => {}}
+        />
       </ol>,
     );
     expect(screen.queryByText("critical path")).not.toBeInTheDocument();
@@ -50,7 +66,12 @@ describe("TimelineNodeRow", () => {
   it("renders a fixed node with a distinct lock marker and 'fixed' badge, independent of criticality", () => {
     render(
       <ol>
-        <TimelineNodeRow node={node({ isFixed: true, isCritical: false, slackDays: 0 })} isLast onSelect={() => {}} />
+        <TimelineNodeRow
+          node={node({ isFixed: true, isCritical: false, slackDays: 0 })}
+          milestoneTypes={TYPES}
+          isLast
+          onSelect={() => {}}
+        />
       </ol>,
     );
     expect(screen.getByText("fixed")).toBeInTheDocument();
@@ -61,7 +82,7 @@ describe("TimelineNodeRow", () => {
   it("formats an unresolvable slack figure as an em dash", () => {
     render(
       <ol>
-        <TimelineNodeRow node={node({ slackDays: null })} isLast onSelect={() => {}} />
+        <TimelineNodeRow node={node({ slackDays: null })} milestoneTypes={TYPES} isLast onSelect={() => {}} />
       </ol>,
     );
     expect(screen.getByText("—")).toBeInTheDocument();
@@ -72,10 +93,30 @@ describe("TimelineNodeRow", () => {
     const user = userEvent.setup();
     render(
       <ol>
-        <TimelineNodeRow node={node({})} isLast onSelect={onSelect} />
+        <TimelineNodeRow node={node({})} milestoneTypes={TYPES} isLast onSelect={onSelect} />
       </ol>,
     );
     await user.click(screen.getByRole("button"));
     expect(onSelect).toHaveBeenCalledOnce();
+  });
+
+  // F9 gap-audit fix: F2's own documented debt — a milestone's type had no
+  // resolver anywhere and was never displayed at all.
+  it("resolves and renders the milestone's own type label when the terms list is available", () => {
+    render(
+      <ol>
+        <TimelineNodeRow node={node({ typeTermId: "t1" })} milestoneTypes={TYPES} isLast onSelect={() => {}} />
+      </ol>,
+    );
+    expect(screen.getByText("Structural")).toBeInTheDocument();
+  });
+
+  it("renders no type badge when the terms list hasn't loaded yet", () => {
+    render(
+      <ol>
+        <TimelineNodeRow node={node({ typeTermId: "t1" })} milestoneTypes={undefined} isLast onSelect={() => {}} />
+      </ol>,
+    );
+    expect(screen.queryByText("Structural")).not.toBeInTheDocument();
   });
 });

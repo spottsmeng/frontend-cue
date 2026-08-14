@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import type { RiskSeverity } from "@/lib/api/types";
 
 import { StatusDot } from "../living-wip/status-dot";
@@ -18,22 +20,23 @@ import { StatusDot } from "../living-wip/status-dot";
  */
 const CONFIG: Record<
   RiskSeverity,
-  { label: string; bg: string; text: string; dot: "warning" | "serious" | "critical" }
+  { bg: string; text: string; dot: "warning" | "serious" | "critical" }
 > = {
-  low: { label: "Low", bg: "bg-surface-sunk", text: "text-ink-secondary", dot: "warning" },
-  medium: { label: "Medium", bg: "bg-warning-soft", text: "text-warning", dot: "warning" },
-  high: { label: "High", bg: "bg-serious-soft", text: "text-serious", dot: "serious" },
-  critical: { label: "Critical", bg: "bg-critical-soft", text: "text-critical", dot: "critical" },
+  low: { bg: "bg-surface-sunk", text: "text-ink-secondary", dot: "warning" },
+  medium: { bg: "bg-warning-soft", text: "text-warning", dot: "warning" },
+  high: { bg: "bg-serious-soft", text: "text-serious", dot: "serious" },
+  critical: { bg: "bg-critical-soft", text: "text-critical", dot: "critical" },
 };
 
 export function SeverityBadge({ severity }: { severity: RiskSeverity }) {
-  const { label, bg, text, dot } = CONFIG[severity];
+  const t = useTranslations("foresight.severityBadge");
+  const { bg, text, dot } = CONFIG[severity];
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${bg} ${text}`}
     >
       <StatusDot tone={dot} />
-      {label}
+      {t(severity)}
     </span>
   );
 }

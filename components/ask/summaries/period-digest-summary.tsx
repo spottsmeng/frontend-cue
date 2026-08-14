@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { CommitmentSummaryRow } from "@/components/living-wip/commitment-summary-row";
 import { DecisionLogRow } from "@/components/living-wip/decision-log-row";
@@ -20,6 +21,7 @@ export function PeriodDigestSummaryView({
   projectId: string;
   onOpenCommitment: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("ask.summaries.periodDigest");
   const today = new Date();
   const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
   const [start, setStart] = useState(thirtyDaysAgo.toISOString().slice(0, 10));
@@ -45,7 +47,7 @@ export function PeriodDigestSummaryView({
         className="flex flex-wrap items-end gap-2"
       >
         <label className="text-xs text-ink-secondary">
-          From
+          {t("from")}
           <input
             type="date"
             required
@@ -55,7 +57,7 @@ export function PeriodDigestSummaryView({
           />
         </label>
         <label className="text-xs text-ink-secondary">
-          To
+          {t("to")}
           <input
             type="date"
             required
@@ -68,23 +70,23 @@ export function PeriodDigestSummaryView({
           type="submit"
           className="rounded-md bg-signal px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
         >
-          Generate digest
+          {t("generate")}
         </button>
       </form>
 
-      {isLoading && <p className="text-sm text-ink-muted">Loading…</p>}
-      {isError && <p className="text-sm text-critical">Could not load this period&rsquo;s digest.</p>}
+      {isLoading && <p className="text-sm text-ink-muted">{t("loading")}</p>}
+      {isError && <p className="text-sm text-critical">{t("loadError")}</p>}
 
       {summary && (
         <div className="flex flex-col gap-4">
           <p className="text-xs text-ink-muted">
-            {formatDate(summary.period_start)} &ndash; {formatDate(summary.period_end)}
+            {t("range", { start: formatDate(summary.period_start), end: formatDate(summary.period_end) })}
           </p>
 
           <div>
-            <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">Commitments created</p>
+            <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">{t("commitmentsCreated")}</p>
             {summary.commitments_created.length === 0 ? (
-              <p className="text-sm text-ink-muted">None in this period.</p>
+              <p className="text-sm text-ink-muted">{t("emptyPeriod")}</p>
             ) : (
               <ul className="flex flex-col gap-1">
                 {summary.commitments_created.map((c) => (
@@ -95,9 +97,9 @@ export function PeriodDigestSummaryView({
           </div>
 
           <div>
-            <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">Commitments resolved</p>
+            <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">{t("commitmentsResolved")}</p>
             {summary.commitments_resolved.length === 0 ? (
-              <p className="text-sm text-ink-muted">None in this period.</p>
+              <p className="text-sm text-ink-muted">{t("emptyPeriod")}</p>
             ) : (
               <ul className="flex flex-col gap-1">
                 {summary.commitments_resolved.map((c) => (
@@ -108,9 +110,9 @@ export function PeriodDigestSummaryView({
           </div>
 
           <div>
-            <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">Decisions</p>
+            <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">{t("decisions")}</p>
             {summary.decisions.length === 0 ? (
-              <p className="text-sm text-ink-muted">None in this period.</p>
+              <p className="text-sm text-ink-muted">{t("emptyPeriod")}</p>
             ) : (
               <ul className="flex flex-col gap-1.5">
                 {summary.decisions.map((d) => (

@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { renderWithIntl as render } from "@/lib/test-utils";
 import { useUIStore } from "@/lib/store/ui-store";
 
 import { ProjectSwitcher } from "./project-switcher";

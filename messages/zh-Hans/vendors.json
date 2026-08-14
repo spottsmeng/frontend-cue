@@ -1,0 +1,81 @@
+{
+  "partyType": {
+    "person": "个人",
+    "vendorOrg": "供应商",
+    "internalStaff": "内部",
+    "allTypes": "全部类型"
+  },
+  "metricHistoryChart": {
+    "financeOnly": "供应商可靠性历史记录仅限财务/采购人员查看。",
+    "loadError": "无法加载历史记录，请重试。",
+    "metricLabel": "指标",
+    "loading": "正在加载历史记录…",
+    "noSnapshots": "该指标/细分尚无记录快照。",
+    "chartAriaLabel": "指标随时间变化趋势",
+    "notEnoughPoints": "可用快照少于两个，暂不足以绘制趋势线。",
+    "notAvailable": "不可用"
+  },
+  "organisationMappingPanel": {
+    "financeOnly": "当前未在本组织任何项目中担任财务/采购或管理员角色，因此无法查看此部分。",
+    "loadError": "无法加载组织历史记录，请重试。",
+    "loading": "正在加载…",
+    "empty": "该联系人尚无组织归属记录。",
+    "represents": "代表",
+    "viewVendor": "查看供应商",
+    "present": "至今",
+    "vendorLabel": "供应商",
+    "selectVendor": "请选择供应商…",
+    "roleTitleLabel": "职位名称（可选）",
+    "roleTitlePlaceholder": "例如：客户总监",
+    "setOrganisation": "设置所属组织",
+    "adminOnly": "设置此归属关系仅限管理员操作——未在本组织任何项目中担任该角色。",
+    "saveError": "保存失败，请重试。"
+  },
+  "segmentPicker": {
+    "eventArchetype": "活动类型",
+    "allArchetypes": "全部活动类型",
+    "vendorCategory": "供应商类别",
+    "ownCategory": "该供应商自身类别",
+    "city": "城市",
+    "cityPlaceholder": "该供应商所在城市"
+  },
+  "vendorDetailView": {
+    "backToVendors": "供应商",
+    "defaultTitle": "供应商",
+    "noCity": "无城市信息",
+    "addedOn": "添加于",
+    "loading": "正在加载…",
+    "financeOnly": "此页面仅限财务/采购人员查看，未在本组织任何项目中担任该角色。",
+    "loadError": "无法加载该联系人信息，请重试。",
+    "reliabilityMetrics": "可靠性指标",
+    "history": "历史记录",
+    "represents": "代表"
+  },
+  "vendorList": {
+    "financeOnly": "供应商目录仅限财务/采购人员查看，未在本组织任何项目中担任该角色，此处暂无可查看内容。",
+    "loadError": "无法加载供应商目录，请重试。",
+    "loading": "正在加载供应商…",
+    "empty": "没有符合此筛选条件的联系人。",
+    "uncategorised": "未分类"
+  },
+  "vendorMetricRow": {
+    "notYetComputed": "尚未计算",
+    "notAvailable": "不可用",
+    "neverComputed": "该供应商在此细分下从未运行过重新计算。",
+    "computedMeta": "n={count} · 计算于 {date}"
+  },
+  "vendorMetricsPanel": {
+    "financeOnly": "供应商可靠性指标仅限财务/采购人员查看，未在本组织任何项目中担任该角色，此处暂无可查看内容。",
+    "loadError": "无法加载可靠性指标，请重试。",
+    "loading": "正在加载指标…"
+  },
+  "vendorsView": {
+    "title": "供应商",
+    "directoryTitle": "供应商目录",
+    "type": "类型",
+    "category": "类别",
+    "allCategories": "全部类别",
+    "city": "城市",
+    "cityPlaceholder": "精确城市名称"
+  }
+}

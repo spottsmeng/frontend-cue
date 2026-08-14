@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useReviseBudgetMutation } from "@/lib/budget/hooks";
 import type { MembershipRole } from "@/lib/api/types";
@@ -22,6 +23,7 @@ export function BudgetReviseForm({
   currentCurrency: string | null;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("livingWip.budgetReviseForm");
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState(currentCurrency ?? "SGD");
@@ -36,7 +38,7 @@ export function BudgetReviseForm({
         onClick={() => setOpen(true)}
         className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary hover:border-signal hover:text-signal"
       >
-        Revise budget
+        {t("reviseBudget")}
       </button>
     );
   }
@@ -54,7 +56,7 @@ export function BudgetReviseForm({
       className="flex items-end gap-2"
     >
       <label className="text-xs text-ink-secondary">
-        New approved amount
+        {t("newApprovedAmount")}
         <input
           type="number"
           required
@@ -64,7 +66,7 @@ export function BudgetReviseForm({
         />
       </label>
       <label className="text-xs text-ink-secondary">
-        Currency
+        {t("currency")}
         <input
           value={currency}
           maxLength={3}
@@ -77,17 +79,17 @@ export function BudgetReviseForm({
         disabled={reviseMutation.isPending}
         className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
       >
-        Save
+        {t("save")}
       </button>
       <button
         type="button"
         onClick={() => setOpen(false)}
         className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary"
       >
-        Cancel
+        {t("cancel")}
       </button>
       {reviseMutation.isError && (
-        <p className="text-xs text-critical">Could not save.</p>
+        <p className="text-xs text-critical">{t("saveError")}</p>
       )}
     </form>
   );

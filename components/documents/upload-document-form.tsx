@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { MembershipRole } from "@/lib/api/types";
 import { hasAnyRole, WRITE_ROLES } from "@/lib/roles";
@@ -29,6 +30,7 @@ export function UploadDocumentForm({
   projectId: string;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("documents.upload");
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
@@ -47,7 +49,7 @@ export function UploadDocumentForm({
         onClick={() => setOpen(true)}
         className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary hover:border-signal hover:text-signal"
       >
-        + Upload document
+        {t("openButton")}
       </button>
     );
   }
@@ -81,7 +83,7 @@ export function UploadDocumentForm({
     >
       <div className="flex flex-wrap items-end gap-2">
         <label className="text-xs text-ink-secondary">
-          File
+          {t("fileLabel")}
           <input
             required
             type="file"
@@ -90,7 +92,7 @@ export function UploadDocumentForm({
           />
         </label>
         <label className="flex-1 text-xs text-ink-secondary">
-          Name
+          {t("nameLabel")}
           <input
             required
             value={name}
@@ -99,22 +101,22 @@ export function UploadDocumentForm({
           />
         </label>
         <label className="text-xs text-ink-secondary">
-          Class
+          {t("classLabel")}
           <select
             value={classCode}
             onChange={(e) => setClassCode(e.target.value)}
             className="mt-1 block w-48 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
           >
-            <option value="">Untagged</option>
-            {classTerms?.map((t) => (
-              <option key={t.code} value={t.code}>
-                {t.label_en}
+            <option value="">{t("untagged")}</option>
+            {classTerms?.map((term) => (
+              <option key={term.code} value={term.code}>
+                {term.label_en}
               </option>
             ))}
           </select>
         </label>
         <label className="text-xs text-ink-secondary">
-          Language (bcp47)
+          {t("languageLabel")}
           <input
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
@@ -123,9 +125,7 @@ export function UploadDocumentForm({
         </label>
       </div>
       <label className="text-xs text-ink-secondary">
-        Extracted text (optional — leave blank to let CUE auto-extract from PDF/Office files and
-        images; not every file type can be auto-extracted, so a document with none is not yet
-        searchable until one is supplied)
+        {t("extractedTextLabel")}
         <textarea
           value={extractedText}
           onChange={(e) => setExtractedText(e.target.value)}
@@ -139,17 +139,17 @@ export function UploadDocumentForm({
           disabled={uploadMutation.isPending}
           className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
         >
-          {uploadMutation.isPending ? "Uploading…" : "Upload"}
+          {uploadMutation.isPending ? t("submitting") : t("submit")}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary"
         >
-          Cancel
+          {t("cancel")}
         </button>
         {uploadMutation.isError && (
-          <p className="text-xs text-critical">Could not upload this document.</p>
+          <p className="text-xs text-critical">{t("error")}</p>
         )}
       </div>
     </form>

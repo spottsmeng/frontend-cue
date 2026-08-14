@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { formatDateTime } from "@/lib/format";
 import type { EvidenceOut } from "@/lib/api/types";
@@ -17,8 +18,9 @@ import type { EvidenceOut } from "@/lib/api/types";
  * *_original pairs the same way), so it renders under `lang="en"`.
  */
 export function EvidenceViewer({ evidence }: { evidence: EvidenceOut[] }) {
+  const t = useTranslations("livingWip.evidenceViewer");
   if (evidence.length === 0) {
-    return <p className="text-sm text-ink-muted">No evidence recorded.</p>;
+    return <p className="text-sm text-ink-muted">{t("noEvidence")}</p>;
   }
   return (
     <ul className="flex flex-col gap-3">
@@ -30,6 +32,7 @@ export function EvidenceViewer({ evidence }: { evidence: EvidenceOut[] }) {
 }
 
 function EvidenceItem({ evidence }: { evidence: EvidenceOut }) {
+  const t = useTranslations("livingWip.evidenceViewer");
   const [showTranslation, setShowTranslation] = useState(false);
   const displayingTranslation = showTranslation && evidence.translation !== null;
 
@@ -47,7 +50,7 @@ function EvidenceItem({ evidence }: { evidence: EvidenceOut }) {
               aria-pressed={!displayingTranslation}
               className={`px-2 py-0.5 text-xs ${!displayingTranslation ? "bg-signal-soft text-signal" : "text-ink-secondary"}`}
             >
-              Original
+              {t("original")}
             </button>
             <button
               type="button"
@@ -55,7 +58,7 @@ function EvidenceItem({ evidence }: { evidence: EvidenceOut }) {
               aria-pressed={displayingTranslation}
               className={`px-2 py-0.5 text-xs ${displayingTranslation ? "bg-signal-soft text-signal" : "text-ink-secondary"}`}
             >
-              Translation
+              {t("translation")}
             </button>
           </div>
         )}
@@ -70,7 +73,7 @@ function EvidenceItem({ evidence }: { evidence: EvidenceOut }) {
 
       {evidence.media_ref && (
         <audio controls src={evidence.media_ref} className="mt-2 w-full">
-          Your browser does not support inline audio playback.
+          {t("noAudioSupport")}
         </audio>
       )}
     </li>

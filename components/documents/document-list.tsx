@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { formatDateTime } from "@/lib/format";
 import { resolveTermLabel, useDocumentsQuery } from "@/lib/documents/hooks";
@@ -21,12 +22,13 @@ export function DocumentList({
   classTerms: OntologyTermOut[] | undefined;
   classTermFilter: string | null;
 }) {
+  const t = useTranslations("documents.list");
   const { data: documents, isLoading, isError } = useDocumentsQuery(projectId);
 
-  if (isLoading) return <p className="text-sm text-ink-muted">Loading documents…</p>;
-  if (isError) return <p className="text-sm text-critical">Could not load documents.</p>;
+  if (isLoading) return <p className="text-sm text-ink-muted">{t("loading")}</p>;
+  if (isError) return <p className="text-sm text-critical">{t("loadError")}</p>;
   if (!documents || documents.length === 0) {
-    return <p className="text-sm text-ink-muted">No documents uploaded yet.</p>;
+    return <p className="text-sm text-ink-muted">{t("empty")}</p>;
   }
 
   const filtered = classTermFilter
@@ -34,7 +36,7 @@ export function DocumentList({
     : documents;
 
   if (filtered.length === 0) {
-    return <p className="text-sm text-ink-muted">No documents match this filter.</p>;
+    return <p className="text-sm text-ink-muted">{t("noMatch")}</p>;
   }
 
   return (
@@ -52,7 +54,7 @@ export function DocumentList({
               </Link>
               {doc.current_version_id === null && (
                 <span className="rounded-full bg-surface-sunk px-2 py-0.5 text-xs font-medium text-ink-muted">
-                  No version yet
+                  {t("noVersionYet")}
                 </span>
               )}
             </div>
@@ -62,9 +64,9 @@ export function DocumentList({
                   {classTerm.label_en}
                 </span>
               ) : (
-                <span>untagged</span>
+                <span>{t("untagged")}</span>
               )}
-              <span>· updated {formatDateTime(doc.updated_at)}</span>
+              <span>{t("updated", { date: formatDateTime(doc.updated_at) })}</span>
             </p>
           </li>
         );

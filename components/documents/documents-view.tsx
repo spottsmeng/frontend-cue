@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useEffectiveRoles } from "@/lib/roles";
 import { useDeliverableClassTermsQuery } from "@/lib/documents/hooks";
@@ -18,6 +19,7 @@ import { UploadDocumentForm } from "./upload-document-form";
  * drawer here.
  */
 export function DocumentsView({ projectId }: { projectId: string }) {
+  const t = useTranslations("documents.overview");
   const { data: roles } = useEffectiveRoles(projectId);
   const { data: classTerms } = useDeliverableClassTermsQuery(projectId);
   const [classFilter, setClassFilter] = useState<string>("");
@@ -25,30 +27,30 @@ export function DocumentsView({ projectId }: { projectId: string }) {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface/95 px-4 py-2.5 backdrop-blur">
-        <span className="text-sm font-medium text-ink">Documents</span>
+        <span className="text-sm font-medium text-ink">{t("title")}</span>
       </div>
 
       <div className="flex flex-col gap-4 px-4 py-4">
-        <SectionPanel title="Search">
+        <SectionPanel title={t("searchSectionTitle")}>
           <DocumentSearchPanel projectId={projectId} />
         </SectionPanel>
 
         <SectionPanel
-          title="All documents"
+          title={t("allDocumentsSectionTitle")}
           action={<UploadDocumentForm projectId={projectId} effectiveRoles={roles?.roles} />}
         >
           <div className="mb-3 flex items-center gap-2">
             <label className="text-xs text-ink-secondary">
-              Filter by class
+              {t("filterByClass")}
               <select
                 value={classFilter}
                 onChange={(e) => setClassFilter(e.target.value)}
                 className="ml-2 rounded-md border border-border bg-surface p-1.5 text-xs text-ink"
               >
-                <option value="">All</option>
-                {classTerms?.map((t) => (
-                  <option key={t.code} value={t.id}>
-                    {t.label_en}
+                <option value="">{t("allClasses")}</option>
+                {classTerms?.map((term) => (
+                  <option key={term.code} value={term.id}>
+                    {term.label_en}
                   </option>
                 ))}
               </select>

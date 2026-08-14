@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { AdminPermissionError, useOrgUsersQuery } from "@/lib/admin/members-hooks";
 import { formatDateTime } from "@/lib/format";
 
@@ -13,27 +15,22 @@ import { SectionPanel } from "../living-wip/section-panel";
  * directory exists.
  */
 export function OrgUsersView() {
+  const t = useTranslations("admin.users");
   const { data: users, isLoading, isError, error } = useOrgUsersQuery();
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
-      <SectionPanel title="Organisation users">
-        {isLoading && <p className="text-sm text-ink-muted">Loading…</p>}
+      <SectionPanel title={t("title")}>
+        {isLoading && <p className="text-sm text-ink-muted">{t("loading")}</p>}
         {isError &&
           (error instanceof AdminPermissionError ? (
-            <p className="text-sm text-ink-muted">
-              This page is Administrator only. You don&apos;t hold that role on any project in this
-              organisation.
-            </p>
+            <p className="text-sm text-ink-muted">{t("adminOnly")}</p>
           ) : (
-            <p className="text-sm text-critical">Could not load users. Please retry.</p>
+            <p className="text-sm text-critical">{t("loadError")}</p>
           ))}
         {users && (
           <>
-            <p className="mb-2 text-xs text-ink-muted">
-              Every user who has signed in to CUE at least once — there is no pre-provisioning (no
-              SCIM this build, FR-ADM-05).
-            </p>
+            <p className="mb-2 text-xs text-ink-muted">{t("note")}</p>
             <ul className="flex flex-col gap-1.5">
               {users.map((u) => (
                 <li
@@ -45,11 +42,11 @@ export function OrgUsersView() {
                     <span className="font-mono text-xs text-ink-muted">{u.email}</span>
                     {!u.active && (
                       <span className="rounded-full bg-surface-sunk px-2 py-0.5 text-xs text-ink-muted">
-                        Inactive
+                        {t("inactive")}
                       </span>
                     )}
                     <span className="font-mono text-xs text-ink-muted">
-                      joined {formatDateTime(u.created_at)}
+                      {t("joined", { date: formatDateTime(u.created_at) })}
                     </span>
                   </span>
                 </li>

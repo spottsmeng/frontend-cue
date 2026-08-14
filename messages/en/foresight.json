@@ -1,0 +1,156 @@
+{
+  "view": {
+    "title": "Foresight",
+    "sections": {
+      "risks": "Risks",
+      "deviations": "Deviations",
+      "notifications": "Your notifications",
+      "webhooks": "Webhook subscriptions",
+      "quietHours": "Quiet hours",
+      "thresholds": "Foresight thresholds"
+    }
+  },
+  "deviationList": {
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "loading": "Loading deviations…",
+    "error": "Could not load deviations. Please retry.",
+    "empty": "No deviations match these filters right now."
+  },
+  "deviationRow": {
+    "status": {
+      "autoDrafted": "Auto-drafted — needs review",
+      "confirmed": "Confirmed",
+      "resolved": "Resolved"
+    },
+    "classFallback": "class {id}",
+    "viewInLivingWip": "View in Living WIP →",
+    "viewInTwin": "View in Twin →",
+    "resolvedFor": "Resolved for {date}, owner {owner}",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "confirmAsIs": "Confirm as-is",
+    "editAndConfirm": "Edit & confirm",
+    "confirmError": "Could not confirm — please try again.",
+    "resolutionDate": "Resolution date",
+    "owner": "Owner",
+    "selectAProjectMember": "Select a project member…",
+    "loadingMembers": "Loading members…",
+    "memberOption": "{name} — {role}",
+    "saveResolution": "Save resolution",
+    "resolveError": "Could not record resolution — please try again.",
+    "recordResolution": "Record resolution"
+  },
+  "notificationList": {
+    "loading": "Loading notifications…",
+    "error": "Could not load notifications. Please retry.",
+    "empty": "No notifications for you on this project right now.",
+    "relatedFindings": "{count} related findings",
+    "deliveredViaWebhook": "delivered via webhook at {date}",
+    "notYetDelivered": "not yet delivered",
+    "acknowledgedAt": "Acknowledged {date}",
+    "acknowledge": "Acknowledge"
+  },
+  "quietHoursPanel": {
+    "loading": "Loading quiet hours…",
+    "error": "Could not load quiet hours. Please retry.",
+    "nothingConfigured": "Nothing configured yet — Foresight notifications are always eligible to send, at any hour.",
+    "startLabel": "Quiet hours start (project local time)",
+    "endLabel": "Quiet hours end",
+    "thresholdLabel": "Live-event override threshold",
+    "explanation": "During this project's declared live-event window, a finding at or above the override threshold bypasses quiet hours and is deliverable immediately.",
+    "saving": "Saving…",
+    "save": "Save quiet hours",
+    "saveError": "Could not save — please retry."
+  },
+  "riskCard": {
+    "viewInLivingWip": "View in Living WIP →",
+    "viewInTwin": "View in Twin →",
+    "viewSpecClaim": "View spec claim in Documents →",
+    "conflictSuffix": "{message} — refreshed to this risk's current status.",
+    "updateError": "Could not update this risk — please retry.",
+    "baseRate": "historical base rate {percent}%",
+    "notEnoughHistory": "not enough history yet",
+    "hideDetails": "Hide details",
+    "details": "Details",
+    "findingKey": "finding_key: {key}",
+    "created": "created: {date}",
+    "acknowledged": "acknowledged: {date}",
+    "escalatedTo": "escalated to {role}",
+    "escalatedToOnDate": "escalated to {role} on {date}",
+    "resolved": "resolved: {date}",
+    "superseded": "superseded by a newer finding for the same condition",
+    "detail": "detail: {json}",
+    "acknowledgeAction": "Acknowledge — pause escalation",
+    "resolveAction": "Mark condition resolved",
+    "acknowledgeNote": "Acknowledging only pauses escalation — it does not mean this is handled. Only Resolve records the underlying condition as actually addressed."
+  },
+  "riskFeed": {
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "source": "Source",
+    "allSources": "All sources",
+    "severity": "Severity",
+    "allSeverities": "All severities",
+    "loading": "Loading risks…",
+    "error": "Could not load the risk feed. Please retry.",
+    "empty": "No risks match these filters right now."
+  },
+  "riskStatusBadge": {
+    "open": "Open",
+    "acknowledged": "Acknowledged",
+    "resolved": "Resolved",
+    "superseded": "Superseded"
+  },
+  "severityBadge": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "critical": "Critical"
+  },
+  "thresholdConfigPanel": {
+    "loading": "Loading thresholds…",
+    "permissionError": "Threshold configuration is organisation-administrator only. You don't hold that role on any project in this organisation, so nothing here is editable for you.",
+    "loadError": "Could not load thresholds. Please retry.",
+    "metricLabel": {
+      "silenceMultiplier": "Silence Radar — multiple of a vendor's own response baseline",
+      "escalationHours": "Escalation — hours unacknowledged before escalating",
+      "forecastSlackDays": "Forecast — milestone slack (days) treated as high miss-likelihood"
+    },
+    "save": "Save",
+    "removeOverride": "Remove override",
+    "orgWideDefaults": "Organisation-wide defaults",
+    "notConfigured": "{label} — not configured, built-in default {value} in effect",
+    "thisProjectOverrides": "This project's overrides",
+    "otherProjectOverrides": "Overrides on other projects",
+    "metric": "Metric",
+    "scope": "Scope",
+    "scopeProject": "This project only",
+    "scopeOrg": "Organisation-wide",
+    "value": "Value",
+    "addOverride": "Add override",
+    "saveError": "Could not save — please retry."
+  },
+  "webhookAdminPanel": {
+    "loading": "Loading webhooks…",
+    "error": "Could not load webhooks. Please retry.",
+    "empty": "No webhook subscriptions on this project yet.",
+    "active": "active",
+    "inactive": "inactive",
+    "created": "created {date}",
+    "delete": "Delete",
+    "url": "URL",
+    "events": "Events",
+    "creating": "Creating…",
+    "createWebhook": "Create webhook",
+    "createError": "Could not create webhook — please retry."
+  },
+  "webhookSecretDialog": {
+    "dialogLabel": "Webhook signing secret",
+    "heading": "Save this signing secret now",
+    "explanation": "This is the only time CUE will show it. If you lose it, delete this webhook and create a new one.",
+    "copied": "Copied",
+    "copy": "Copy",
+    "done": "Done — I've saved it"
+  }
+}

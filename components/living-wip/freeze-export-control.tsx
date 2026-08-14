@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import type { MembershipRole } from "@/lib/api/types";
 import { ADMIN_ROLES, hasAnyRole } from "@/lib/roles";
 import { ExportBlockedError, useExportMutation } from "@/lib/reports/hooks";
@@ -21,6 +23,7 @@ export function FreezeExportControl({
   effectiveRoles: MembershipRole[] | undefined;
   onOpenCommitment: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("livingWip.freezeExport");
   const exportMutation = useExportMutation(projectId);
 
   if (!hasAnyRole(effectiveRoles, ADMIN_ROLES)) return null;
@@ -39,7 +42,7 @@ export function FreezeExportControl({
           onClick={() => exportMutation.mutate("pptx")}
           className="bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
         >
-          Freeze &amp; Export PPTX
+          {exportMutation.isPending ? t("exporting") : t("pptx")}
         </button>
         <button
           type="button"
@@ -47,23 +50,30 @@ export function FreezeExportControl({
           onClick={() => exportMutation.mutate("pdf")}
           className="border-l border-white/30 bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
         >
-          PDF
+          {exportMutation.isPending ? t("exporting") : t("pdf")}
         </button>
       </div>
 
+      {exportMutation.isPending && (
+        // NFR-PRF-05's own real budget (≤30s for a typical project) — a
+        // disabled button alone gives zero sense of expected duration (F9's
+        // own loading-state-honesty instruction), the weakest of the two
+        // loading states this session found.
+        <div className="absolute right-0 top-9 z-20 w-72 rounded-lg border border-border bg-surface p-3 text-xs shadow-pop">
+          <p className="text-ink-secondary">{t("composing")}</p>
+        </div>
+      )}
+
       {exportMutation.isSuccess && (
         <div className="absolute right-0 top-9 z-20 w-72 rounded-lg border border-border bg-surface p-3 text-xs shadow-pop">
-          <p className="text-ink">
-            Export ready — this snapshot is a point-in-time artefact, distinct from the live
-            report above.
-          </p>
+          <p className="text-ink">{t("ready")}</p>
           <a
             href={exportMutation.data?.download_url}
             target="_blank"
             rel="noreferrer"
             className="mt-2 inline-block text-signal hover:underline"
           >
-            Download →
+            {t("download")}
           </a>
         </div>
       )}
@@ -77,6 +87,7 @@ export function FreezeExportControl({
                 <button
                   type="button"
                   onClick={() => onOpenCommitment(c.commitment_id)}
+                  lang="en"
                   className="text-left text-signal hover:underline"
                 >
                   {c.deliverable_en} →

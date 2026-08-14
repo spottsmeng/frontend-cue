@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { useCreateProjectMutation } from "@/lib/admin/projects-hooks";
 import { MEMBERSHIP_ROLES, ROLE_LABEL } from "@/lib/admin/constants";
@@ -34,6 +35,7 @@ interface DraftMember {
  * write-up of this judgment call.
  */
 export function ProjectProvisioningForm() {
+  const t = useTranslations("admin.provisioning");
   const router = useRouter();
   const createMutation = useCreateProjectMutation();
 
@@ -84,7 +86,7 @@ export function ProjectProvisioningForm() {
     <form onSubmit={submit} className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-3">
         <label className="text-xs text-ink-secondary">
-          Project name
+          {t("projectNameLabel")}
           <input
             required
             type="text"
@@ -94,7 +96,7 @@ export function ProjectProvisioningForm() {
           />
         </label>
         <label className="text-xs text-ink-secondary">
-          Client
+          {t("clientLabel")}
           <input
             type="text"
             value={clientName}
@@ -103,7 +105,7 @@ export function ProjectProvisioningForm() {
           />
         </label>
         <label className="text-xs text-ink-secondary">
-          Venue
+          {t("venueLabel")}
           <input
             type="text"
             value={venue}
@@ -112,7 +114,7 @@ export function ProjectProvisioningForm() {
           />
         </label>
         <label className="text-xs text-ink-secondary">
-          Timezone
+          {t("timezoneLabel")}
           <input
             type="text"
             value={timezone}
@@ -121,7 +123,7 @@ export function ProjectProvisioningForm() {
           />
         </label>
         <label className="text-xs text-ink-secondary">
-          Event start
+          {t("eventStartLabel")}
           <input
             type="date"
             value={eventStart}
@@ -130,7 +132,7 @@ export function ProjectProvisioningForm() {
           />
         </label>
         <label className="text-xs text-ink-secondary">
-          Event end
+          {t("eventEndLabel")}
           <input
             type="date"
             value={eventEnd}
@@ -142,7 +144,7 @@ export function ProjectProvisioningForm() {
 
       <div className="rounded-md border border-border p-3">
         <p className="mb-2 text-xs uppercase tracking-wide text-ink-muted">
-          Initial team access (optional — you&apos;re granted Administrator automatically)
+          {t("initialTeamNote")}
         </p>
         {members.length > 0 && (
           <ul className="mb-2 flex flex-col gap-1">
@@ -152,14 +154,14 @@ export function ProjectProvisioningForm() {
                 className="flex items-center justify-between rounded-md bg-surface-sunk px-2 py-1 text-sm"
               >
                 <span className="text-ink">
-                  {m.email} — {ROLE_LABEL[m.role]}
+                  {t("memberRow", { email: m.email, role: ROLE_LABEL[m.role] })}
                 </span>
                 <button
                   type="button"
                   onClick={() => setMembers(members.filter((_, idx) => idx !== i))}
                   className="text-xs text-critical hover:underline"
                 >
-                  Remove
+                  {t("removeLabel")}
                 </button>
               </li>
             ))}
@@ -167,17 +169,17 @@ export function ProjectProvisioningForm() {
         )}
         <div className="flex flex-wrap items-end gap-2">
           <label className="text-xs text-ink-secondary">
-            Email
+            {t("emailLabel")}
             <input
               type="email"
               value={draftEmail}
               onChange={(e) => setDraftEmail(e.target.value)}
-              placeholder="colleague@example.com"
+              placeholder={t("emailPlaceholder")}
               className="mt-1 block w-56 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
             />
           </label>
           <label className="text-xs text-ink-secondary">
-            Role
+            {t("roleLabel")}
             <select
               value={draftRole}
               onChange={(e) => setDraftRole(e.target.value as MembershipRole)}
@@ -195,13 +197,10 @@ export function ProjectProvisioningForm() {
             onClick={addMemberRow}
             className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary hover:border-signal"
           >
-            Add to team
+            {t("addToTeam")}
           </button>
         </div>
-        <p className="mt-2 text-xs text-ink-muted">
-          A member must already have signed in to CUE at least once (no SCIM pre-provisioning) —
-          an unknown email is rejected at submit.
-        </p>
+        <p className="mt-2 text-xs text-ink-muted">{t("memberNote")}</p>
       </div>
 
       <div className="flex items-center gap-3">
@@ -210,11 +209,11 @@ export function ProjectProvisioningForm() {
           disabled={createMutation.isPending || !name}
           className="rounded-md bg-signal px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
         >
-          {createMutation.isPending ? "Provisioning…" : "Create project"}
+          {createMutation.isPending ? t("provisioning") : t("createProject")}
         </button>
         {createMutation.isError && (
           <p className="text-xs text-critical">
-            {(createMutation.error as { detail?: string })?.detail ?? "Could not create project."}
+            {(createMutation.error as { detail?: string })?.detail ?? t("createErrorFallback")}
           </p>
         )}
       </div>

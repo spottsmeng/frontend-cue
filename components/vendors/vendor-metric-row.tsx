@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { formatDateTime } from "@/lib/format";
 import type { VendorMetricName, VendorMetricOut } from "@/lib/api/types";
 
@@ -22,13 +26,14 @@ export function VendorMetricRow({
   metric: VendorMetricName;
   snapshot: VendorMetricOut | null;
 }) {
+  const t = useTranslations("vendors.vendorMetricRow");
   return (
     <li className="flex flex-col gap-0.5 rounded-md border border-border p-3">
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-medium text-ink">{METRIC_LABEL[metric]}</span>
         {snapshot === null ? (
           <span className="rounded-full bg-surface-sunk px-2 py-0.5 text-xs font-medium text-ink-muted">
-            Not yet computed
+            {t("notYetComputed")}
           </span>
         ) : snapshot.available && snapshot.value !== null ? (
           <span className="font-mono text-sm font-semibold text-ink">
@@ -36,14 +41,14 @@ export function VendorMetricRow({
           </span>
         ) : (
           <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning">
-            Not available
+            {t("notAvailable")}
           </span>
         )}
       </div>
 
       {snapshot === null && (
         <p className="text-xs text-ink-muted">
-          No recompute has ever run for this vendor in this segment yet.
+          {t("neverComputed")}
         </p>
       )}
       {snapshot !== null && !snapshot.available && (
@@ -51,7 +56,7 @@ export function VendorMetricRow({
       )}
       {snapshot !== null && snapshot.available && (
         <p className="font-mono text-xs text-ink-muted">
-          n={snapshot.sample_size} · computed {formatDateTime(snapshot.computed_at)}
+          {t("computedMeta", { count: snapshot.sample_size, date: formatDateTime(snapshot.computed_at) })}
         </p>
       )}
     </li>

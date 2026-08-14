@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import type { RiskStatus } from "@/lib/api/types";
 
 /**
@@ -14,18 +16,19 @@ import type { RiskStatus } from "@/lib/api/types";
  * collapsed into one "closed" bucket, and rendered with visibly different
  * copy/hue, not just a shared muted "done" look.
  */
-const CONFIG: Record<RiskStatus, { label: string; bg: string; text: string }> = {
-  open: { label: "Open", bg: "bg-surface-sunk", text: "text-ink-secondary" },
-  acknowledged: { label: "Acknowledged", bg: "bg-signal-soft", text: "text-signal" },
-  resolved: { label: "Resolved", bg: "bg-dusk-soft", text: "text-dusk" },
-  superseded: { label: "Superseded", bg: "bg-surface-sunk", text: "text-ink-muted" },
+const CONFIG: Record<RiskStatus, { bg: string; text: string }> = {
+  open: { bg: "bg-surface-sunk", text: "text-ink-secondary" },
+  acknowledged: { bg: "bg-signal-soft", text: "text-signal" },
+  resolved: { bg: "bg-dusk-soft", text: "text-dusk" },
+  superseded: { bg: "bg-surface-sunk", text: "text-ink-muted" },
 };
 
 export function RiskStatusBadge({ status }: { status: RiskStatus }) {
-  const { label, bg, text } = CONFIG[status];
+  const t = useTranslations("foresight.riskStatusBadge");
+  const { bg, text } = CONFIG[status];
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${bg} ${text}`}>
-      {label}
+      {t(status)}
     </span>
   );
 }

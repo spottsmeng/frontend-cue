@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { computeWritebackReplyRate } from "@/lib/analytics/aggregate";
 import { useAnalyticsWritebackQuery } from "@/lib/analytics/hooks";
 import { formatDate } from "@/lib/format";
@@ -22,13 +24,14 @@ export function WritebackReplyRateChart({
   projectIds: string[];
   projectsById: Map<string, string>;
 }) {
+  const t = useTranslations("analytics.writebackReplyRateChart");
   const { data, isLoading, isError } = useAnalyticsWritebackQuery(projectIds);
 
   if (isError) {
-    return <p className="text-sm text-critical">Could not load write-back history. Please retry.</p>;
+    return <p className="text-sm text-critical">{t("loadError")}</p>;
   }
   if (isLoading) {
-    return <p className="text-sm text-ink-muted">Loading write-back reply rate…</p>;
+    return <p className="text-sm text-ink-muted">{t("loading")}</p>;
   }
 
   const { series, rows } = computeWritebackReplyRate(data ?? [], projectsById);
@@ -36,7 +39,7 @@ export function WritebackReplyRateChart({
   if (rows.length === 0) {
     return (
       <p className="text-sm text-ink-muted">
-        No write-back messages have been sent yet on any project you can see.
+        {t("empty")}
       </p>
     );
   }
@@ -52,18 +55,18 @@ export function WritebackReplyRateChart({
       <ThemedLineChart
         series={chartSeries}
         valueFormat={(v) => `${v.toFixed(0)}%`}
-        ariaLabel="Write-back reply rate: vendor confirmations received vs. sent, per project per week"
+        ariaLabel={t("chartAriaLabel")}
       />
       <ChartLegend items={chartSeries.map((s) => ({ id: s.id, label: s.label }))} />
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs">
           <thead>
             <tr className="text-ink-muted">
-              <th className="py-1 pr-4 font-medium">Week of</th>
-              <th className="py-1 pr-4 font-medium">Project</th>
-              <th className="py-1 pr-4 font-medium">Sent</th>
-              <th className="py-1 pr-4 font-medium">Replied</th>
-              <th className="py-1 font-medium">Rate</th>
+              <th className="py-1 pr-4 font-medium">{t("headers.weekOf")}</th>
+              <th className="py-1 pr-4 font-medium">{t("headers.project")}</th>
+              <th className="py-1 pr-4 font-medium">{t("headers.sent")}</th>
+              <th className="py-1 pr-4 font-medium">{t("headers.replied")}</th>
+              <th className="py-1 font-medium">{t("headers.rate")}</th>
             </tr>
           </thead>
           <tbody>

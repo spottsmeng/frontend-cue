@@ -30,7 +30,7 @@ primitives → `@theme inline` mapping → base element defaults). Conceptually:
 
 | Token | Role | Light | Dark |
 |---|---|---|---|
-| `signal` | Primary — actions, links, focus ring | `#2A78D6` | `#3987E5` |
+| `signal` | Primary — actions, links, focus ring | `#1F68B8` | `#5A9AE8` |
 | `dusk` | Secondary — selection, emphasis | `#4A3AA7` | `#9184E8` |
 | `bloom` | Tertiary — sparse accents only, never a CTA | `#C43D78` | `#EB9CC0` |
 
@@ -42,27 +42,34 @@ failed the dark-mode CVD check outright — blue and violet collapse into each o
 at those lightness steps, worst adjacent ΔE 1.9 (deutan) / 9.8 (normal vision), both well under the
 8/15 gates. The shipped `dusk` (`#9184E8` dark) was re-stepped until it cleared: worst adjacent ΔE 12.6
 (deutan) / 16.6 (normal vision), full `--pairs all` pass in both themes. Each has a `-soft` tint
-(`signal-soft`, `dusk-soft`, `bloom-soft`) for chip/badge backgrounds — the swatch itself is for
-solid fills (buttons, rings), not body text on a light surface (it sits under 3:1 there by design;
-pair with white/dark text on the fill, or the `-soft` tint under regular ink, never the raw swatch as
-small text).
+(`signal-soft`, `dusk-soft`, `bloom-soft`) for chip/badge backgrounds. `signal` itself was re-stepped
+again by F9's real axe-core run (frontend/PROGRESS.md's F9 notes): the original `#2A78D6`/`#3987E5`
+measured 4.41:1 (light, on white) / 3.99:1 (dark, on `signal-soft`) — a genuine WCAG 1.4.3 text-
+contrast fail axe flagged as "serious," not a rounding artefact. One darken/lighten step each clears
+>=4.5:1 everywhere it's used as text (5.6–6.3:1 measured) with no existing pairing regressing.
 
 **Status quad — fixed, reserved, never touches brand.**
 
-| Token | Meaning | Hex (both themes' light value; dark re-steps for the dark surface) |
-|---|---|---|
-| `good` | on-plan | `#0CA30C` / `#37C837` dark |
-| `warning` | watch | `#C97D00` / `#F0A93B` dark |
-| `serious` | escalating | `#C1552C` / `#F0916A` dark |
-| `critical` | risk | `#D03B3B` / `#F06B6B` dark |
+| Token | Meaning | Hex (light) | Hex (dark) |
+|---|---|---|---|
+| `good` | on-plan | `#067D06` | `#37C837` |
+| `warning` | watch | `#8F5800` | `#F0A93B` |
+| `serious` | escalating | `#96401F` | `#F0916A` |
+| `critical` | risk | `#B3201F` | `#F06B6B` |
 
-Always paired with an icon + label (§12.1) — on light surfaces `warning`/`serious` sit under 3:1 fill
-contrast on purpose; the label carries the meaning, the fill never does alone. Maps onto two real
-taxonomies in the backend: the commitment/milestone 3-state stripe (on-plan/watch/risk → good/warning/
-critical, skipping `serious`) and Foresight's own 4-state `RiskSeverityLiteral`
-(low/medium/high/critical → warning-lite/warning/serious/critical). Confirm this mapping still holds
-when F3 (Foresight) actually wires severity badges — it's a reasonable default, not tested against
-every real value yet.
+Always paired with an icon + label (§12.1) — colour is never the sole carrier of meaning, regardless
+of contrast. The light-mode values above were re-stepped by F9's real axe-core run
+(frontend/PROGRESS.md's F9 notes): the originals (`#0CA30C`/`#C97D00`/`#C1552C`/`#D03B3B`) measured
+2.96–3.88:1 as **pill text** on their own `-soft` background (`VerificationBadge`/`SeverityBadge`'s
+actual rendered shape) — a real WCAG 1.4.3 fail distinct from the fill-contrast question below, which
+icon+label pairing does not exempt. Re-stepped to clear >=4.5:1 on `-soft` (8.4–9.3:1 measured) and
+comfortably exceed 3:1 as a large fill too (5.3–6.9:1 on white) — the *previous* version of this file
+noted `warning`/`serious` sitting under 3:1 as a large solid fill "by design"; that specific tradeoff
+no longer describes these re-stepped tokens (verify against `app/globals.css`'s own comments if this
+ever needs re-checking, per this file's own "if the two disagree, the CSS is correct" rule). Maps onto
+two real taxonomies in the backend: the commitment/milestone 3-state stripe (on-plan/watch/risk →
+good/warning/critical, skipping `serious`) and Foresight's own 4-state `RiskSeverityLiteral`
+(low/medium/high/critical → warning-lite/warning/serious/critical).
 
 **Verification chips — a second, independent status axis.** `CommitmentOut.verification_state` /
 `ReportField.verification_state` / `DeviationOut`'s equivalent (auto / pending_verification /

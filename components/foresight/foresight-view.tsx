@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useEffectiveRoles } from "@/lib/roles";
 
 import { SectionPanel } from "../living-wip/section-panel";
@@ -23,36 +25,37 @@ import { WebhookAdminPanel } from "./webhook-admin-panel";
  * is explicitly told not to duplicate them, only to link here.
  */
 export function ForesightView({ projectId }: { projectId: string }) {
+  const t = useTranslations("foresight.view");
   const { data: roles } = useEffectiveRoles(projectId);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface/95 px-4 py-2.5 backdrop-blur">
-        <span className="text-sm font-medium text-ink">Foresight</span>
+        <span className="text-sm font-medium text-ink">{t("title")}</span>
       </div>
 
       <div className="flex flex-col gap-4 px-4 py-4">
-        <SectionPanel title="Risks">
+        <SectionPanel title={t("sections.risks")}>
           <RiskFeed projectId={projectId} effectiveRoles={roles?.roles} />
         </SectionPanel>
 
-        <SectionPanel title="Deviations">
+        <SectionPanel title={t("sections.deviations")}>
           <DeviationList projectId={projectId} effectiveRoles={roles?.roles} />
         </SectionPanel>
 
-        <SectionPanel title="Your notifications">
+        <SectionPanel title={t("sections.notifications")}>
           <NotificationList projectId={projectId} />
         </SectionPanel>
 
-        <SectionPanel title="Webhook subscriptions">
+        <SectionPanel title={t("sections.webhooks")}>
           <WebhookAdminPanel projectId={projectId} effectiveRoles={roles?.roles} />
         </SectionPanel>
 
-        <SectionPanel title="Quiet hours">
+        <SectionPanel title={t("sections.quietHours")}>
           <QuietHoursPanel projectId={projectId} effectiveRoles={roles?.roles} />
         </SectionPanel>
 
-        <SectionPanel title="Foresight thresholds">
+        <SectionPanel title={t("sections.thresholds")}>
           <ThresholdConfigPanel projectId={projectId} />
         </SectionPanel>
       </div>

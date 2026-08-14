@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { CommitmentDetailPanel } from "@/components/living-wip/commitment-detail-panel";
 
@@ -9,12 +10,6 @@ import { SuccessorBriefView } from "./successor-brief-view";
 import { SummaryTabs } from "./summary-tabs";
 
 type Tab = "ask" | "summaries" | "brief";
-
-const TABS: { tab: Tab; label: string }[] = [
-  { tab: "ask", label: "Ask" },
-  { tab: "summaries", label: "Summaries" },
-  { tab: "brief", label: "Successor brief" },
-];
 
 /**
  * §12.5: Ask "genuinely dual — a quick lookup on the floor, deep retrieval
@@ -26,8 +21,15 @@ const TABS: { tab: Tab; label: string }[] = [
  * citation-routing instruction.
  */
 export function AskView({ projectId }: { projectId: string }) {
+  const t = useTranslations("ask.tabs");
   const [tab, setTab] = useState<Tab>("ask");
   const [openCommitmentId, setOpenCommitmentId] = useState<string | null>(null);
+
+  const TABS: { tab: Tab; label: string }[] = [
+    { tab: "ask", label: t("ask") },
+    { tab: "summaries", label: t("summaries") },
+    { tab: "brief", label: t("brief") },
+  ];
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col">

@@ -1,0 +1,190 @@
+{
+  "verification": {
+    "auto": "自动",
+    "pendingVerification": "待核实",
+    "verified": "已核实",
+    "corrected": "已更正"
+  },
+  "reportField": {
+    "notAvailable": "不可用",
+    "noSourceRecorded": "未记录来源"
+  },
+  "budgetReviseForm": {
+    "reviseBudget": "修订预算",
+    "newApprovedAmount": "新核准金额",
+    "currency": "币种",
+    "save": "保存",
+    "cancel": "取消",
+    "saveError": "保存失败。"
+  },
+  "commitmentDetail": {
+    "title": "承诺",
+    "loading": "加载中…",
+    "statePrefix": "状态：",
+    "verifiedAt": "已于 {date} 核实",
+    "evidence": "证据",
+    "correctAndConfirm": "更正并确认",
+    "deliverable": "交付物",
+    "deliverableOriginal": "交付物（原始语言）",
+    "due": "截止时间",
+    "amount": "金额",
+    "currency": "币种",
+    "saving": "保存中…",
+    "confirm": "确认",
+    "saveError": "保存失败，请重试。",
+    "saved": "已保存。",
+    "paymentStatus": "付款状态",
+    "notSet": "未设置",
+    "unpaid": "未付款",
+    "invoiced": "已开票",
+    "paid": "已付款",
+    "roleRequired": "（需要财务或制片角色权限方可更改）",
+    "writeback": "回写"
+  },
+  "commitmentSummaryRow": {
+    "due": "截止 {date}"
+  },
+  "detailDrawer": {
+    "close": "关闭"
+  },
+  "deviationRow": {
+    "statusAutoDrafted": "自动生成——待审核",
+    "statusConfirmed": "已确认",
+    "statusResolved": "已解决",
+    "uncategorised": "未分类",
+    "confirm": "确认",
+    "cancel": "取消",
+    "confirmAsIs": "直接确认",
+    "editAndConfirm": "编辑并确认",
+    "confirmError": "确认失败，请重试。"
+  },
+  "exportHistory": {
+    "title": "导出历史",
+    "loading": "加载中…",
+    "empty": "尚无导出记录——报告准备就绪后，可使用上方的“冻结并导出”。",
+    "download": "下载 →"
+  },
+  "freezeExport": {
+    "pptx": "冻结并导出 PPTX",
+    "pdf": "PDF",
+    "exporting": "导出中…",
+    "composing": "正在生成快照——大型项目最长可能需要 30 秒。",
+    "ready": "导出已完成——此快照是特定时间点的存档，与上方的实时报告不同。",
+    "download": "下载 →"
+  },
+  "view": {
+    "loading": "正在加载实时进度…",
+    "loadError": "无法加载报告，请重试。",
+    "lastLedgerChange": "台账最近变更：{date}"
+  },
+  "provenanceChip": {
+    "viewSourceCount": "查看来源（{count}）",
+    "viewSource": "查看来源",
+    "provenance": "来源",
+    "commitment": "承诺"
+  },
+  "riskLogRow": {
+    "baseRate": "基础比率 {pct}%"
+  },
+  "supersessionCandidate": {
+    "loadingName": "加载中…",
+    "loadingAmount": "…",
+    "was": "原为 {amount}",
+    "now": "现为 {amount}",
+    "notSpecified": "未指定",
+    "confirmed": "已确认",
+    "rejected": "已拒绝",
+    "confirmAction": "确认——这是一次修订",
+    "rejectAction": "拒绝——两项承诺无关",
+    "saveError": "保存失败，请重试。"
+  },
+  "supersessionReview": {
+    "title": "承诺修订",
+    "loading": "加载中…",
+    "loadError": "无法加载承诺修订记录。",
+    "empty": "该项目从未提出过承诺修订。",
+    "needsReview": "待审核",
+    "recentlyReviewed": "最近已审核"
+  },
+  "writeback": {
+    "loading": "正在加载回写历史…",
+    "draftNotSent": "草稿——尚未发送",
+    "authorisedNotSent": "已授权——尚未发送",
+    "draftMessageLabel": "消息草稿",
+    "saveEdit": "保存修改",
+    "authorise": "授权",
+    "send": "发送",
+    "confirmWithVendor": "与供应商确认",
+    "priorMessages": "既往发出的消息",
+    "noReplyYet": "尚无回复",
+    "noActivity": "此承诺尚无回写记录。",
+    "genericError": "发生错误"
+  },
+  "evidenceViewer": {
+    "original": "原文",
+    "translation": "译文",
+    "noEvidence": "暂无证据记录。",
+    "noAudioSupport": "此浏览器不支持内嵌音频播放。"
+  },
+  "budgetSummarySection": {
+    "title": "预算摘要",
+    "approvedBudget": "核准预算",
+    "committedSpend": "已承诺支出",
+    "outstandingPayments": "未结清款项",
+    "variance": "差异"
+  },
+  "decisionLogSection": {
+    "title": "决策与审批记录",
+    "empty": "尚无决策或待处理审批记录。",
+    "outstandingApprovals": "待处理审批",
+    "due": "截止 {date}",
+    "recentDecisions": "近期决策"
+  },
+  "milestoneTracker": {
+    "title": "里程碑追踪",
+    "empty": "该项目尚未设置里程碑。",
+    "statusCompleted": "已完成",
+    "statusOnTrack": "进度正常",
+    "statusAtRisk": "有风险",
+    "statusCritical": "关键",
+    "statusNoDate": "无日期",
+    "criticalPath": "关键路径",
+    "planned": "计划 {date}",
+    "actual": "实际 {date}",
+    "slack": "缓冲 {days} 天"
+  },
+  "nextSteps": {
+    "title": "下一步",
+    "empty": "暂无待办事项——项目中的所有承诺与里程碑均已完结，供应商也没有任何未尽事宜。",
+    "openCommitments": "待办承诺",
+    "openMilestones": "待办里程碑",
+    "planned": "计划 {date}"
+  },
+  "projectOverview": {
+    "title": "项目概览",
+    "project": "项目",
+    "client": "客户",
+    "venue": "场地",
+    "eventStart": "活动开始",
+    "eventEnd": "活动结束",
+    "phase": "阶段",
+    "noVisualReferences": "尚无交付物关联视觉参考图。",
+    "notAvailable": "不可用 — {reason}",
+    "noSourceRecorded": "未记录来源",
+    "deliverablesWithoutVisual": "{count, plural, other {还有 # 项交付物尚未关联视觉参考图。}}"
+  },
+  "riskAndIssues": {
+    "title": "风险与问题",
+    "empty": "该项目目前没有未解决的风险或偏差。",
+    "risks": "风险",
+    "deviations": "偏差"
+  },
+  "vendorStatus": {
+    "title": "供应商状态",
+    "empty": "该项目尚无供应商动态记录。",
+    "noItems": "{name} 暂无待处理或已确认的事项。",
+    "outstanding": "待处理",
+    "confirmed": "已确认",
+    "reliabilityUnavailable": "供应商可靠性指标暂不可用——供应商可靠性关系图将在后续里程碑推出。"
+  }
+}

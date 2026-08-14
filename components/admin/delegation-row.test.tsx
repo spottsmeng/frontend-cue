@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { renderWithIntl as render } from "@/lib/test-utils";
 import type { DelegationOut } from "@/lib/api/types";
 
 import { DelegationRow } from "./delegation-row";

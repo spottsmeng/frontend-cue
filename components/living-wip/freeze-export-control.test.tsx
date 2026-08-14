@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { renderWithIntl as render } from "@/lib/test-utils";
 import { ExportBlockedError } from "@/lib/reports/hooks";
 
 import { FreezeExportControl } from "./freeze-export-control";
@@ -69,6 +70,18 @@ describe("FreezeExportControl", () => {
 
     ledLink.click();
     expect(onOpenCommitment).toHaveBeenCalledWith("c-1");
+  });
+
+  // F9: NFR-PRF-05's real ≤30s budget — a disabled button alone gave zero
+  // sense of expected duration, the weakest of the two loading states this
+  // session's own loading-state-honesty audit found.
+  it("communicates expected duration while an export is pending, not just a disabled button", () => {
+    useExportMutation.mockReturnValue({ ...baseMutation(), isPending: true });
+    render(
+      <FreezeExportControl projectId="p1" effectiveRoles={["producer"]} onOpenCommitment={vi.fn()} />,
+    );
+    expect(screen.getAllByRole("button", { name: "Exporting…" })).toHaveLength(2);
+    expect(screen.getByText(/up to 30 seconds/)).toBeInTheDocument();
   });
 
   it("renders a download link on success, distinct from the live report", () => {

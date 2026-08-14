@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -25,6 +26,7 @@ export function ProjectSwitcher({ projects }: { projects: ProjectSwitcherItem[] 
   const setOpen = useUIStore((s) => s.setProjectSwitcherOpen);
   const currentProjectId = projectIdFromPathname(usePathname());
   const current = projects.find((p) => p.id === currentProjectId);
+  const t = useTranslations("nav");
 
   return (
     <div className="relative">
@@ -36,7 +38,7 @@ export function ProjectSwitcher({ projects }: { projects: ProjectSwitcherItem[] 
         className="flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-ink hover:border-border-strong"
       >
         <span className="max-w-[24ch] truncate font-medium">
-          {current?.name ?? "Select a project"}
+          {current?.name ?? t("selectAProject")}
         </span>
         <span aria-hidden className="text-ink-muted">
           ⌄
@@ -49,7 +51,7 @@ export function ProjectSwitcher({ projects }: { projects: ProjectSwitcherItem[] 
           className="absolute left-0 z-20 mt-2 max-h-80 w-72 overflow-y-auto rounded-lg border border-border bg-surface p-1.5 shadow-pop"
         >
           {projects.length === 0 && (
-            <li className="px-3 py-2 text-sm text-ink-muted">No projects yet</li>
+            <li className="px-3 py-2 text-sm text-ink-muted">{t("noProjectsYet")}</li>
           )}
           {projects.map((project) => (
             <li key={project.id} role="option" aria-selected={project.id === currentProjectId}>

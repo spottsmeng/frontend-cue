@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   useDeliverableClassTermsQuery,
@@ -32,6 +33,7 @@ export function DocumentTagForm({
   document: DocumentOut;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("documents.tagging");
   const { data: classTerms } = useDeliverableClassTermsQuery(projectId);
   const { data: milestoneTypeTerms } = useDocumentMilestoneTypeTermsQuery(projectId);
   const { data: phaseTerms } = usePhaseTermsQuery(projectId);
@@ -41,7 +43,7 @@ export function DocumentTagForm({
   // useState defaults read from them once, at mount, so this document's
   // already-set tags show as pre-selected instead of blank on first paint.
   if (!classTerms || !milestoneTypeTerms || !phaseTerms) {
-    return <p className="text-xs text-ink-muted">Loading tag options…</p>;
+    return <p className="text-xs text-ink-muted">{t("loading")}</p>;
   }
 
   return (
@@ -68,6 +70,7 @@ function TagFormFields({
   milestoneTypeTerms: OntologyTermOut[];
   phaseTerms: OntologyTermOut[];
 }) {
+  const t = useTranslations("documents.tagging");
   const [classCode, setClassCode] = useState(() => codeForTermId(classTerms, document.class_term_id));
   const [milestoneTypeCode, setMilestoneTypeCode] = useState(() =>
     codeForTermId(milestoneTypeTerms, document.milestone_type_term_id),
@@ -91,46 +94,46 @@ function TagFormFields({
       className="flex flex-wrap items-end gap-2"
     >
       <label className="text-xs text-ink-secondary">
-        Class
+        {t("classLabel")}
         <select
           value={classCode}
           onChange={(e) => setClassCode(e.target.value)}
           className="mt-1 block w-44 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
         >
-          <option value="">Untagged</option>
-          {classTerms?.map((t) => (
-            <option key={t.code} value={t.code}>
-              {t.label_en}
+          <option value="">{t("untagged")}</option>
+          {classTerms?.map((term) => (
+            <option key={term.code} value={term.code}>
+              {term.label_en}
             </option>
           ))}
         </select>
       </label>
       <label className="text-xs text-ink-secondary">
-        Milestone type
+        {t("milestoneTypeLabel")}
         <select
           value={milestoneTypeCode}
           onChange={(e) => setMilestoneTypeCode(e.target.value)}
           className="mt-1 block w-44 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
         >
-          <option value="">Untagged</option>
-          {milestoneTypeTerms?.map((t) => (
-            <option key={t.code} value={t.code}>
-              {t.label_en}
+          <option value="">{t("untagged")}</option>
+          {milestoneTypeTerms?.map((term) => (
+            <option key={term.code} value={term.code}>
+              {term.label_en}
             </option>
           ))}
         </select>
       </label>
       <label className="text-xs text-ink-secondary">
-        Phase
+        {t("phaseLabel")}
         <select
           value={phaseCode}
           onChange={(e) => setPhaseCode(e.target.value)}
           className="mt-1 block w-44 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
         >
-          <option value="">Untagged</option>
-          {phaseTerms?.map((t) => (
-            <option key={t.code} value={t.code}>
-              {t.label_en}
+          <option value="">{t("untagged")}</option>
+          {phaseTerms?.map((term) => (
+            <option key={term.code} value={term.code}>
+              {term.label_en}
             </option>
           ))}
         </select>
@@ -140,9 +143,9 @@ function TagFormFields({
         disabled={tagMutation.isPending}
         className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
       >
-        {tagMutation.isPending ? "Saving…" : "Save tags"}
+        {tagMutation.isPending ? t("submitting") : t("submit")}
       </button>
-      {tagMutation.isError && <p className="text-xs text-critical">Could not save tags.</p>}
+      {tagMutation.isError && <p className="text-xs text-critical">{t("error")}</p>}
     </form>
   );
 }

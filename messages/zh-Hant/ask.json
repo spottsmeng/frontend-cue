@@ -1,0 +1,120 @@
+{
+  "tabs": {
+    "ask": "問答",
+    "summaries": "摘要",
+    "brief": "交接簡報"
+  },
+  "chat": {
+    "contextHint": "追問將沿用本次對話的脈絡。",
+    "freshHint": "可用中文或英文詢問本專案的任何問題。",
+    "newConversation": "開始新對話",
+    "error": "無法連線至 CUE,請重試。",
+    "thinking": "思考中——通常幾秒鐘,最長可能需要 8 秒……",
+    "placeholder": "詢問與本專案相關的問題……",
+    "inputLabel": "提問",
+    "submit": "提問",
+    "submitting": "提問中……"
+  },
+  "citations": {
+    "sourceLabel": {
+      "commitment": "承諾事項",
+      "evidence": "佐證",
+      "budget": "預算",
+      "document_version": "文件",
+      "audit_log": "決策紀錄",
+      "deviation": "偏差"
+    },
+    "open": "{label} ↗",
+    "notYetAvailable": "{label}(尚不可用)",
+    "resolving": "{label}——解析中……",
+    "unresolvable": "{label}(無法解析)",
+    "versionOpen": "{label}(第 {versionNo} 版) ↗"
+  },
+  "refusal": {
+    "cantDoYetTitle": "CUE 尚未支援此操作",
+    "openInLivingWip": "前往即時 WIP 直接處理該承諾事項 →",
+    "noEvidenceTitle": "目前沒有可供引用的佐證"
+  },
+  "summaries": {
+    "tabs": {
+      "projectStatus": "專案狀態",
+      "vendorStatus": "廠商狀態",
+      "periodDigest": "期間摘要",
+      "decisionHistory": "決策歷史",
+      "outstandingActions": "待辦事項"
+    },
+    "loading": "載入中……",
+    "loadError": "無法載入此摘要。",
+    "decisionHistory": {
+      "empty": "本專案尚無決策紀錄。"
+    },
+    "outstandingActions": {
+      "byOwner": "依負責人",
+      "byDueWindow": "依到期區間",
+      "empty": "目前沒有待辦事項。",
+      "window": {
+        "overdue": "已逾期",
+        "due_within_7_days": "7 天內到期",
+        "due_within_30_days": "30 天內到期",
+        "due_later": "稍後到期",
+        "no_due_date": "無到期日"
+      }
+    },
+    "periodDigest": {
+      "from": "起始日期",
+      "to": "結束日期",
+      "generate": "產生摘要",
+      "loading": "載入中……",
+      "loadError": "無法載入該期間的摘要。",
+      "range": "{start} – {end}",
+      "commitmentsCreated": "新增承諾事項",
+      "commitmentsResolved": "已完成承諾事項",
+      "decisions": "決策",
+      "emptyPeriod": "該期間內無紀錄。"
+    },
+    "projectStatus": {
+      "project": "專案",
+      "openCommitments": "未結承諾事項",
+      "atRiskCommitments": "有風險的承諾事項",
+      "openRisks": "未結風險",
+      "openDeviations": "未結偏差",
+      "nextMilestone": "下一里程碑",
+      "nextMilestoneDue": "下一里程碑到期日"
+    }
+  },
+  "successorBrief": {
+    "description": "為接任專案經理產生完整交接簡報——涵蓋未結承諾事項、決策歷史、風險、關鍵文件、廠商聯絡方式,以及每一項偏差及其處理結果(不僅限於尚未處理的部分)。",
+    "generate": "產生交接簡報",
+    "generating": "產生中……",
+    "generateError": "無法產生簡報,請重試。",
+    "generatedAt": "產生於 {date}",
+    "regenerate": "重新產生",
+    "sections": {
+      "openCommitments": "未結承諾事項",
+      "decisionHistory": "決策歷史",
+      "risks": "風險",
+      "keyDocuments": "關鍵文件",
+      "vendorContacts": "廠商聯絡方式",
+      "deviationsAndResolutions": "偏差與處理結果"
+    },
+    "empty": {
+      "openCommitments": "目前沒有未結承諾事項。",
+      "decisionHistory": "尚無決策紀錄。",
+      "risks": "目前沒有未結風險。",
+      "keyDocuments": "尚無文件紀錄。",
+      "vendorContacts": "尚無廠商紀錄。",
+      "deviationsAndResolutions": "尚無偏差紀錄。"
+    },
+    "documentApproved": "已核准",
+    "documentNotApproved": "尚未核准",
+    "openCommitmentCount": "{count} 項未結承諾事項",
+    "deviationsHint": "本專案的全部偏差紀錄,無論是否已處理——交接需要完整歷史,而非僅有尚未處理的部分。",
+    "deviationStatus": {
+      "auto_drafted": "自動產生——待審核",
+      "confirmed": "已確認",
+      "resolved": "已處理"
+    },
+    "resolvedFor": "處理日期 {date},負責人 {owner}",
+    "viewInForesight": "在前瞻分析中檢視 →"
+  }
+}

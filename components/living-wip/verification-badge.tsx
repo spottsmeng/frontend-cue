@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import type { VerificationState } from "@/lib/api/types";
 
 // DESIGN.md's "verification chips" system — a second, independent status
@@ -10,28 +12,29 @@ import type { VerificationState } from "@/lib/api/types";
 // state at all and a pill would misleadingly imply one.
 const CONFIG: Record<
   Exclude<VerificationState, "not_applicable">,
-  { label: string; text: string; bg: string }
+  { key: "auto" | "pendingVerification" | "verified" | "corrected"; text: string; bg: string }
 > = {
-  auto: { label: "Auto", text: "text-verify-auto", bg: "bg-surface-sunk" },
+  auto: { key: "auto", text: "text-verify-auto", bg: "bg-surface-sunk" },
   pending_verification: {
-    label: "Pending verification",
+    key: "pendingVerification",
     text: "text-verify-pending",
     bg: "bg-warning-soft",
   },
-  human_verified: { label: "Verified", text: "text-verify-verified", bg: "bg-signal-soft" },
-  human_corrected: { label: "Corrected", text: "text-verify-corrected", bg: "bg-dusk-soft" },
+  human_verified: { key: "verified", text: "text-verify-verified", bg: "bg-signal-soft" },
+  human_corrected: { key: "corrected", text: "text-verify-corrected", bg: "bg-dusk-soft" },
 };
 
 export function VerificationBadge({ state }: { state: VerificationState }) {
+  const t = useTranslations("livingWip.verification");
   if (state === "not_applicable") {
     return <span className="text-xs text-ink-muted">—</span>;
   }
-  const { label, text, bg } = CONFIG[state];
+  const { key, text, bg } = CONFIG[state];
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${bg} ${text}`}
     >
-      {label}
+      {t(key)}
     </span>
   );
 }

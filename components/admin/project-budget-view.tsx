@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   useBudgetHistoryQuery,
@@ -23,6 +24,7 @@ import { SectionPanel } from "../living-wip/section-panel";
  * without leaving this screen.
  */
 export function ProjectBudgetView({ projectId }: { projectId: string }) {
+  const t = useTranslations("admin.budget");
   const { data: current, isLoading } = useBudgetQuery(projectId);
   const { data: history } = useBudgetHistoryQuery(projectId);
   const createMutation = useCreateBudgetMutation(projectId);
@@ -35,13 +37,15 @@ export function ProjectBudgetView({ projectId }: { projectId: string }) {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
-      <SectionPanel title="Budget">
-        {isLoading && <p className="text-sm text-ink-muted">Loading…</p>}
+      <SectionPanel title={t("title")}>
+        {isLoading && <p className="text-sm text-ink-muted">{t("loading")}</p>}
         {!isLoading && (
           <p className="mb-3 text-sm text-ink">
             {current
-              ? `Current baseline: ${formatMoney(current.approved_amount, current.currency)}`
-              : "No budget baseline recorded yet."}
+              ? t("currentBaseline", {
+                  amount: formatMoney(current.approved_amount, current.currency),
+                })
+              : t("noBaseline")}
           </p>
         )}
 
@@ -57,7 +61,7 @@ export function ProjectBudgetView({ projectId }: { projectId: string }) {
           className="mb-4 flex flex-wrap items-end gap-2 rounded-md border border-border p-3"
         >
           <label className="text-xs text-ink-secondary">
-            Approved amount
+            {t("approvedAmountLabel")}
             <input
               required
               type="number"
@@ -69,7 +73,7 @@ export function ProjectBudgetView({ projectId }: { projectId: string }) {
             />
           </label>
           <label className="text-xs text-ink-secondary">
-            Currency
+            {t("currencyLabel")}
             <input
               required
               type="text"
@@ -84,16 +88,16 @@ export function ProjectBudgetView({ projectId }: { projectId: string }) {
             disabled={activeMutation.isPending}
             className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
-            {current ? "Record revision" : "Record baseline"}
+            {current ? t("recordRevision") : t("recordBaseline")}
           </button>
           {activeMutation.isError && (
-            <p className="w-full text-xs text-critical">Could not save — please retry.</p>
+            <p className="w-full text-xs text-critical">{t("saveError")}</p>
           )}
         </form>
 
-        <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">History</p>
+        <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">{t("historyLabel")}</p>
         {(history ?? []).length === 0 && (
-          <p className="text-sm text-ink-muted">No baseline recorded yet.</p>
+          <p className="text-sm text-ink-muted">{t("noHistory")}</p>
         )}
         {(history ?? []).length > 0 && (
           <ul className="flex flex-col gap-1.5">
@@ -106,17 +110,17 @@ export function ProjectBudgetView({ projectId }: { projectId: string }) {
                   {formatMoney(b.approved_amount, b.currency)}
                   {!b.revision_of && (
                     <span className="ml-2 rounded-full bg-surface-sunk px-2 py-0.5 text-xs text-ink-muted">
-                      baseline
+                      {t("baselineTag")}
                     </span>
                   )}
                   {b.is_current && (
                     <span className="ml-2 rounded-full bg-signal-soft px-2 py-0.5 text-xs text-signal">
-                      current
+                      {t("currentTag")}
                     </span>
                   )}
                 </span>
                 <span className="font-mono text-xs text-ink-muted">
-                  approved {formatDateTime(b.approved_at)}
+                  {t("approvedOn", { date: formatDateTime(b.approved_at) })}
                 </span>
               </li>
             ))}

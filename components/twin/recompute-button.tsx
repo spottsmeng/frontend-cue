@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useRecomputeMutation } from "@/lib/twin/hooks";
 
 /**
@@ -16,16 +18,17 @@ import { useRecomputeMutation } from "@/lib/twin/hooks";
  * refetch.
  */
 export function RecomputeButton({ projectId }: { projectId: string }) {
+  const t = useTranslations("twin.recomputeButton");
   const recompute = useRecomputeMutation(projectId);
   return (
     <button
       type="button"
       onClick={() => recompute.mutate()}
       disabled={recompute.isPending}
-      title="Force a fresh CPM pass and record it in the Twin audit trail"
+      title={t("title")}
       className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary hover:border-signal hover:text-signal disabled:opacity-50"
     >
-      {recompute.isPending ? "Recomputing…" : "Recompute"}
+      {recompute.isPending ? t("recomputing") : t("recompute")}
     </button>
   );
 }

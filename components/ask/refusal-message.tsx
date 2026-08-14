@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import type { AskRefusalKind } from "@/lib/api/types";
 
@@ -21,13 +22,15 @@ export function RefusalMessage({
   refusalKind: AskRefusalKind;
   unavailableReason: string | null;
 }) {
+  const t = useTranslations("ask.refusal");
+
   if (refusalKind === "action_not_yet_supported") {
     return (
       <div className="rounded-md border border-dusk bg-dusk-soft p-3 text-sm text-ink">
-        <p className="font-medium text-dusk">CUE can&rsquo;t do that yet</p>
+        <p className="font-medium text-dusk">{t("cantDoYetTitle")}</p>
         <p className="mt-1 text-ink-secondary">{unavailableReason}</p>
         <Link href={`/projects/${projectId}`} className="mt-2 inline-block text-signal hover:underline">
-          Open the commitment in Living WIP to do it directly →
+          {t("openInLivingWip")}
         </Link>
       </div>
     );
@@ -35,7 +38,7 @@ export function RefusalMessage({
 
   return (
     <div className="rounded-md border border-border bg-surface-sunk p-3 text-sm text-ink">
-      <p className="font-medium text-ink-secondary">I don&rsquo;t have evidence for that</p>
+      <p className="font-medium text-ink-secondary">{t("noEvidenceTitle")}</p>
       <p className="mt-1 text-ink-muted">{unavailableReason}</p>
     </div>
   );

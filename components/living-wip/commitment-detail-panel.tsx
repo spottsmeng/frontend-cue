@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
-import { formatDateTime } from "@/lib/format";
+import { contentLang, formatDateTime } from "@/lib/format";
 import type { CommitmentCorrection, CommitmentOut } from "@/lib/api/types";
 import { FINANCE_ROLES, hasAnyRole, useEffectiveRoles } from "@/lib/roles";
 import { useCommitmentQuery, usePaymentStatusMutation, useVerifyCommitmentMutation } from "@/lib/commitments/hooks";
@@ -102,6 +103,7 @@ export function CommitmentDetailPanel({
   commitmentId: string;
   onClose: () => void;
 }) {
+  const t = useTranslations("livingWip.commitmentDetail");
   const { data: commitment, isLoading } = useCommitmentQuery(projectId, commitmentId);
   const { data: roles } = useEffectiveRoles(projectId);
   const verifyMutation = useVerifyCommitmentMutation(projectId);
@@ -122,43 +124,45 @@ export function CommitmentDetailPanel({
   const canSetPaymentStatus = hasAnyRole(roles?.roles, FINANCE_ROLES);
 
   return (
-    <DetailDrawer title="Commitment" onClose={onClose}>
+    <DetailDrawer title={t("title")} onClose={onClose}>
       {isLoading || !commitment || !form ? (
-        <p className="text-sm text-ink-muted">Loading…</p>
+        <p className="text-sm text-ink-muted">{t("loading")}</p>
       ) : (
         <>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-semibold text-ink">{commitment.deliverable_en}</h3>
+              <h3 lang="en" className="text-base font-semibold text-ink">
+                {commitment.deliverable_en}
+              </h3>
               <VerificationBadge state={commitment.verification_state} />
             </div>
             {commitment.deliverable_original &&
               commitment.deliverable_original !== commitment.deliverable_en && (
-                <p lang="zh" className="mt-0.5 text-sm text-ink-secondary">
+                <p lang={contentLang(commitment.evidence)} className="mt-0.5 text-sm text-ink-secondary">
                   {commitment.deliverable_original}
                 </p>
               )}
             <p className="mt-1 font-mono text-xs text-ink-muted">
-              state: {commitment.state}
+              {t("statePrefix")} {commitment.state}
               {commitment.verified_at &&
-                ` · verified ${formatDateTime(commitment.verified_at)}`}
+                ` · ${t("verifiedAt", { date: formatDateTime(commitment.verified_at) })}`}
             </p>
           </div>
 
           <section>
             <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-muted">
-              Evidence
+              {t("evidence")}
             </h4>
             <EvidenceViewer evidence={commitment.evidence} />
           </section>
 
           <section>
             <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-muted">
-              Correct &amp; confirm
+              {t("correctAndConfirm")}
             </h4>
             <div className="flex flex-col gap-2">
               <label className="text-xs text-ink-secondary">
-                Deliverable
+                {t("deliverable")}
                 <input
                   value={form.deliverable_en}
                   onChange={(e) => setForm({ ...form, deliverable_en: e.target.value })}
@@ -166,7 +170,7 @@ export function CommitmentDetailPanel({
                 />
               </label>
               <label className="text-xs text-ink-secondary">
-                Deliverable (original language)
+                {t("deliverableOriginal")}
                 <input
                   value={form.deliverable_original}
                   onChange={(e) => setForm({ ...form, deliverable_original: e.target.value })}
@@ -175,7 +179,7 @@ export function CommitmentDetailPanel({
               </label>
               <div className="flex gap-2">
                 <label className="flex-1 text-xs text-ink-secondary">
-                  Due
+                  {t("due")}
                   <input
                     type="datetime-local"
                     value={form.due_at}
@@ -184,7 +188,7 @@ export function CommitmentDetailPanel({
                   />
                 </label>
                 <label className="w-28 text-xs text-ink-secondary">
-                  Amount
+                  {t("amount")}
                   <input
                     type="number"
                     value={form.amount}
@@ -193,7 +197,7 @@ export function CommitmentDetailPanel({
                   />
                 </label>
                 <label className="w-20 text-xs text-ink-secondary">
-                  Currency
+                  {t("currency")}
                   <input
                     value={form.currency}
                     maxLength={3}
@@ -214,23 +218,32 @@ export function CommitmentDetailPanel({
                 }
                 className="mt-1 self-start rounded-md bg-signal px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
               >
-                {verifyMutation.isPending ? "Saving…" : "Confirm"}
+                {verifyMutation.isPending ? t("saving") : t("confirm")}
               </button>
               {verifyMutation.isError && (
-                <p className="text-xs text-critical">Could not save — please try again.</p>
+                <p className="text-xs text-critical">{t("saveError")}</p>
               )}
               {verifyMutation.isSuccess && (
-                <p className="text-xs text-good">Saved.</p>
+                <p className="text-xs text-good">{t("saved")}</p>
               )}
             </div>
           </section>
 
           <section>
-            <h4 className="mb-2 flex items-center justify-between text-xs font-medium uppercase tracking-wide text-ink-muted">
-              Payment status
+            {/* F9's own keyboard-only pass found this <select> had no
+                programmatic label at all — the heading below was only a
+                visual association, invisible to a screen reader or
+                getByLabel-style query. axe-core's own scan never caught it
+                because it only ever ran as an Administrator, who never
+                renders this Finance/Producer-gated control — exactly the
+                class of gap a real role-based keyboard/screen-reader pass
+                catches that an automated scan run under one role can't. */}
+            <h4 id="payment-status-heading" className="mb-2 flex items-center justify-between text-xs font-medium uppercase tracking-wide text-ink-muted">
+              {t("paymentStatus")}
             </h4>
             {canSetPaymentStatus ? (
               <select
+                aria-labelledby="payment-status-heading"
                 value={commitment.payment_status ?? ""}
                 onChange={(e) =>
                   paymentStatusMutation.mutate({
@@ -242,25 +255,23 @@ export function CommitmentDetailPanel({
                 className="rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
               >
                 <option value="" disabled>
-                  Not set
+                  {t("notSet")}
                 </option>
-                <option value="unpaid">Unpaid</option>
-                <option value="invoiced">Invoiced</option>
-                <option value="paid">Paid</option>
+                <option value="unpaid">{t("unpaid")}</option>
+                <option value="invoiced">{t("invoiced")}</option>
+                <option value="paid">{t("paid")}</option>
               </select>
             ) : (
               <p className="text-sm text-ink-secondary">
-                {commitment.payment_status ?? "Not set"}{" "}
-                <span className="text-ink-muted">
-                  (Finance or Producer role required to change)
-                </span>
+                {commitment.payment_status ?? t("notSet")}{" "}
+                <span className="text-ink-muted">{t("roleRequired")}</span>
               </p>
             )}
           </section>
 
           <section>
             <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-muted">
-              Write-back
+              {t("writeback")}
             </h4>
             <WritebackPanel
               projectId={projectId}

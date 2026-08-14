@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { formatDateTime } from "@/lib/format";
 import type { MembershipRole } from "@/lib/api/types";
@@ -31,6 +32,7 @@ export function WritebackPanel({
   commitmentId: string;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("livingWip.writeback");
   const canWrite = hasAnyRole(effectiveRoles, WRITE_ROLES);
   const { data: history, isLoading } = useWritebackHistoryQuery(projectId, commitmentId);
   const draftMutation = useDraftWritebackMutation(projectId);
@@ -41,7 +43,7 @@ export function WritebackPanel({
   const [draftText, setDraftText] = useState<string | null>(null);
 
   if (isLoading) {
-    return <p className="text-sm text-ink-muted">Loading write-back history…</p>;
+    return <p className="text-sm text-ink-muted">{t("loading")}</p>;
   }
 
   // list_writeback_history orders by created_at desc, so the first
@@ -56,14 +58,14 @@ export function WritebackPanel({
         <div className="rounded-md border border-border-strong bg-surface-sunk p-3">
           <div className="mb-2 flex items-center justify-between text-xs text-ink-muted">
             <span>
-              {active.status === "draft" ? "Draft — not yet sent" : "Authorised — not yet sent"}
+              {active.status === "draft" ? t("draftNotSent") : t("authorisedNotSent")}
             </span>
             <span className="font-mono">{active.language}</span>
           </div>
 
           {active.status === "draft" ? (
             <textarea
-              aria-label="Draft message"
+              aria-label={t("draftMessageLabel")}
               value={editedText}
               onChange={(e) => setDraftText(e.target.value)}
               rows={2}
@@ -86,7 +88,7 @@ export function WritebackPanel({
                     }
                     className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary hover:border-signal hover:text-signal disabled:opacity-50"
                   >
-                    Save edit
+                    {t("saveEdit")}
                   </button>
                   <button
                     type="button"
@@ -94,7 +96,7 @@ export function WritebackPanel({
                     onClick={() => authoriseMutation.mutate(active.id)}
                     className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
                   >
-                    Authorise
+                    {t("authorise")}
                   </button>
                 </>
               )}
@@ -105,20 +107,26 @@ export function WritebackPanel({
                   onClick={() => sendMutation.mutate(active.id)}
                   className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
                 >
-                  Send
+                  {t("send")}
                 </button>
               )}
             </div>
           )}
 
           {editMutation.isError && (
-            <p className="mt-2 text-xs text-critical">{errorMessage(editMutation.error)}</p>
+            <p className="mt-2 text-xs text-critical">
+              {errorMessage(editMutation.error, t("genericError"))}
+            </p>
           )}
           {authoriseMutation.isError && (
-            <p className="mt-2 text-xs text-critical">{errorMessage(authoriseMutation.error)}</p>
+            <p className="mt-2 text-xs text-critical">
+              {errorMessage(authoriseMutation.error, t("genericError"))}
+            </p>
           )}
           {sendMutation.isError && (
-            <p className="mt-2 text-xs text-critical">{errorMessage(sendMutation.error)}</p>
+            <p className="mt-2 text-xs text-critical">
+              {errorMessage(sendMutation.error, t("genericError"))}
+            </p>
           )}
         </div>
       ) : (
@@ -130,10 +138,12 @@ export function WritebackPanel({
               onClick={() => draftMutation.mutate(commitmentId)}
               className="rounded-md border border-signal px-3 py-1.5 text-xs font-medium text-signal hover:bg-signal-soft disabled:opacity-50"
             >
-              Confirm with vendor
+              {t("confirmWithVendor")}
             </button>
             {draftMutation.isError && (
-              <p className="mt-2 text-xs text-critical">{errorMessage(draftMutation.error)}</p>
+              <p className="mt-2 text-xs text-critical">
+                {errorMessage(draftMutation.error, t("genericError"))}
+              </p>
             )}
           </div>
         )
@@ -142,14 +152,14 @@ export function WritebackPanel({
       {sent.length > 0 && (
         <div>
           <h4 className="mb-1 text-xs font-medium uppercase tracking-wide text-ink-muted">
-            Prior outbound messages
+            {t("priorMessages")}
           </h4>
           <ul className="flex flex-col gap-1.5">
             {sent.map((m) => (
               <li key={m.id} className="rounded-md border border-border p-2 text-xs">
                 <div className="flex justify-between text-ink-muted">
                   <span>{formatDateTime(m.sent_at)}</span>
-                  <span>{m.reply_outcome ?? "no reply yet"}</span>
+                  <span>{m.reply_outcome ?? t("noReplyYet")}</span>
                 </div>
                 <p className="mt-1 text-ink">{m.draft_text}</p>
               </li>
@@ -159,16 +169,16 @@ export function WritebackPanel({
       )}
 
       {!canWrite && !active && sent.length === 0 && (
-        <p className="text-sm text-ink-muted">No write-back activity on this commitment yet.</p>
+        <p className="text-sm text-ink-muted">{t("noActivity")}</p>
       )}
     </div>
   );
 }
 
-function errorMessage(error: unknown): string {
+function errorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error) return error.message;
   if (error && typeof error === "object" && "detail" in error) {
     return String((error as { detail: unknown }).detail);
   }
-  return "something went wrong";
+  return fallback;
 }

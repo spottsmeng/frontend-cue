@@ -1,22 +1,10 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { ProjectSwitcher, type ProjectSwitcherItem } from "./project-switcher";
 import { UserMenu } from "./user-menu";
 
-// Org-scoped surfaces (Admin console, Vendor Reliability Graph, Analytics)
-// are deliberately NOT nested under /projects/[projectId] — their own
-// backend endpoints (/admin/*, /parties, cross-project analytics) are
-// org-scoped, not project-scoped (see require_org_administrator/
-// require_org_finance in backend/app/api/deps.py), so their routes aren't
-// either. Project-scoped surfaces (Living WIP, Twin, Foresight, Documents,
-// Ask) live in the nested projects/[projectId]/layout.tsx instead.
-const ORG_LINKS = [
-  { href: "/admin", label: "Admin" },
-  { href: "/vendors", label: "Vendors" },
-  { href: "/analytics", label: "Analytics" },
-];
-
-export function TopNav({
+export async function TopNav({
   projects,
   canSeeVendors,
   canSeeAdmin,
@@ -25,6 +13,21 @@ export function TopNav({
   canSeeVendors: boolean;
   canSeeAdmin: boolean;
 }) {
+  const t = await getTranslations("nav");
+
+  // Org-scoped surfaces (Admin console, Vendor Reliability Graph, Analytics)
+  // are deliberately NOT nested under /projects/[projectId] — their own
+  // backend endpoints (/admin/*, /parties, cross-project analytics) are
+  // org-scoped, not project-scoped (see require_org_administrator/
+  // require_org_finance in backend/app/api/deps.py), so their routes aren't
+  // either. Project-scoped surfaces (Living WIP, Twin, Foresight, Documents,
+  // Ask) live in the nested projects/[projectId]/layout.tsx instead.
+  const ORG_LINKS = [
+    { href: "/admin", label: t("admin") },
+    { href: "/vendors", label: t("vendors") },
+    { href: "/analytics", label: t("analytics") },
+  ];
+
   // F6's own instruction: "hide the nav entry for other roles, but the real
   // gate is the backend's 403" (F0's UX-nicety-not-security-boundary
   // position) — /parties is require_org_finance-gated (FINANCE_ROLES,

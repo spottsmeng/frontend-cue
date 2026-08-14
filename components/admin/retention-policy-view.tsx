@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { AdminPermissionError } from "@/lib/admin/members-hooks";
 import { useAdminProjectsQuery } from "@/lib/admin/projects-hooks";
@@ -30,6 +31,7 @@ import { SectionPanel } from "../living-wip/section-panel";
  * fetched `ProjectOut.vertical_id`, never fabricated.
  */
 export function RetentionPolicyView() {
+  const t = useTranslations("admin.retention");
   const { data: policies, isLoading, isError, error } = useRetentionPoliciesQuery();
   const { data: projects } = useAdminProjectsQuery();
   const knownVerticalId = projects?.[0]?.vertical_id;
@@ -50,9 +52,9 @@ export function RetentionPolicyView() {
         className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-2 text-sm"
       >
         <span className="text-ink">
-          {p.vertical_id ? "This organisation's vertical" : "All verticals"}
+          {p.vertical_id ? t("orgVertical") : t("allVerticals")}
           {" · "}
-          {p.region ?? "all regions"}
+          {p.region ?? t("allRegions")}
         </span>
         <span className="flex items-center gap-2">
           <input
@@ -62,7 +64,7 @@ export function RetentionPolicyView() {
             onChange={(e) => setEditingDays({ ...editingDays, [p.id]: e.target.value })}
             className="w-24 rounded-md border border-border bg-surface p-1 font-mono text-xs text-ink"
           />
-          <span className="text-xs text-ink-muted">days</span>
+          <span className="text-xs text-ink-muted">{t("daysUnit")}</span>
           <button
             type="button"
             disabled={updateMutation.isPending || Number(editValue) === p.retention_days}
@@ -71,7 +73,7 @@ export function RetentionPolicyView() {
             }
             className="rounded-md border border-border-strong px-2 py-1 text-xs text-ink-secondary hover:border-signal disabled:opacity-50"
           >
-            Save
+            {t("save")}
           </button>
           <button
             type="button"
@@ -79,7 +81,7 @@ export function RetentionPolicyView() {
             onClick={() => deleteMutation.mutate(p.id)}
             className="rounded-md border border-border-strong px-2 py-1 text-xs text-critical hover:border-critical disabled:opacity-50"
           >
-            Remove
+            {t("remove")}
           </button>
         </span>
       </li>
@@ -88,23 +90,18 @@ export function RetentionPolicyView() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4">
-      <SectionPanel title="Retention policy">
-        {isLoading && <p className="text-sm text-ink-muted">Loading…</p>}
+      <SectionPanel title={t("title")}>
+        {isLoading && <p className="text-sm text-ink-muted">{t("loading")}</p>}
         {isError &&
           (error instanceof AdminPermissionError ? (
-            <p className="text-sm text-ink-muted">
-              This page is Administrator only. You don&apos;t hold that role on any project in this
-              organisation.
-            </p>
+            <p className="text-sm text-ink-muted">{t("adminOnly")}</p>
           ) : (
-            <p className="text-sm text-critical">Could not load retention policy. Please retry.</p>
+            <p className="text-sm text-critical">{t("loadError")}</p>
           ))}
         {policies && (
           <div className="flex flex-col gap-4">
             {policies.length === 0 ? (
-              <p className="text-sm text-ink-muted">
-                No retention policy configured — no automatic narrowing/broadening is in effect.
-              </p>
+              <p className="text-sm text-ink-muted">{t("empty")}</p>
             ) : (
               <ul className="flex flex-col gap-1.5">{policies.map(row)}</ul>
             )}
@@ -125,30 +122,30 @@ export function RetentionPolicyView() {
               className="flex flex-wrap items-end gap-2 rounded-md border border-border p-3"
             >
               <label className="text-xs text-ink-secondary">
-                Vertical scope
+                {t("verticalScopeLabel")}
                 <select
                   value={scope}
                   onChange={(e) => setScope(e.target.value as "all" | "vertical")}
                   className="mt-1 block w-56 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
                 >
-                  <option value="all">All verticals</option>
+                  <option value="all">{t("allVerticals")}</option>
                   <option value="vertical" disabled={!knownVerticalId}>
-                    This organisation&apos;s vertical
+                    {t("orgVertical")}
                   </option>
                 </select>
               </label>
               <label className="text-xs text-ink-secondary">
-                Region (blank = all regions)
+                {t("regionLabel")}
                 <input
                   type="text"
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
-                  placeholder="e.g. SG"
+                  placeholder={t("regionPlaceholder")}
                   className="mt-1 block w-32 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
                 />
               </label>
               <label className="text-xs text-ink-secondary">
-                Retention (days)
+                {t("retentionDaysLabel")}
                 <input
                   required
                   type="number"
@@ -163,10 +160,10 @@ export function RetentionPolicyView() {
                 disabled={createMutation.isPending}
                 className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
               >
-                Add policy
+                {t("addPolicy")}
               </button>
               {createMutation.isError && (
-                <p className="w-full text-xs text-critical">Could not save — please retry.</p>
+                <p className="w-full text-xs text-critical">{t("saveError")}</p>
               )}
             </form>
           </div>

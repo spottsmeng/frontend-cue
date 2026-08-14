@@ -1,3 +1,6 @@
+import { useTranslations } from "next-intl";
+
+import type { OntologyTermOut } from "@/lib/api/types";
 import type { TimelineNode } from "@/lib/twin/presentation";
 
 import { EmptyState } from "../living-wip/empty-state";
@@ -22,13 +25,16 @@ import { TimelineNodeRow } from "./timeline-node";
  */
 export function Timeline({
   nodes,
+  milestoneTypes,
   onSelect,
 }: {
   nodes: TimelineNode[];
+  milestoneTypes: OntologyTermOut[] | undefined;
   onSelect: (milestoneId: string) => void;
 }) {
+  const t = useTranslations("twin.timeline");
   if (nodes.length === 0) {
-    return <EmptyState message="No milestones on this project's Twin yet." />;
+    return <EmptyState message={t("empty")} />;
   }
   return (
     <ol className="flex flex-col">
@@ -36,6 +42,7 @@ export function Timeline({
         <TimelineNodeRow
           key={node.milestoneId}
           node={node}
+          milestoneTypes={milestoneTypes}
           isLast={i === nodes.length - 1}
           onSelect={() => onSelect(node.milestoneId)}
         />

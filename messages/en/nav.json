@@ -1,0 +1,19 @@
+{
+  "admin": "Admin",
+  "vendors": "Vendors",
+  "analytics": "Analytics",
+  "theme": "Theme",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "language": "Language",
+  "highContrast": "High contrast",
+  "signOut": "Sign out",
+  "livingWip": "Living WIP",
+  "twin": "Twin",
+  "foresight": "Foresight",
+  "documents": "Documents",
+  "ask": "Ask",
+  "selectAProject": "Select a project",
+  "noProjectsYet": "No projects yet"
+}

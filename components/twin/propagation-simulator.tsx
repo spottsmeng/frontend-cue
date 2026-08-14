@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { MilestoneOut } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format";
@@ -35,6 +36,7 @@ export function PropagationSimulator({
   milestones: MilestoneOut[];
   currentBindingConstraintId: string | null;
 }) {
+  const t = useTranslations("twin.propagationSimulator");
   const [rows, setRows] = useState<CandidateRow[]>([emptyRow()]);
   const propagateMutation = usePropagateMutation(projectId);
   const milestonesById = new Map(milestones.map((m) => [m.id, m]));
@@ -42,15 +44,14 @@ export function PropagationSimulator({
   return (
     <div className="flex flex-col gap-3">
       <p className="rounded-md border border-dusk bg-dusk-soft px-3 py-2 text-xs text-dusk">
-        Simulation only — this never writes anything. Every candidate below is explored, not saved;
-        nothing on this project changes until a PM edits a milestone directly.
+        {t("simulationOnly")}
       </p>
 
       <div className="flex flex-col gap-2">
         {rows.map((row, i) => (
           <div key={row.key} className="flex flex-wrap items-end gap-2 rounded-md border border-border p-2">
             <label className="text-xs text-ink-secondary">
-              If milestone
+              {t("ifMilestone")}
               <select
                 value={row.milestoneId}
                 onChange={(e) => {
@@ -61,7 +62,7 @@ export function PropagationSimulator({
                 className="mt-1 block w-56 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
               >
                 <option value="" disabled>
-                  Select…
+                  {t("select")}
                 </option>
                 {milestones.map((m) => (
                   <option key={m.id} value={m.id}>
@@ -71,7 +72,7 @@ export function PropagationSimulator({
               </select>
             </label>
             <label className="text-xs text-ink-secondary">
-              lands on
+              {t("landsOn")}
               <input
                 type="datetime-local"
                 value={row.newDate}
@@ -89,7 +90,7 @@ export function PropagationSimulator({
                 onClick={() => setRows(rows.filter((r) => r.key !== row.key))}
                 className="rounded-md border border-border-strong px-2 py-1.5 text-xs text-ink-secondary"
               >
-                Remove
+                {t("remove")}
               </button>
             )}
           </div>
@@ -100,7 +101,7 @@ export function PropagationSimulator({
             onClick={() => setRows([...rows, emptyRow()])}
             className="rounded-md border border-border-strong px-3 py-1.5 text-xs text-ink-secondary hover:border-signal hover:text-signal"
           >
-            + Add another candidate (compare side by side)
+            {t("addAnother")}
           </button>
           <button
             type="button"
@@ -115,11 +116,11 @@ export function PropagationSimulator({
             }
             className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
-            {propagateMutation.isPending ? "Simulating…" : "Run simulation"}
+            {propagateMutation.isPending ? t("simulating") : t("runSimulation")}
           </button>
         </div>
         {propagateMutation.isError && (
-          <p className="text-xs text-critical">Could not run the simulation.</p>
+          <p className="text-xs text-critical">{t("runError")}</p>
         )}
       </div>
 
@@ -137,15 +138,15 @@ export function PropagationSimulator({
                 className="flex min-w-64 flex-1 flex-col gap-2 rounded-md border border-border-strong p-3"
               >
                 <h5 className="text-xs font-semibold text-ink">
-                  {shifted?.name ?? "milestone"} → {formatDateTime(result.new_date)}
+                  {shifted?.name ?? t("unnamedMilestone")} → {formatDateTime(result.new_date)}
                 </h5>
                 <p className="text-xs text-ink-secondary">
-                  Binding constraint after this shift:{" "}
+                  {t("bindingConstraintAfter")}{" "}
                   <span className={constraintChanged ? "font-medium text-dusk" : "text-ink"}>
-                    {constraintAfter?.name ?? "none"}
+                    {constraintAfter?.name ?? t("none")}
                   </span>
                   {constraintChanged && (
-                    <span className="ml-1 text-dusk">(changed from the current graph)</span>
+                    <span className="ml-1 text-dusk">{t("changedFromCurrent")}</span>
                   )}
                 </p>
                 <ul className="flex flex-col gap-1">
@@ -157,17 +158,18 @@ export function PropagationSimulator({
                         className="flex flex-col gap-0.5 rounded-md bg-surface-sunk p-1.5 text-xs"
                       >
                         <span className="text-ink">
-                          {affectedMilestone?.name ?? "unknown"}
+                          {affectedMilestone?.name ?? t("unknownMilestone")}
                           {a.propagation_stopped && (
                             <span className="ml-1.5 rounded-full bg-surface px-1.5 py-0.5 text-[10px] text-ink-muted">
-                              🔒 stopped here (fixed)
+                              {t("stoppedHere")}
                             </span>
                           )}
                         </span>
                         <span className="font-mono text-[11px] text-ink-muted">
-                          {formatDateTime(a.previous_earliest)} → {formatDateTime(a.new_earliest)} ·
-                          consumed {a.consumed_slack_days !== null ? `${a.consumed_slack_days.toFixed(1)}d` : "—"}{" "}
-                          slack
+                          {formatDateTime(a.previous_earliest)} → {formatDateTime(a.new_earliest)} ·{" "}
+                          {a.consumed_slack_days !== null
+                            ? t("consumedSlack", { days: a.consumed_slack_days.toFixed(1) })
+                            : t("consumedSlackUnknown")}
                         </span>
                       </li>
                     );

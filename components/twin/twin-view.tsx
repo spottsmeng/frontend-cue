@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useEffectiveRoles } from "@/lib/roles";
 import { joinTwinNodes } from "@/lib/twin/presentation";
 import {
   useDependenciesQuery,
   useMilestonesQuery,
+  useMilestoneTypeTermsQuery,
   useTwinConstraintQuery,
   useTwinCurrentQuery,
 } from "@/lib/twin/hooks";
@@ -29,22 +31,27 @@ import { Timeline } from "./timeline";
  * scale note.
  */
 export function TwinView({ projectId }: { projectId: string }) {
+  const t = useTranslations("twin.view");
   const { data: milestones, isLoading: milestonesLoading, isError: milestonesError } =
     useMilestonesQuery(projectId);
   const { data: dependencies, isLoading: dependenciesLoading } = useDependenciesQuery(projectId);
   const { data: twinCurrent, isLoading: twinLoading, isError: twinError } = useTwinCurrentQuery(projectId);
   const { data: constraint } = useTwinConstraintQuery(projectId);
   const { data: roles } = useEffectiveRoles(projectId);
+  // F9 gap-audit fix: same query AddMilestoneForm below already fetches
+  // (dedup'd by TanStack Query's own cache, not a second network call) —
+  // closes F2's own documented milestone-type-never-displayed debt.
+  const { data: milestoneTypes } = useMilestoneTypeTermsQuery(projectId);
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(null);
 
   const isLoading = milestonesLoading || dependenciesLoading || twinLoading;
   const isError = milestonesError || twinError;
 
   if (isLoading) {
-    return <p className="p-6 text-sm text-ink-muted">Loading Production Twin…</p>;
+    return <p className="p-6 text-sm text-ink-muted">{t("loading")}</p>;
   }
   if (isError || !milestones || !dependencies || !twinCurrent) {
-    return <p className="p-6 text-sm text-critical">Could not load the Twin. Please retry.</p>;
+    return <p className="p-6 text-sm text-critical">{t("error")}</p>;
   }
 
   const nodes = joinTwinNodes(milestones, twinCurrent);
@@ -60,7 +67,7 @@ export function TwinView({ projectId }: { projectId: string }) {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface/95 px-4 py-2.5 backdrop-blur">
-        <span className="text-sm font-medium text-ink">Production Twin</span>
+        <span className="text-sm font-medium text-ink">{t("title")}</span>
         <RecomputeButton projectId={projectId} />
       </div>
 
@@ -70,11 +77,11 @@ export function TwinView({ projectId }: { projectId: string }) {
           slackDays={constraint?.slack_days ?? null}
         />
 
-        <SectionPanel title="Timeline" action={<AddMilestoneForm projectId={projectId} effectiveRoles={roles?.roles} />}>
-          <Timeline nodes={nodes} onSelect={setSelectedMilestoneId} />
+        <SectionPanel title={t("sections.timeline")} action={<AddMilestoneForm projectId={projectId} effectiveRoles={roles?.roles} />}>
+          <Timeline nodes={nodes} milestoneTypes={milestoneTypes} onSelect={setSelectedMilestoneId} />
         </SectionPanel>
 
-        <SectionPanel title="Dependencies">
+        <SectionPanel title={t("sections.dependencies")}>
           <DependencyPanel
             projectId={projectId}
             milestones={milestones}
@@ -83,7 +90,7 @@ export function TwinView({ projectId }: { projectId: string }) {
           />
         </SectionPanel>
 
-        <SectionPanel title="Propagation simulator">
+        <SectionPanel title={t("sections.propagationSimulator")}>
           <PropagationSimulator
             projectId={projectId}
             milestones={milestones}
@@ -99,6 +106,7 @@ export function TwinView({ projectId }: { projectId: string }) {
           node={selectedNode}
           dependencies={dependencies}
           milestonesById={milestonesById}
+          milestoneTypes={milestoneTypes}
           effectiveRoles={roles?.roles}
           onClose={() => setSelectedMilestoneId(null)}
         />

@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans_SC, Noto_Sans_TC } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import Script from "next/script";
 import "./globals.css";
 
+import { auth } from "@/auth";
+import { apiServer } from "@/lib/api/server";
 import { Providers } from "./providers";
 
 const geistSans = Geist({
@@ -37,17 +41,38 @@ export const metadata: Metadata = {
   description: "Production intelligence for live brand activation",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // F9: high-contrast (NFR-ACC-03) is resolved server-side from the real
+  // per-user `GET /users/me` (backend/app/api/users.py) and painted
+  // directly into the SSR'd <html> attributes — no flash at all, since the
+  // value never depends on client-only storage the way theme's own
+  // beforeInteractive script below has to work around. Unauthenticated
+  // pages (e.g. /login) have no session to fetch against, so they simply
+  // render without the attribute — the correct default.
+  const session = await auth();
+  let highContrast = false;
+  if (session?.accessToken) {
+    const api = await apiServer();
+    const { data } = await api.GET("/users/me");
+    highContrast = data?.high_contrast ?? false;
+  }
+
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
     <html
-      lang="en"
+      lang={locale}
+      data-contrast={highContrast ? "high" : undefined}
       className={`${geistSans.variable} ${geistMono.variable} ${notoSansSC.variable} ${notoSansTC.variable} h-full antialiased`}
       // The beforeInteractive script below deliberately sets data-theme on
       // this element ahead of hydration (a returning visitor's stored theme
       // choice must paint on the first frame, not flash the OS theme then
       // snap) — the server render can never see localStorage, so this
       // attribute always legitimately differs at hydration time. Scoped to
-      // this element's own attributes only, not the subtree.
+      // this element's own attributes only, not the subtree. data-contrast
+      // above needs no equivalent script — it's resolved server-side, so
+      // server and client markup already agree.
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-bg text-ink font-sans">
@@ -66,7 +91,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             } catch (e) {}
           `}
         </Script>
-        <Providers>{children}</Providers>
+        <NextIntlClientProvider messages={messages}>
+          <Providers>{children}</Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

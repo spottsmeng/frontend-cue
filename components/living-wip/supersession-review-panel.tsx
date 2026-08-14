@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useSupersessionCandidatesQuery } from "@/lib/commitments/hooks";
 import type { MembershipRole } from "@/lib/api/types";
 
@@ -33,22 +35,21 @@ export function SupersessionReviewPanel({
   projectId: string;
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("livingWip.supersessionReview");
   const { data: candidates, isLoading, isError } = useSupersessionCandidatesQuery(projectId);
 
   const pending = (candidates ?? []).filter((c) => c.status === "pending");
   const reviewed = (candidates ?? []).filter((c) => c.status !== "pending");
 
   return (
-    <SectionPanel title="Commitment revisions">
-      {isLoading && <p className="text-sm text-ink-muted">Loading…</p>}
-      {isError && <p className="text-sm text-critical">Could not load commitment revisions.</p>}
-      {candidates && candidates.length === 0 && (
-        <EmptyState message="No commitment revisions have ever been proposed on this project." />
-      )}
+    <SectionPanel title={t("title")}>
+      {isLoading && <p className="text-sm text-ink-muted">{t("loading")}</p>}
+      {isError && <p className="text-sm text-critical">{t("loadError")}</p>}
+      {candidates && candidates.length === 0 && <EmptyState message={t("empty")} />}
 
       {pending.length > 0 && (
         <div className="mb-4">
-          <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">Needs review</p>
+          <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">{t("needsReview")}</p>
           <ul className="flex flex-col gap-2">
             {pending.map((candidate) => (
               <SupersessionCandidateRow
@@ -64,7 +65,9 @@ export function SupersessionReviewPanel({
 
       {reviewed.length > 0 && (
         <div>
-          <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">Recently reviewed</p>
+          <p className="mb-1.5 text-xs uppercase tracking-wide text-ink-muted">
+            {t("recentlyReviewed")}
+          </p>
           <ul className="flex flex-col gap-2">
             {reviewed.map((candidate) => (
               <SupersessionCandidateRow

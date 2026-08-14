@@ -1,19 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { useResolveDocumentVersionQuery } from "@/lib/ask/hooks";
 import { routeCitation } from "@/lib/ask/citation-routing";
 import type { Citation } from "@/lib/api/types";
-
-const SOURCE_LABEL: Record<Citation["source_type"], string> = {
-  commitment: "Commitment",
-  evidence: "Evidence",
-  budget: "Budget",
-  document_version: "Document",
-  audit_log: "Decision log",
-  deviation: "Deviation",
-};
 
 /**
  * §12.5: "every citation opens the source" — one real, clickable chip per
@@ -31,8 +23,9 @@ export function CitationChip({
   citation: Citation;
   onOpenCommitment: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("ask.citations");
   const route = routeCitation(projectId, citation);
-  const label = citation.label ?? SOURCE_LABEL[citation.source_type];
+  const label = citation.label ?? t(`sourceLabel.${citation.source_type}`);
 
   if (route.kind === "commitment") {
     return (
@@ -42,7 +35,7 @@ export function CitationChip({
         title={citation.snippet ?? undefined}
         className="inline-flex items-center gap-1 rounded-full border border-signal bg-signal-soft px-2 py-0.5 text-xs text-signal hover:opacity-80"
       >
-        {label} ↗
+        {t("open", { label })}
       </button>
     );
   }
@@ -54,7 +47,7 @@ export function CitationChip({
         title={citation.snippet ?? undefined}
         className="inline-flex items-center gap-1 rounded-full border border-signal bg-signal-soft px-2 py-0.5 text-xs text-signal hover:opacity-80"
       >
-        {label} ↗
+        {t("open", { label })}
       </Link>
     );
   }
@@ -68,7 +61,7 @@ export function CitationChip({
       title={route.reason}
       className="inline-flex items-center gap-1 rounded-full border border-border-strong px-2 py-0.5 text-xs text-ink-muted"
     >
-      {label} (not yet available)
+      {t("notYetAvailable", { label })}
     </span>
   );
 }
@@ -84,19 +77,20 @@ function DocumentVersionCitationChip({
   label: string;
   snippet?: string | null;
 }) {
+  const t = useTranslations("ask.citations");
   const { data: version, isLoading, isError } = useResolveDocumentVersionQuery(projectId, versionId);
 
   if (isLoading) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full border border-border-strong px-2 py-0.5 text-xs text-ink-muted">
-        {label} — resolving…
+        {t("resolving", { label })}
       </span>
     );
   }
   if (isError || !version) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full border border-border-strong px-2 py-0.5 text-xs text-ink-muted">
-        {label} (unresolvable)
+        {t("unresolvable", { label })}
       </span>
     );
   }
@@ -107,7 +101,7 @@ function DocumentVersionCitationChip({
       title={snippet ?? undefined}
       className="inline-flex items-center gap-1 rounded-full border border-signal bg-signal-soft px-2 py-0.5 text-xs text-signal hover:opacity-80"
     >
-      {label} (v{version.version_no}) ↗
+      {t("versionOpen", { label, versionNo: version.version_no })}
     </Link>
   );
 }

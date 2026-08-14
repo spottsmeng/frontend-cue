@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import type { RiskLogRow as RiskLogRowT } from "@/lib/api/types";
 
 import { ProvenanceChip } from "./provenance-chip";
@@ -16,6 +18,7 @@ export function RiskLogRow({
   risk: RiskLogRowT;
   onOpenCommitment: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("livingWip.riskLogRow");
   return (
     <li className="rounded-md border border-border p-2">
       <div className="flex items-start justify-between gap-2">
@@ -24,7 +27,8 @@ export function RiskLogRow({
       </div>
       <p className="mt-1 font-mono text-xs text-ink-muted">
         {risk.source} · {risk.severity} · {risk.status}
-        {risk.base_rate !== null && ` · base rate ${(risk.base_rate * 100).toFixed(0)}%`}
+        {risk.base_rate !== null &&
+          ` · ${t("baseRate", { pct: (risk.base_rate * 100).toFixed(0) })}`}
       </p>
     </li>
   );

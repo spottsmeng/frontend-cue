@@ -1,0 +1,156 @@
+{
+  "view": {
+    "title": "预警",
+    "sections": {
+      "risks": "风险",
+      "deviations": "偏差",
+      "notifications": "通知",
+      "webhooks": "Webhook 订阅",
+      "quietHours": "免打扰时段",
+      "thresholds": "预警阈值"
+    }
+  },
+  "deviationList": {
+    "status": "状态",
+    "allStatuses": "所有状态",
+    "loading": "正在加载偏差…",
+    "error": "无法加载偏差，请重试。",
+    "empty": "没有符合当前筛选条件的偏差。"
+  },
+  "deviationRow": {
+    "status": {
+      "autoDrafted": "自动生成 — 待审核",
+      "confirmed": "已确认",
+      "resolved": "已解决"
+    },
+    "classFallback": "分类 {id}",
+    "viewInLivingWip": "在实时进度中查看 →",
+    "viewInTwin": "在数字孪生中查看 →",
+    "resolvedFor": "解决日期 {date}，负责人 {owner}",
+    "confirm": "确认",
+    "cancel": "取消",
+    "confirmAsIs": "原样确认",
+    "editAndConfirm": "编辑后确认",
+    "confirmError": "确认失败，请重试。",
+    "resolutionDate": "解决日期",
+    "owner": "负责人",
+    "selectAProjectMember": "选择项目成员…",
+    "loadingMembers": "正在加载成员…",
+    "memberOption": "{name} — {role}",
+    "saveResolution": "保存解决方案",
+    "resolveError": "记录解决方案失败，请重试。",
+    "recordResolution": "记录解决方案"
+  },
+  "notificationList": {
+    "loading": "正在加载通知…",
+    "error": "无法加载通知，请重试。",
+    "empty": "此项目暂无通知。",
+    "relatedFindings": "{count} 条相关发现",
+    "deliveredViaWebhook": "已于 {date} 通过 Webhook 送达",
+    "notYetDelivered": "尚未送达",
+    "acknowledgedAt": "已于 {date} 确认知悉",
+    "acknowledge": "确认知悉"
+  },
+  "quietHoursPanel": {
+    "loading": "正在加载免打扰时段…",
+    "error": "无法加载免打扰时段，请重试。",
+    "nothingConfigured": "尚未配置 — 预警通知目前可在任意时段发送。",
+    "startLabel": "免打扰开始时间（项目当地时间）",
+    "endLabel": "免打扰结束时间",
+    "thresholdLabel": "现场活动例外阈值",
+    "explanation": "在项目声明的现场活动期间，达到或超过例外阈值的发现将绕过免打扰时段，立即送达。",
+    "saving": "正在保存…",
+    "save": "保存免打扰设置",
+    "saveError": "保存失败，请重试。"
+  },
+  "riskCard": {
+    "viewInLivingWip": "在实时进度中查看 →",
+    "viewInTwin": "在数字孪生中查看 →",
+    "viewSpecClaim": "在文档中查看规格声明 →",
+    "conflictSuffix": "{message} — 已刷新为该风险的当前状态。",
+    "updateError": "无法更新此风险，请重试。",
+    "baseRate": "历史基准发生率 {percent}%",
+    "notEnoughHistory": "历史数据尚不充分",
+    "hideDetails": "隐藏详情",
+    "details": "详情",
+    "findingKey": "发现标识：{key}",
+    "created": "创建时间：{date}",
+    "acknowledged": "确认时间：{date}",
+    "escalatedTo": "已升级至 {role}",
+    "escalatedToOnDate": "已于 {date} 升级至 {role}",
+    "resolved": "解决时间：{date}",
+    "superseded": "已被同一状况的最新发现取代",
+    "detail": "详细信息：{json}",
+    "acknowledgeAction": "确认知悉 — 暂停升级",
+    "resolveAction": "标记状况已解决",
+    "acknowledgeNote": "确认知悉仅会暂停升级，并不代表已处理。只有「解决」才会记录该状况已实际处理。"
+  },
+  "riskFeed": {
+    "status": "状态",
+    "allStatuses": "所有状态",
+    "source": "来源",
+    "allSources": "所有来源",
+    "severity": "严重程度",
+    "allSeverities": "所有严重程度",
+    "loading": "正在加载风险…",
+    "error": "无法加载风险列表，请重试。",
+    "empty": "没有符合当前筛选条件的风险。"
+  },
+  "riskStatusBadge": {
+    "open": "待处理",
+    "acknowledged": "已确认知悉",
+    "resolved": "已解决",
+    "superseded": "已被取代"
+  },
+  "severityBadge": {
+    "low": "低",
+    "medium": "中",
+    "high": "高",
+    "critical": "严重"
+  },
+  "thresholdConfigPanel": {
+    "loading": "正在加载阈值…",
+    "permissionError": "阈值配置仅限机构管理员操作。在本机构的任何项目中均未持有该角色，因此此处内容不可编辑。",
+    "loadError": "无法加载阈值，请重试。",
+    "metricLabel": {
+      "silenceMultiplier": "静默雷达 — 相对于供应商自身响应基准的倍数",
+      "escalationHours": "升级 — 未确认知悉即升级前的小时数",
+      "forecastSlackDays": "预测 — 视为高失约可能性的里程碑富余天数"
+    },
+    "save": "保存",
+    "removeOverride": "移除覆盖项",
+    "orgWideDefaults": "机构级默认值",
+    "notConfigured": "{label} — 尚未配置，当前生效的内置默认值为 {value}",
+    "thisProjectOverrides": "本项目的覆盖项",
+    "otherProjectOverrides": "其他项目的覆盖项",
+    "metric": "指标",
+    "scope": "适用范围",
+    "scopeProject": "仅本项目",
+    "scopeOrg": "机构级",
+    "value": "数值",
+    "addOverride": "添加覆盖项",
+    "saveError": "保存失败，请重试。"
+  },
+  "webhookAdminPanel": {
+    "loading": "正在加载 Webhook…",
+    "error": "无法加载 Webhook，请重试。",
+    "empty": "此项目尚无 Webhook 订阅。",
+    "active": "已启用",
+    "inactive": "已停用",
+    "created": "创建于 {date}",
+    "delete": "删除",
+    "url": "URL",
+    "events": "事件",
+    "creating": "正在创建…",
+    "createWebhook": "创建 Webhook",
+    "createError": "创建 Webhook 失败，请重试。"
+  },
+  "webhookSecretDialog": {
+    "dialogLabel": "Webhook 签名密钥",
+    "heading": "请立即保存此签名密钥",
+    "explanation": "此密钥仅显示这一次。如果遗失，请删除此 Webhook 后重新创建一个。",
+    "copied": "已复制",
+    "copy": "复制",
+    "done": "完成 — 已保存"
+  }
+}

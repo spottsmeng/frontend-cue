@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { DependencyOut, MembershipRole, MilestoneOut } from "@/lib/api/types";
 import { hasAnyRole, WRITE_ROLES } from "@/lib/roles";
@@ -33,6 +34,7 @@ export function DependencyPanel({
   dependencies: DependencyOut[];
   effectiveRoles: MembershipRole[] | undefined;
 }) {
+  const t = useTranslations("twin.dependencyPanel");
   const milestonesById = new Map(milestones.map((m) => [m.id, m]));
   const canWrite = hasAnyRole(effectiveRoles, WRITE_ROLES);
 
@@ -48,7 +50,7 @@ export function DependencyPanel({
   return (
     <div className="flex flex-col gap-3">
       {dependencies.length === 0 ? (
-        <EmptyState message="No dependency edges on this project's Twin yet." />
+        <EmptyState message={t("empty")} />
       ) : (
         <ul className="flex flex-col gap-1.5">
           {dependencies.map((edge) => {
@@ -61,13 +63,13 @@ export function DependencyPanel({
                 className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-2 text-sm"
               >
                 <span className="text-ink">
-                  {upstream?.name ?? "unknown"} <span className="text-ink-muted">→</span>{" "}
-                  {downstream?.name ?? "unknown"}
+                  {upstream?.name ?? t("unknownMilestone")} <span className="text-ink-muted">→</span>{" "}
+                  {downstream?.name ?? t("unknownMilestone")}
                 </span>
                 {canWrite ? (
                   <span className="flex items-center gap-2">
                     <label className="flex items-center gap-1 text-xs text-ink-secondary">
-                      lag
+                      {t("lagPrefix")}
                       <input
                         type="number"
                         min={0}
@@ -77,7 +79,7 @@ export function DependencyPanel({
                         }
                         className="w-16 rounded-md border border-border bg-surface p-1 font-mono text-xs text-ink"
                       />
-                      d
+                      {t("lagSuffix")}
                     </label>
                     <button
                       type="button"
@@ -90,7 +92,7 @@ export function DependencyPanel({
                       }
                       className="rounded-md border border-border-strong px-2 py-1 text-xs text-ink-secondary hover:border-signal disabled:opacity-50"
                     >
-                      Save
+                      {t("save")}
                     </button>
                     <button
                       type="button"
@@ -98,11 +100,11 @@ export function DependencyPanel({
                       onClick={() => deleteMutation.mutate(edge.id)}
                       className="rounded-md border border-border-strong px-2 py-1 text-xs text-critical hover:border-critical disabled:opacity-50"
                     >
-                      Remove
+                      {t("remove")}
                     </button>
                   </span>
                 ) : (
-                  <span className="font-mono text-xs text-ink-muted">lag {edge.lag_days}d</span>
+                  <span className="font-mono text-xs text-ink-muted">{t("lagDays", { days: edge.lag_days })}</span>
                 )}
               </li>
             );
@@ -139,7 +141,7 @@ export function DependencyPanel({
           className="flex flex-wrap items-end gap-2 rounded-md border border-border p-3"
         >
           <label className="text-xs text-ink-secondary">
-            Upstream
+            {t("upstream")}
             <select
               required
               value={upstreamId}
@@ -147,7 +149,7 @@ export function DependencyPanel({
               className="mt-1 block w-48 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
             >
               <option value="" disabled>
-                Select…
+                {t("select")}
               </option>
               {milestones.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -160,7 +162,7 @@ export function DependencyPanel({
             →
           </span>
           <label className="text-xs text-ink-secondary">
-            Downstream
+            {t("downstream")}
             <select
               required
               value={downstreamId}
@@ -168,7 +170,7 @@ export function DependencyPanel({
               className="mt-1 block w-48 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
             >
               <option value="" disabled>
-                Select…
+                {t("select")}
               </option>
               {milestones.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -178,7 +180,7 @@ export function DependencyPanel({
             </select>
           </label>
           <label className="text-xs text-ink-secondary">
-            Lag (days)
+            {t("lagDaysLabel")}
             <input
               type="number"
               min={0}
@@ -192,11 +194,11 @@ export function DependencyPanel({
             disabled={createMutation.isPending}
             className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
-            {createMutation.isPending ? "Adding…" : "Add dependency"}
+            {createMutation.isPending ? t("adding") : t("add")}
           </button>
           {cycleError && (
             <p className="w-full text-xs text-critical">
-              Rejected — {cycleError} Remove or rewire an existing edge before retrying.
+              {t("rejected", { error: cycleError })}
             </p>
           )}
         </form>

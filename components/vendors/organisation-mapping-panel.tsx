@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { formatDate } from "@/lib/format";
 import {
@@ -29,6 +30,7 @@ import {
  * expected outcome, not a bug.
  */
 export function OrganisationMappingPanel({ partyId }: { partyId: string }) {
+  const t = useTranslations("vendors.organisationMappingPanel");
   const { data, isLoading, isError, error } = useVendorOrganisationHistoryQuery(partyId, true);
   const { data: vendorOrgs } = useVendorListQuery({ type: "vendor_org" });
   const setOrganisationMutation = useSetOrganisationMutation(partyId);
@@ -40,22 +42,21 @@ export function OrganisationMappingPanel({ partyId }: { partyId: string }) {
     if (error instanceof VendorOrganisationPermissionError) {
       return (
         <p className="text-sm text-ink-muted">
-          You don&apos;t currently hold a Finance/Procurement or administrator role on any project in
-          this organisation, so this section isn&apos;t visible to you.
+          {t("financeOnly")}
         </p>
       );
     }
-    return <p className="text-sm text-critical">Could not load organisation history. Please retry.</p>;
+    return <p className="text-sm text-critical">{t("loadError")}</p>;
   }
 
-  if (isLoading) return <p className="text-sm text-ink-muted">Loading…</p>;
+  if (isLoading) return <p className="text-sm text-ink-muted">{t("loading")}</p>;
 
   const history = data ?? [];
 
   return (
     <div className="flex flex-col gap-3">
       {history.length === 0 ? (
-        <p className="text-sm text-ink-muted">No organisation mapping recorded for this contact.</p>
+        <p className="text-sm text-ink-muted">{t("empty")}</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
           {history.map((row) => (
@@ -64,17 +65,17 @@ export function OrganisationMappingPanel({ partyId }: { partyId: string }) {
               className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border px-3 py-2 text-sm"
             >
               <span className="text-ink">
-                {row.role_title ?? "Represents"} —{" "}
+                {row.role_title ?? t("represents")} —{" "}
                 <Link
                   href={`/vendors/${row.organisation_party_id}`}
                   className="text-signal hover:underline"
                 >
-                  view vendor
+                  {t("viewVendor")}
                 </Link>
               </span>
               <span className="font-mono text-xs text-ink-muted">
                 {formatDate(row.effective_from)} –{" "}
-                {row.effective_to ? formatDate(row.effective_to) : "present"}
+                {row.effective_to ? formatDate(row.effective_to) : t("present")}
               </span>
             </li>
           ))}
@@ -93,13 +94,13 @@ export function OrganisationMappingPanel({ partyId }: { partyId: string }) {
         className="flex flex-wrap items-end gap-2 rounded-md border border-border p-3"
       >
         <label className="text-xs text-ink-secondary">
-          Vendor
+          {t("vendorLabel")}
           <select
             value={organisationPartyId}
             onChange={(e) => setOrganisationPartyId(e.target.value)}
             className="mt-1 block w-56 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
           >
-            <option value="">Select a vendor…</option>
+            <option value="">{t("selectVendor")}</option>
             {vendorOrgs?.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.display_name}
@@ -108,12 +109,12 @@ export function OrganisationMappingPanel({ partyId }: { partyId: string }) {
           </select>
         </label>
         <label className="text-xs text-ink-secondary">
-          Role title (optional)
+          {t("roleTitleLabel")}
           <input
             type="text"
             value={roleTitle}
             onChange={(e) => setRoleTitle(e.target.value)}
-            placeholder="e.g. Account Director"
+            placeholder={t("roleTitlePlaceholder")}
             className="mt-1 block w-48 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
           />
         </label>
@@ -122,16 +123,15 @@ export function OrganisationMappingPanel({ partyId }: { partyId: string }) {
           disabled={!organisationPartyId || setOrganisationMutation.isPending}
           className="rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
         >
-          Set organisation
+          {t("setOrganisation")}
         </button>
         {setOrganisationMutation.isError &&
           (setOrganisationMutation.error instanceof VendorOrganisationWritePermissionError ? (
             <p className="w-full text-xs text-ink-muted">
-              Setting this mapping is Administrator only — you don&apos;t hold that role on any
-              project in this organisation.
+              {t("adminOnly")}
             </p>
           ) : (
-            <p className="w-full text-xs text-critical">Could not save — please retry.</p>
+            <p className="w-full text-xs text-critical">{t("saveError")}</p>
           ))}
       </form>
     </div>

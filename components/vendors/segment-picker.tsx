@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { distinctArchetypeCodes, useProjectsQuery, useVendorCategoryTermsQuery } from "@/lib/vendors/hooks";
 import type { VendorSegment } from "@/lib/vendors/hooks";
 
@@ -23,6 +25,7 @@ export function SegmentPicker({
   segment: VendorSegment;
   onChange: (segment: VendorSegment) => void;
 }) {
+  const t = useTranslations("vendors.segmentPicker");
   const { data: projects } = useProjectsQuery();
   const anyProjectId = projects?.[0]?.id;
   const { data: categoryTerms } = useVendorCategoryTermsQuery(anyProjectId);
@@ -31,13 +34,13 @@ export function SegmentPicker({
   return (
     <div className="flex flex-wrap items-end gap-3">
       <label className="text-xs text-ink-secondary">
-        Event archetype
+        {t("eventArchetype")}
         <select
           value={segment.eventArchetype ?? ""}
           onChange={(e) => onChange({ ...segment, eventArchetype: e.target.value || undefined })}
           className="mt-1 block w-56 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
         >
-          <option value="">All archetypes</option>
+          <option value="">{t("allArchetypes")}</option>
           {archetypeCodes.map((code) => (
             <option key={code} value={code}>
               {code}
@@ -47,28 +50,28 @@ export function SegmentPicker({
       </label>
 
       <label className="text-xs text-ink-secondary">
-        Vendor category
+        {t("vendorCategory")}
         <select
           value={segment.vendorCategory ?? ""}
           onChange={(e) => onChange({ ...segment, vendorCategory: e.target.value || undefined })}
           className="mt-1 block w-56 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
         >
-          <option value="">This vendor&apos;s own category</option>
-          {categoryTerms?.map((t) => (
-            <option key={t.code} value={t.code}>
-              {t.label_en}
+          <option value="">{t("ownCategory")}</option>
+          {categoryTerms?.map((term) => (
+            <option key={term.code} value={term.code}>
+              {term.label_en}
             </option>
           ))}
         </select>
       </label>
 
       <label className="text-xs text-ink-secondary">
-        City
+        {t("city")}
         <input
           type="text"
           value={segment.city ?? ""}
           onChange={(e) => onChange({ ...segment, city: e.target.value || undefined })}
-          placeholder="This vendor's own city"
+          placeholder={t("cityPlaceholder")}
           className="mt-1 block w-44 rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
         />
       </label>

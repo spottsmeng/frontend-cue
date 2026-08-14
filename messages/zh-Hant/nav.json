@@ -1,0 +1,19 @@
+{
+  "admin": "管理",
+  "vendors": "供應商",
+  "analytics": "分析",
+  "theme": "主題",
+  "themeSystem": "跟隨系統",
+  "themeLight": "淺色",
+  "themeDark": "深色",
+  "language": "語言",
+  "highContrast": "高對比度",
+  "signOut": "登出",
+  "livingWip": "即時進度",
+  "twin": "數位孿生",
+  "foresight": "預警",
+  "documents": "文件",
+  "ask": "問答",
+  "selectAProject": "選擇一個專案",
+  "noProjectsYet": "暫無專案"
+}

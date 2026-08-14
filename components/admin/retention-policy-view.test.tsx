@@ -1,6 +1,7 @@
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { renderWithIntl as render } from "@/lib/test-utils";
 import { AdminPermissionError } from "@/lib/admin/members-hooks";
 import type { RetentionPolicyOut } from "@/lib/api/types";
 

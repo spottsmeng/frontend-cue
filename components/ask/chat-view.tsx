@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAskQueryMutation } from "@/lib/ask/hooks";
 import type { AskAnswer } from "@/lib/api/types";
@@ -31,6 +32,7 @@ export function ChatView({
   projectId: string;
   onOpenCommitment: (commitmentId: string) => void;
 }) {
+  const t = useTranslations("ask.chat");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [question, setQuestion] = useState("");
@@ -74,7 +76,7 @@ export function ChatView({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <p className="text-xs text-ink-muted">
-          {conversationId ? "Follow-up questions use this conversation's own context." : "Ask anything about this project — English or Chinese."}
+          {conversationId ? t("contextHint") : t("freshHint")}
         </p>
         {(turns.length > 0 || conversationId) && (
           <button
@@ -86,7 +88,7 @@ export function ChatView({
             }}
             className="rounded-md border border-border-strong px-2.5 py-1 text-xs text-ink-secondary hover:border-signal hover:text-signal"
           >
-            New conversation
+            {t("newConversation")}
           </button>
         )}
       </div>
@@ -98,12 +100,17 @@ export function ChatView({
 
             {turn.error && (
               <p className="self-start rounded-lg border border-critical bg-critical-soft px-3 py-2 text-sm text-critical">
-                Could not reach CUE — please try again.
+                {t("error")}
               </p>
             )}
 
             {!turn.error && !turn.answer && (
-              <p className="self-start text-sm text-ink-muted">Thinking — this can take a few seconds…</p>
+              // NFR-PRF-04's own real budget (p50 ≤3s, p95 ≤8s) — honest about
+              // the tail, not just "a few seconds" (F9's own loading-state-
+              // honesty instruction: a spinner with no sense of expected
+              // duration is a bad UX regardless of whether the backend is "on
+              // budget").
+              <p className="self-start text-sm text-ink-muted">{t("thinking")}</p>
             )}
 
             {turn.answer?.available && (
@@ -139,8 +146,8 @@ export function ChatView({
         <input
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask a question about this project…"
-          aria-label="Ask a question"
+          placeholder={t("placeholder")}
+          aria-label={t("inputLabel")}
           className="flex-1 rounded-md border border-border bg-surface p-2 text-sm text-ink"
         />
         <button
@@ -148,7 +155,7 @@ export function ChatView({
           disabled={askMutation.isPending || !question.trim()}
           className="rounded-md bg-signal px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
         >
-          {askMutation.isPending ? "Asking…" : "Ask"}
+          {askMutation.isPending ? t("submitting") : t("submit")}
         </button>
       </form>
     </div>

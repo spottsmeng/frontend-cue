@@ -22,6 +22,18 @@
    override that must win both directions. F0 (frontend/PROGRESS.md) is
    what wires an actual toggle to set that attribute — the CSS contract
    here is ready for it, doesn't require it.
+
+   A fourth, orthogonal state — `[data-contrast="high"]` (F9, NFR-ACC-03) —
+   slots into this exact seam rather than a parallel mechanism, per
+   frontend/DESIGN.md's own instruction. It's crossed with theme, not a
+   theme of its own: the same three-block cascade shape above
+   (unqualified default / `@media (prefers-color-scheme: dark)` /
+   explicit `[data-theme="dark"]`), each block additionally qualified with
+   `[data-contrast="high"]`, so "high contrast + light" and "high contrast
+   + dark" each resolve to their own real, WCAG-verified values rather
+   than one mode bolted onto the other. Real, measured contrast ratios
+   (WCAG relative-luminance formula, not eyeballed) recorded per token
+   below — see frontend/PROGRESS.md's F9 notes for the full before/after.
    ========================================================================== */
 
 :root {
@@ -36,31 +48,50 @@
   --border-strong: #CDD2DA;
   --ink:           #14171C;
   --ink-secondary: #4A5262;
-  --ink-muted:     #7C8494;
+  /* F9's real axe-core run (frontend/PROGRESS.md's F9 notes) caught the
+     original #7C8494 at 3.38–3.75:1 against every surface it's actually
+     used on — a genuine WCAG 1.4.3 text-contrast fail (< 4.5:1), not the
+     "fill contrast" tradeoff below. Darkened to clear >=4.5:1 everywhere,
+     measured, not eyeballed. */
+  --ink-muted:     #5F6779;
 
   /* Brand triad — Signal / Dusk / Bloom. Deliberately clear of red/amber/
      green (PRD §12.1: "semantic colour is distinct from brand colour").
      Validated with the dataviz skill's validate_palette.js: worst adjacent
      pair ΔE 12.6 (deutan CVD) / 16.6 (normal vision) in dark mode, both
-     clear of the 8/15 gates — see frontend/DESIGN.md for the full run. */
-  --signal:      #2A78D6;   /* primary — actions, links, focus ring */
+     clear of the 8/15 gates — see frontend/DESIGN.md for the full run.
+     `--signal` re-stepped by F9 (frontend/PROGRESS.md's F9 notes): the
+     original #2A78D6 measured 4.41:1 on white/as a button fill under white
+     text — axe-core flagged it a real "serious" violation (just under
+     WCAG's 4.5:1 text floor, not a rounding artefact). Darkened one step;
+     every existing pairing only gains margin, none regresses. */
+  --signal:      #1F68B8;   /* primary — actions, links, focus ring */
   --signal-soft: #E4EFFB;
   --dusk:        #4A3AA7;   /* secondary — selection, emphasis */
   --dusk-soft:   #ECE8F8;
   --bloom:       #C43D78;   /* tertiary — sparse accents only, never a CTA */
   --bloom-soft:  #FBE7EF;
 
-  /* Status quad — fixed, reserved, never themed by brand. Always paired
-     with an icon + label (PRD §12.1); on light surfaces `warning` and
-     `serious` sit below 3:1 fill contrast by design — text/icon carries
-     the meaning, never the fill alone. */
-  --good:          #0CA30C;
+  /* Status quad — fixed, reserved, never themed by brand. F9's axe-core run
+     found (and re-stepped) a real WCAG 1.4.3 text-contrast failure at
+     pill scale (text-{good,warning,serious,critical} on the matching
+     -soft background — VerificationBadge/SeverityBadge's own pill shape):
+     originals measured 2.96–3.88:1, all under the 4.5:1 text floor. This
+     is a genuinely different check from the "fill contrast" note that
+     used to live here — that one was about the raw swatch as a *large
+     solid fill* (a button/ring), always paired with an icon+label per
+     PRD §12.1 and left as-is by design; this is small pill *text*, which
+     WCAG 1.4.3 does not exempt regardless of an adjacent icon. Re-stepped
+     values clear >=4.5:1 against their own -soft background and are
+     comfortably clear of 3:1 as a fill too (5.3–6.9:1 on white) — the old
+     under-3:1-fill caveat no longer describes these tokens. */
+  --good:          #067D06;
   --good-soft:     #E3F6E3;
-  --warning:       #C97D00;
+  --warning:       #8F5800;
   --warning-soft:  #FBEDD3;
-  --serious:       #C1552C;
+  --serious:       #96401F;
   --serious-soft:  #FBE4DA;
-  --critical:      #D03B3B;
+  --critical:      #B3201F;
   --critical-soft: #FBE1E1;
 
   /* Verification chips — a second, independent status axis (extraction
@@ -102,7 +133,10 @@
     --ink-secondary: #B7BECC;
     --ink-muted:     #8890A0;
 
-    --signal:      #3987E5;
+    /* F9's axe-core run also caught dark mode's verify-verified pill
+       (text-signal on signal-soft) at 3.99:1 — lightened one step to clear
+       4.5:1 (measured: 4.99:1 on signal-soft, 6.29:1 on surface). */
+    --signal:      #5A9AE8;
     --signal-soft: #172A42;
     --dusk:        #9184E8;
     --dusk-soft:   #241F42;
@@ -164,6 +198,50 @@
 
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
   --shadow-pop:  0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   High-contrast mode (NFR-ACC-03: "outdoor and stage-lighting conditions").
+   Values below are re-stepped against this session's own axe-core-driven
+   base-theme fixes just above (ink-muted/signal/good/warning/serious/
+   critical all moved once already to clear WCAG 1.4.3's 4.5:1 text floor) —
+   HC needs to still read as a real, distinguishable step beyond that
+   improved base, not a near-duplicate of it, so every HC value here targets
+   comfortably past AAA (7:1+) rather than the AA floor the base fix itself
+   already reached. Borders (barely visible at 1.18:1 light / 1.32:1 dark
+   against bg) are unaffected by the base-theme fix and keep their original
+   HC values.
+   -------------------------------------------------------------------------- */
+:root[data-contrast="high"] {
+  --ink-secondary: #2A303C; /* 12.46:1 vs light bg */
+  --ink-muted:     #525A6B; /* 6.51:1 vs light bg, still a real step past the re-stepped base's 5.10–5.67:1 */
+  --border:        #6B7280; /* 4.55:1 vs light bg, was 1.18:1 */
+  --border-strong: #454C5A; /* 8.12:1 vs light bg, was 1.43:1 */
+
+  --signal: #12467F; /* 9.51:1 vs white / 8.17:1 on signal-soft */
+
+  --good:     #014E01; /* 10.04:1 vs white / 8.87:1 on good-soft */
+  --warning:  #5A3600; /* 10.70:1 vs white / 9.25:1 on warning-soft */
+  --serious:  #6B2C15; /* 10.52:1 vs white / 8.62:1 on serious-soft */
+  --critical: #7E1615; /* 10.43:1 vs white / 8.43:1 on critical-soft */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-contrast="high"]:not([data-theme="light"]) {
+    --ink-muted:     #A5ACBC; /* 8.54:1 vs dark bg */
+    --border:        #5A6478; /* 3.27:1 vs dark bg, was 1.32:1 */
+    --border-strong: #7D869A; /* 5.32:1 vs dark bg, was 1.66:1 */
+    --signal: #8BBBF2; /* 9.71:1 vs dark surface / 7.25:1 on signal-soft */
+    /* good/warning/serious/critical already clear 5.3–6.9:1 in dark mode
+       (measured, not assumed) — left at their base dark values. */
+  }
+}
+
+:root[data-theme="dark"][data-contrast="high"] {
+  --ink-muted:     #A5ACBC;
+  --border:        #5A6478;
+  --border-strong: #7D869A;
+  --signal: #6FADEF;
 }
 
 /* --------------------------------------------------------------------------

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { formatDateTime } from "@/lib/format";
 import { useSnapshotsQuery } from "@/lib/reports/hooks";
 
@@ -10,14 +12,15 @@ import { SectionPanel } from "./section-panel";
  * `GET .../report/snapshots` is that history, each row its own
  * `download_url` straight from storage. */
 export function ExportHistoryPanel({ projectId }: { projectId: string }) {
+  const t = useTranslations("livingWip.exportHistory");
   const { data: snapshots, isLoading } = useSnapshotsQuery(projectId);
 
   return (
-    <SectionPanel title="Export history">
+    <SectionPanel title={t("title")}>
       {isLoading ? (
-        <p className="text-sm text-ink-muted">Loading…</p>
+        <p className="text-sm text-ink-muted">{t("loading")}</p>
       ) : !snapshots || snapshots.length === 0 ? (
-        <EmptyState message="No exports yet — use Freeze & Export above once the report is ready to share." />
+        <EmptyState message={t("empty")} />
       ) : (
         <ul className="flex flex-col gap-1.5">
           {snapshots.map((s) => (
@@ -34,7 +37,7 @@ export function ExportHistoryPanel({ projectId }: { projectId: string }) {
                 rel="noreferrer"
                 className="text-signal hover:underline"
               >
-                Download →
+                {t("download")}
               </a>
             </li>
           ))}

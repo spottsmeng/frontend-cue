@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { VendorPermissionError, useVendorQuery } from "@/lib/vendors/hooks";
 import type { VendorSegment } from "@/lib/vendors/hooks";
@@ -11,10 +12,10 @@ import { MetricHistoryChart } from "./metric-history-chart";
 import { OrganisationMappingPanel } from "./organisation-mapping-panel";
 import { VendorMetricsPanel } from "./vendor-metrics-panel";
 
-const TYPE_LABEL: Record<string, string> = {
-  person: "Person",
-  vendor_org: "Vendor",
-  internal_staff: "Internal",
+const TYPE_LABEL_KEY: Record<string, string> = {
+  person: "person",
+  vendor_org: "vendorOrg",
+  internal_staff: "internalStaff",
 };
 
 /**
@@ -27,28 +28,31 @@ const TYPE_LABEL: Record<string, string> = {
  * both need to stay in sync with the same segment.
  */
 export function VendorDetailView({ partyId }: { partyId: string }) {
+  const t = useTranslations("vendors.vendorDetailView");
+  const tType = useTranslations("vendors.partyType");
   const { data: party, isLoading, isError, error } = useVendorQuery(partyId);
   const [segment, setSegment] = useState<VendorSegment>({});
+
+  const typeKey = party ? TYPE_LABEL_KEY[party.type] : undefined;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface/95 px-4 py-2.5 backdrop-blur">
         <Link href="/vendors" className="text-sm text-ink-muted hover:text-signal">
-          ← Vendors
+          ← {t("backToVendors")}
         </Link>
-        <span className="text-sm font-medium text-ink">{party?.display_name ?? "Vendor"}</span>
+        <span className="text-sm font-medium text-ink">{party?.display_name ?? t("defaultTitle")}</span>
       </div>
 
       <div className="flex flex-col gap-4 px-4 py-4">
-        {isLoading && <p className="text-sm text-ink-muted">Loading…</p>}
+        {isLoading && <p className="text-sm text-ink-muted">{t("loading")}</p>}
         {isError &&
           (error instanceof VendorPermissionError ? (
             <p className="text-sm text-ink-muted">
-              This page is Finance/Procurement only. You don&apos;t hold that role on any project in
-              this organisation.
+              {t("financeOnly")}
             </p>
           ) : (
-            <p className="text-sm text-critical">Could not load this party. Please retry.</p>
+            <p className="text-sm text-critical">{t("loadError")}</p>
           ))}
 
         {party && (
@@ -57,25 +61,25 @@ export function VendorDetailView({ partyId }: { partyId: string }) {
               title={party.display_name}
               action={
                 <span className="rounded-full bg-surface-sunk px-2 py-0.5 text-xs font-medium text-ink-muted">
-                  {TYPE_LABEL[party.type] ?? party.type}
+                  {typeKey ? tType(typeKey) : party.type}
                 </span>
               }
             >
               <p className="font-mono text-xs text-ink-muted">
-                {party.city ?? "no city on file"} · added {party.created_at.slice(0, 10)}
+                {party.city ?? t("noCity")} · {t("addedOn")} {party.created_at.slice(0, 10)}
               </p>
             </SectionPanel>
 
-            <SectionPanel title="Reliability metrics">
+            <SectionPanel title={t("reliabilityMetrics")}>
               <VendorMetricsPanel partyId={partyId} segment={segment} onSegmentChange={setSegment} />
             </SectionPanel>
 
-            <SectionPanel title="History">
+            <SectionPanel title={t("history")}>
               <MetricHistoryChart partyId={partyId} eventArchetype={segment.eventArchetype} />
             </SectionPanel>
 
             {party.type === "person" && (
-              <SectionPanel title="Represents">
+              <SectionPanel title={t("represents")}>
                 <OrganisationMappingPanel partyId={partyId} />
               </SectionPanel>
             )}
