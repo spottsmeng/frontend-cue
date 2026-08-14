@@ -1469,20 +1469,35 @@ with any other spec file's own assertions.
 ### Testing
 
 `uv run pytest` (backend): 555 passing. `pnpm typecheck` / `pnpm lint` / `pnpm test` (122 passing,
-24 files) / `pnpm build`: all clean. `pnpm test:e2e` (full suite, `--workers=2` matching CI's own
-concurrency): 44 passed, 3 failed, 6 didn't run (cascading skips from `describe.serial` blocks after
-their own file's one failure) — every one of the 3 failures is a pre-existing, already-documented
-flakiness class this session's own changes didn't cause and confirmed doesn't touch:
-- `e2e/analytics.spec.ts` racing `e2e/admin.spec.ts`'s own "F7 E2E Project" creation (an F7/F8-owned
-  cross-file interaction, unrelated to any F9 surface).
-- `e2e/ask.spec.ts` and `e2e/living-wip.spec.ts`'s write-back-draft spec both hitting the real-Ollama
-  timing flakiness `backend/PROGRESS.md`'s and this file's own F7 notes already document at length
-  (this session ran locally against real Ollama, per this project's own dev-cost posture — CI's own
-  `FakeClient` provider doesn't have this problem).
+24 files) / `pnpm build`: all clean.
+
+**A real bug this session's own seed-script extension caused, caught by the actual pushed-commit CI
+run — not by any local test run first.** `e2e/analytics.spec.ts` hardcoded an expected "6" (the
+seed's own non-auto-verification-state commitment count) and read `projects[0]` from a live
+`GET /projects` call rather than looking up the seeded project by name. This session's own second
+`pending_verification` commitment (§9 above, added to give `hardening.spec.ts` a fixture the shared
+`living-wip.spec.ts` race couldn't touch) genuinely moved that baseline from 6 to 7 — a real,
+foreseeable consequence of the seed change this session's own local runs never caught, because
+`e2e/hardening.spec.ts`'s own admin-provisioning test (which creates a real second project,
+knocking "CUE Dev Project" out of `projects[0]`) happened not to interleave badly enough locally to
+expose the ordering half of the bug on every run. **The first real pushed-commit CI run for this
+session did expose it** — `analytics.spec.ts` failed there, `pnpm test:e2e` had been green locally
+moments before. Root-caused from the real CI log (`gh run view --log-failed`), not guessed: fixed by
+looking the seeded project up by its own known name ("CUE Dev Project") instead of trusting array
+order, and updating the hardcoded counts (6→7 baseline, 7→8 after the test's own +1). Re-verified
+locally and via a second real pushed commit before calling this milestone's own CI claim genuine.
+
+`pnpm test:e2e` (full suite, `--workers=2` matching CI's own concurrency), after that fix: 46 passed,
+2 failed, 5 didn't run (cascading skips from `describe.serial` blocks after their own file's one
+failure) — both remaining failures are the same pre-existing, already-documented real-Ollama timing
+flakiness class `backend/PROGRESS.md`'s and this file's own F7 notes already document at length
+(`e2e/ask.spec.ts`, `e2e/living-wip.spec.ts`'s write-back-draft spec) — this session ran locally
+against real Ollama, per this project's own dev-cost posture; CI's own `FakeClient` provider doesn't
+have this problem, confirmed by the real CI run itself passing both.
 
 `e2e/hardening.spec.ts` (8 specs) and `e2e/a11y.spec.ts` (8 specs) — the 16 specs this session itself
-added — all pass cleanly and reproducibly (re-run clean 3 times during debugging, not a one-off
-green).
+added — all pass cleanly and reproducibly (re-run clean multiple times during debugging, not a
+one-off green).
 
 ### Explicitly out of scope, as the prompt itself named
 
@@ -1501,8 +1516,11 @@ and this milestone's own pass closed the accessibility/localisation/hardening ga
 milestone's own prompt explicitly deferred to it (F0's reserved-but-unimplemented high-contrast CSS
 seam, every surface's colour-only-signal risk, the single-locale UI chrome, the honest-loading-state
 gap on Ask/Export). Real, current evidence: `uv run pytest` 555 passing (backend), `pnpm test` 122
-passing across 24 files (frontend), `pnpm test:e2e` 44/47 passing with the 3 remaining failures each
-a pre-existing, named, unrelated flakiness class — not this session's own regression — a real axe-
+passing across 24 files (frontend), `pnpm test:e2e` 46/53 passing with the 2 remaining failures a
+pre-existing, named, real-Ollama-only flakiness class CI's own `FakeClient` provider doesn't hit
+(confirmed by the real pushed-commit CI run itself — see this session's own "Testing" notes above for
+the one real regression this session's own seed-script change *did* cause and the real CI log that
+caught it, fixed before this milestone's own CI claim was made) — a real axe-
 core scan (0/8 critical/serious violations, down from a real, found-and-fixed color-contrast failure
 on every surface) and a real Lighthouse run (100/100 accessibility on every page audited, `finalDisplayedUrl`-verified as the real intended page each time), and two genuine keyboard-accessibility bugs
 (an unmanaged focus trap on every detail drawer in the app, an unlabelled form control gated to a

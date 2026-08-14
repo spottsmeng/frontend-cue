@@ -33,8 +33,11 @@ async function authHeaders(page: Page): Promise<{ Authorization: string }> {
 /**
  * F8's own TESTING EXPECTATION, against the real backend seeded by
  * scripts/seed_dev_data.py (no mocks — frontend/CLAUDE.md's testing
- * philosophy). The dev seed already gives "CUE Dev Project" 6 real
- * commitments requiring human verification (verification_state !== "auto")
+ * philosophy). The dev seed already gives "CUE Dev Project" 7 real
+ * commitments requiring human verification (verification_state !== "auto"
+ * — 6 originally, plus F9's own second dedicated `pending_verification`
+ * fixture, "Stage power distribution board," added for
+ * `e2e/hardening.spec.ts`'s own keyboard-only flow)
  * and one real LLMUsageEvent row (from the seed script's own Ask-index
  * embedding call) — this spec first asserts those render as real numbers,
  * then seeds more real activity out-of-band (`page.request` with this
@@ -57,8 +60,24 @@ test.describe.serial("Analytics dashboard (F8)", () => {
     const projects = (await (
       await page.request.get(`${API_URL}/projects`, { headers })
     ).json()) as { id: string; name: string }[];
-    const projectId = projects[0].id;
-    const projectName = projects[0].name;
+    // Not `projects[0]` — a real, live bug this session found: `GET
+    // /projects` has no guaranteed order, and this suite runs alongside
+    // other spec files that create real additional projects
+    // (`e2e/admin.spec.ts`'s own "F7 E2E Project" provisioning test,
+    // `e2e/hardening.spec.ts`'s own keyboard-only provisioning test) —
+    // under `fullyParallel`, any of them can land before this file's own
+    // `GET /projects` call and knock the seeded project out of index 0.
+    // This test's own real assertions (6 non-auto commitments, one real
+    // `LLMUsageEvent` row) only hold for the actual seeded project, by
+    // name, not "whichever project happened to sort first."
+    const seededProject = projects.find((p) => p.name === "CUE Dev Project");
+    if (!seededProject) {
+      throw new Error(
+        `seeded "CUE Dev Project" not found among ${projects.length} projects — cannot proceed`,
+      );
+    }
+    const projectId = seededProject.id;
+    const projectName = seededProject.name;
 
     await page.goto("/analytics");
     await expect(
@@ -70,7 +89,7 @@ test.describe.serial("Analytics dashboard (F8)", () => {
       .locator("section")
       .filter({ has: page.getByRole("heading", { name: "Verification burden" }) });
     await expect(burdenPanel.getByText(projectName)).toBeVisible();
-    await expect(burdenPanel.getByRole("cell", { name: "6", exact: true })).toBeVisible();
+    await expect(burdenPanel.getByRole("cell", { name: "7", exact: true })).toBeVisible();
 
     // --- Write-back reply rate: honestly empty before anything is sent ---
     const replyPanel = page
@@ -154,8 +173,8 @@ test.describe.serial("Analytics dashboard (F8)", () => {
 
     await page.reload();
 
-    // --- Verification burden moved from 6 to 7 ---------------------------
-    await expect(burdenPanel.getByRole("cell", { name: "7", exact: true })).toBeVisible();
+    // --- Verification burden moved from 7 to 8 ---------------------------
+    await expect(burdenPanel.getByRole("cell", { name: "8", exact: true })).toBeVisible();
 
     // --- Reply rate now shows the one real sent, not-yet-replied message -
     const replyRow = replyPanel.locator("tbody tr").first();
@@ -191,6 +210,6 @@ test.describe.serial("Analytics dashboard (F8)", () => {
     const burdenPanel = page
       .locator("section")
       .filter({ has: page.getByRole("heading", { name: "Verification burden" }) });
-    await expect(burdenPanel.getByRole("cell", { name: "7", exact: true })).toBeVisible();
+    await expect(burdenPanel.getByRole("cell", { name: "8", exact: true })).toBeVisible();
   });
 });
