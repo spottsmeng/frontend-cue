@@ -41,6 +41,7 @@
     "fallbackName": "文件",
     "tagsSectionTitle": "標籤",
     "versionsSectionTitle": "版本",
+    "activitySectionTitle": "活動紀錄",
     "loading": "載入中……",
     "loadError": "無法載入此文件。",
     "loadingVersionHistory": "正在載入版本歷史……"
@@ -50,7 +51,7 @@
     "current": "目前版本",
     "superseded": "已被取代",
     "download": "下載 →",
-    "approvedBy": "由 {name} 於 {date} 核准。寫回 SharePoint/Nextcloud 的作業可能已在背景執行——本版本未顯示其結果(詳見 frontend/PROGRESS.md)。",
+    "approvedBy": "由 {name} 於 {date} 核准。寫回 SharePoint 的結果請見下方的活動紀錄。",
     "notApproved": "尚未核准。",
     "notIndexed": "尚未建立索引——無法從此檔案擷取文字。請重新上傳並附上擷取文字,以便本文件可被搜尋。",
     "approve": "核准——將此版本設為已核准版本",
@@ -87,5 +88,17 @@
     "submit": "儲存標籤",
     "submitting": "儲存中……",
     "error": "無法儲存標籤。"
+  },
+  "activityLog": {
+    "loading": "正在載入活動紀錄……",
+    "loadError": "無法載入此文件的活動紀錄。",
+    "empty": "此文件尚無活動紀錄。",
+    "byOn": "{name} · {date}",
+    "documentCreated": "文件已建立",
+    "versionCreated": "已上傳新版本(v{versionNo})",
+    "versionApprovedSynced": "版本已核准並已同步至 SharePoint",
+    "versionApprovedSyncFailed": "版本已核准——同步至 SharePoint 失敗",
+    "tagged": "分類資訊已更新",
+    "projectArchived": "專案已封存"
   }
 }

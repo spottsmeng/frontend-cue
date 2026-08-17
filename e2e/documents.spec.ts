@@ -139,4 +139,48 @@ test.describe.serial("Documents (F4)", () => {
     await conflictLink.click();
     await expect(page.getByText("LED wall quotation.pdf").first()).toBeVisible();
   });
+
+  test("a document's real lifecycle — upload, approve, tag — shows up in its own Activity section", async ({
+    page,
+  }) => {
+    const uniqueName = `Truss schedule ${Date.now()}`;
+    const allDocsSection = page
+      .locator("section")
+      .filter({ has: page.getByRole("heading", { name: "All documents" }) });
+
+    await allDocsSection.getByRole("button", { name: "+ Upload document" }).click();
+    await allDocsSection.getByLabel("File", { exact: true }).setInputFiles({
+      name: "truss-schedule.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("%PDF-1.4 truss schedule fixture"),
+    });
+    await allDocsSection.getByLabel("Name").fill(uniqueName);
+    await allDocsSection.getByLabel(/Extracted text/).fill("Truss schedule, load rating 500kg.");
+    await allDocsSection.getByRole("button", { name: "Upload", exact: true }).click();
+    await allDocsSection.getByText(uniqueName).click();
+
+    const versionsSection = page
+      .locator("section")
+      .filter({ has: page.getByRole("heading", { name: "Versions" }) });
+    await versionsSection.getByRole("button", { name: /^Approve/ }).click();
+    await expect(versionsSection.getByText(/Approved by/)).toBeVisible();
+
+    const tagsSection = page.locator("section").filter({ has: page.getByRole("heading", { name: "Tags" }) });
+    await tagsSection.getByLabel("Class").selectOption({ index: 1 });
+    await tagsSection.getByRole("button", { name: "Save tags" }).click();
+
+    const activitySection = page
+      .locator("section")
+      .filter({ has: page.getByRole("heading", { name: "Activity" }) });
+    // Blind Spots item 3, closed properly rather than left as a JSON-only
+    // download: real DocumentAuditLog rows, in plain language, on this
+    // document's own page — a document with no history at all can't exist,
+    // so "Document created" is always present.
+    await expect(activitySection.getByText("Document created")).toBeVisible();
+    await expect(activitySection.getByText(/New version uploaded/)).toBeVisible();
+    await expect(activitySection.getByText(/^Version approved/)).toBeVisible();
+    await expect(activitySection.getByText("Classification updated")).toBeVisible();
+    // Never a raw action code or an opaque JSON blob leaking through.
+    await expect(activitySection.getByText(/^\{/)).toHaveCount(0);
+  });
 });

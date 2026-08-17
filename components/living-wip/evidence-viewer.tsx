@@ -6,6 +6,8 @@ import { useTranslations } from "next-intl";
 import { formatDateTime } from "@/lib/format";
 import type { EvidenceOut } from "@/lib/api/types";
 
+import { ConfidenceBadge } from "../ui/confidence-badge";
+
 /**
  * P7 ("the original language is never lost") + FR-VOI-05 (audio playback
  * from any evidence link) — every evidence span gets an original/
@@ -31,7 +33,8 @@ export function EvidenceViewer({ evidence }: { evidence: EvidenceOut[] }) {
   );
 }
 
-function EvidenceItem({ evidence }: { evidence: EvidenceOut }) {
+/** Exported standalone for evidence-viewer.test.tsx. */
+export function EvidenceItem({ evidence }: { evidence: EvidenceOut }) {
   const t = useTranslations("livingWip.evidenceViewer");
   const [showTranslation, setShowTranslation] = useState(false);
   const displayingTranslation = showTranslation && evidence.translation !== null;
@@ -72,9 +75,16 @@ function EvidenceItem({ evidence }: { evidence: EvidenceOut }) {
       </p>
 
       {evidence.media_ref && (
-        <audio controls src={evidence.media_ref} className="mt-2 w-full">
-          {t("noAudioSupport")}
-        </audio>
+        <>
+          <audio controls src={evidence.media_ref} className="mt-2 w-full">
+            {t("noAudioSupport")}
+          </audio>
+          {evidence.transcript_confidence !== null && (
+            <div className="mt-1.5">
+              <ConfidenceBadge value={evidence.transcript_confidence} />
+            </div>
+          )}
+        </>
       )}
     </li>
   );

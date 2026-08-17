@@ -1741,6 +1741,151 @@ fixed by polling the backend's own new `GET .../capture/status` endpoint (real a
    re-verified live: a fresh channel's pull now genuinely reaches `complete` with real captured
    messages instead of failing partway through.
 
+## CUE Blind Spots — frontend gap closure (2026-08-17)
+
+`backend/PROGRESS.md`'s own "Blind Spots" round closed eight backend gaps (a producer genuinely
+computed/recorded something, nothing read it back) — validating that round against the real product
+surfaced a **Class A gap** in this frontend's own sense (`CLAUDE.md`'s gap-audit convention: "a value
+is surfaced with no paired place to render it") on four of the eight fields, plus one stale piece of
+copy describing a backend limitation that no longer exists. `pnpm run generate:api` regenerated
+`lib/api/schema.gen.ts` against the now-running backend first — the four new fields didn't exist in
+the TypeScript client at all until that ran.
+
+**Stale copy fixed**: Admin → Export's own description used to read "Documents are not yet included
+in this bundle, a real, currently-open gap on the backend side" — literally true when F7 wrote it,
+false since the backend round above closed it. Reworded in all three locale bundles
+(`messages/{en,zh-Hans,zh-Hant}/admin.json`'s `export.description`) to describe what the bundle
+actually contains now, not what it used to lack.
+
+**New shared component, `components/ui/confidence-badge.tsx`** (`ConfidenceBadge`,
+`ManuallyVerifiedBadge`) — populates this project's previously-empty `components/ui/` with the one
+piece of visual language genuinely reused across four different screens once this round finished:
+Admin's Channel Identity review queue (pre-existing, refactored onto the shared component rather
+than left as a fifth near-duplicate), a spec claim's own extraction confidence, voice-note evidence's
+transcript confidence, and a captured message's identity-resolution confidence. Tone is value-driven
+(<70% → `warning`, the same `max_confidence` threshold `GET /admin/channel-identities` already uses
+server-side to mean "needs a look" — reused, not a second number invented here; ≥70% → quiet/neutral)
+rather than the single fixed `warning` tone the original Channel Identity screen hard-coded, since
+that screen only ever renders already-filtered low-confidence rows — a bare copy of its styling would
+have mislabelled a spec claim's 95% or a fully-resolved message's 100% as "needs review."
+
+**The four fields, one screen each:**
+
+1. **`SpecClaim.confidence`** (`components/documents/spec-claims-panel.tsx`) — a `ConfidenceBadge`
+   next to the attribute/value pills, omitted (not "0%") for a manually-entered claim with no model
+   score.
+2. **`Evidence.transcript_confidence`** (`components/living-wip/evidence-viewer.tsx`) — rendered
+   directly under the audio player `media_ref` already adds, the two FR-VOI fields that travel
+   together shown together, omitted for text-only evidence.
+3. **`Message.identity_confidence` / `identity_manually_verified`** (`components/admin/
+   channel-messages-view.tsx`) — added to the capture debug console's per-message row, next to the
+   existing extraction-status pill. `MessageRow` extracted out to a standalone exported component in
+   the same change (mirroring `NotificationRow`'s own exported-for-testing shape) — it was inline in
+   a `.map()` before, untestable on its own.
+4. **`AuditLog.detail`** (`components/living-wip/decision-log-row.tsx`) — the harder one, since
+   `detail` has no one fixed shape across the ~6 backend call sites that write to it (a correction's
+   `changes: {field: {before, after}}}`, a lifecycle transition's `trigger`, write-back's
+   `outbound_message_id`, a deviation resolution's `resolution_date`/`resolution_owner`, ...). Wrote
+   `formatDecisionDetail` (exported, pure, unit-tested independent of rendering) to special-case
+   `changes` into a readable "field: before → after" line — the single highest-value case, what a PM
+   actually corrected — and fall back to a plain "key: value" line for everything else, rather than
+   inventing a schema the backend doesn't have or silently dropping the other shapes. `DecisionLogRow`
+   is the one shared component F1/F5 already agreed to reuse (Living WIP's own Decision Log section,
+   the Successor Brief, and Ask's decision-history/period-digest summaries all render through it) —
+   one change here closes the gap on all four surfaces at once, not just Living WIP's.
+
+**Explicitly not done, named rather than silently skipped**: no new screen for the deviation → Notification
+dispatch (backend item 1) or the consent-record creation (backend item 2) — both already have real,
+working screens (Foresight's Notifications panel; Admin → Consent) that read the data correctly today,
+confirmed by walking both end to end against the real backend before starting this round. Nothing to
+build there.
+
+**Tested, for real:**
+
+- `pnpm typecheck` / `pnpm lint` / `pnpm build` all clean.
+- `pnpm test`: 141/141 (up from 122 — four new test files, `confidence-badge.test.tsx`,
+  `spec-claims-panel.test.tsx`, `channel-messages-view.test.tsx`, `decision-log-row.test.tsx`, plus
+  `evidence-viewer.test.tsx`'s pre-existing six-test suite extended with three more rather than
+  replaced — first-draft mistake caught before it shipped: an early pass at this file overwrote
+  it outright instead of extending it, silently deleting its original translation-toggle/audio-
+  player/empty-state coverage; caught by `git diff` showing the file as *modified* rather than
+  *new* before committing to it, restored from `git show HEAD` and merged properly), 19 net new test
+  cases, including the message-bundle key-parity check across all three locales for the new
+  `common.confidence`/`common.manuallyVerified` keys.
+- `pnpm exec playwright test e2e/documents.spec.ts e2e/admin.spec.ts e2e/living-wip.spec.ts:36` — the
+  real specs that exercise the four screens this round touched — 13/13 against the real backend.
+- **Two pre-existing, unrelated e2e failures investigated, not silently ignored**:
+  `ask.spec.ts`'s citation-opens-the-real-document test and `living-wip.spec.ts`'s
+  verify-then-export test both failed before this round's changes too — confirmed by `git stash`-ing
+  every change in this round and re-running both specs against the untouched code, same two failures,
+  same error text, byte-for-byte. Neither touches anything this round changed (Ask's citation-link
+  rendering, a Budget row's own verification badge) — a pre-existing local-environment/seed-data issue
+  (this session's backend had already been manually poked at outside the e2e suite's own seeding, per
+  the entries above), not a regression, and out of this round's own scope to chase further.
+
+`pnpm test` 141/141, `pnpm build` clean, 13/13 relevant Playwright specs clean.
+
+## Blind Spots item 3: a real document Activity view, not just a JSON download (2026-08-17)
+
+Direct follow-up to the round just above: item 3's own validation steps required opening a
+downloaded JSON file and searching it by hand for `document_audit_log`/`writeback_audit_log` — asked
+the user directly whether that was the intended long-term UX or worth a real screen. Decided: yes,
+worth it, scoped to a **document-scoped Activity view** (not a project-wide admin activity log —
+smaller, and every other audit-shaped surface in this app, Consent/Budget history/Decision Log,
+already lives at the resource it's about, not centralised) — `WritebackAuditLog` stays export-only
+for now, since the write-back ceiling already has its own real "current value" surface at Admin →
+Settings and didn't come up as a pain point the way document history did.
+
+This needed a real backend endpoint first (`backend/PROGRESS.md`'s matching entry) —
+`DocumentAuditLog` had no project-scoped read surface at all before this round, only the
+whole-bundle export.
+
+**What shipped:**
+
+- **`DocumentActivityLog`** (`components/documents/document-activity-log.tsx`) — a new "Activity"
+  section on the document detail page, alongside Tags and Versions. Each of the five real
+  `DocumentAuditAction` values gets its own plain-language line (`describeAction`, exhaustively
+  switched over the real backend enum, not a generic key:value fallback — `DocumentAuditLog.detail`
+  has one fixed shape per action, unlike `AuditLog.detail`'s free-form shape `decision-log-row.tsx`'s
+  `formatDecisionDetail` had to generalise over): "Document created," "New version uploaded (v2),"
+  "Version approved and synced to SharePoint" / "— SharePoint sync failed," "Classification updated."
+  Actor resolved to a real name via the same `resolveMemberLabel`/`useProjectMembersQuery` pair
+  `version-history.tsx` already uses.
+- **A second, real stale-copy fix, same shape as the Export page's** (previous round): `version-
+  History.approvedBy` used to read "...its outcome isn't surfaced by this build" — true when F4
+  wrote it, false now that Activity shows the real `sharepoint_write_back` outcome. Reworded to point
+  at the new section instead, all three locales.
+- New hook `useDocumentAuditLogQuery` (`lib/documents/hooks.ts`), invalidated by the same
+  `invalidateDocument` helper every other document mutation already goes through — approving a
+  version or saving tags refreshes the Activity list automatically, no manual refresh needed.
+
+**A real, repeatable environment gotcha, caught and understood, not silently worked around**: the
+first Playwright run of the new Activity test failed with the literal untranslated key strings
+rendering (`documents.activityLog.tagged`, etc.) instead of real text — not a code bug. Playwright's
+`webServer.reuseExistingServer` had reattached to a **production server process left running from an
+earlier command in this same session**, built before the new translation keys existed; `next start`
+serves whatever was baked in at `next build` time, so a stale server never picks up new message JSON
+without a rebuild. This is the production-build sibling of `frontend/PROGRESS.md`'s own prior
+"next-intl doesn't hot-reload new keys mid-session" gotcha (Capture debug console, part 2) — same
+root cause (a running process older than the source it's serving), different mechanism (build-time
+bundling vs. dev-server hot-reload). Fixed by killing the stale process and letting Playwright's own
+`pnpm build && pnpm start` run fresh; all five documents specs passed clean afterward.
+
+**Tested, for real:**
+
+- `pnpm typecheck`/`lint`/`build` clean.
+- `pnpm test`: 146/146 (5 new tests in `document-activity-log.test.tsx`, exercising all five real
+  actions including the sync-succeeded/sync-failed distinction) — deliberately asserts the actor
+  line with a regex (`/^Priya ·/`), not the exact `formatDateTime` output, since that's locale/
+  timezone-dependent and no other test in this suite hardcodes it either.
+- `pnpm exec playwright test e2e/documents.spec.ts` — a new, fully real test drives a document
+  through upload → approve → tag and asserts all four resulting facts appear in plain language in
+  the real Activity section, with no raw action code or JSON blob leaking through. 5/5, plus the
+  full `documents.spec.ts` + `admin.spec.ts` + `living-wip.spec.ts:36` set (14/14) re-run clean
+  against the corrected, fresh build.
+
+`pnpm test` 146/146, `pnpm build` clean, 14/14 relevant Playwright specs clean (fresh server).
+
 ## Updating this file
 
 When a milestone completes:

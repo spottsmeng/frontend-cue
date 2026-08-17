@@ -7,6 +7,7 @@ import { useResolveSpecClaimQuery, useSpecClaimsQuery } from "@/lib/documents/ho
 import type { SpecClaimOut } from "@/lib/api/types";
 
 import { EvidenceViewer } from "../living-wip/evidence-viewer";
+import { ConfidenceBadge } from "../ui/confidence-badge";
 
 /**
  * FR-DOC-08: structured spec-claim extraction (Annex A's Location ·
@@ -42,7 +43,8 @@ export function SpecClaimsPanel({
   );
 }
 
-function SpecClaimRow({ projectId, claim }: { projectId: string; claim: SpecClaimOut }) {
+/** Exported standalone for spec-claims-panel.test.tsx — pure presentational for a claim with no `contradicts` target. */
+export function SpecClaimRow({ projectId, claim }: { projectId: string; claim: SpecClaimOut }) {
   return (
     <li className="rounded-md border border-border-strong bg-surface-sunk p-2.5">
       <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -51,6 +53,8 @@ function SpecClaimRow({ projectId, claim }: { projectId: string; claim: SpecClai
         )}
         <span className="rounded-full bg-dusk-soft px-2 py-0.5 text-dusk">{claim.attribute}</span>
         <span className="font-mono text-ink">{claim.value}</span>
+        {/* null only for a manually-entered claim with no model score */}
+        {claim.confidence !== null && <ConfidenceBadge value={claim.confidence} />}
       </div>
 
       {claim.contradicts && <ContradictsLink projectId={projectId} claimId={claim.contradicts} />}

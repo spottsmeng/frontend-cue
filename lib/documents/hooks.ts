@@ -96,6 +96,36 @@ export function useDocumentLineageQuery(projectId: string, documentId: string) {
   });
 }
 
+export function documentAuditLogQueryKey(projectId: string, documentId: string) {
+  return ["documents", projectId, documentId, "audit-log"] as const;
+}
+
+/**
+ * The Documents page's own Activity tab — this document's real
+ * `DocumentAuditLog` trail (backend/app/api/documents.py's `read_document_
+ * audit_log`, a Blind Spots follow-up: these rows used to be reachable only
+ * through Admin's whole-project export bundle). Most-recent-first, per the
+ * endpoint's own docstring; two events written in the same request (a fresh
+ * upload's `document_created` immediately followed by `version_created`)
+ * can share an identical `occurred_at` (Postgres's `now()` is transaction-
+ * scoped, not per-statement) — their relative order isn't guaranteed, and
+ * this view doesn't pretend otherwise.
+ */
+export function useDocumentAuditLogQuery(projectId: string, documentId: string) {
+  const api = useApiClient();
+  return useQuery({
+    queryKey: documentAuditLogQueryKey(projectId, documentId),
+    queryFn: async () => {
+      const { data, error } = await api.GET(
+        "/projects/{project_id}/documents/{document_id}/audit-log",
+        { params: { path: { project_id: projectId, document_id: documentId } } },
+      );
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 function invalidateDocument(
   queryClient: ReturnType<typeof useQueryClient>,
   projectId: string,
@@ -104,6 +134,7 @@ function invalidateDocument(
   queryClient.invalidateQueries({ queryKey: documentsQueryKey(projectId) });
   queryClient.invalidateQueries({ queryKey: documentQueryKey(projectId, documentId) });
   queryClient.invalidateQueries({ queryKey: documentLineageQueryKey(projectId, documentId) });
+  queryClient.invalidateQueries({ queryKey: documentAuditLogQueryKey(projectId, documentId) });
 }
 
 // --- Upload / new version -------------------------------------------------

@@ -32,8 +32,6 @@
     "adminOnly": "此页面仅限管理员访问。您在本组织的任何项目中都不具备该角色。",
     "loadError": "无法加载渠道身份，请重试。",
     "empty": "当前没有需要审核的低置信度或未验证身份解析。",
-    "confidence": "置信度 {value}%",
-    "manuallyVerified": "已人工核实",
     "resolvedTo": "当前解析为 {party} · 更新于 {date}",
     "correctPartyLabel": "正确的供应商",
     "selectPartyPlaceholder": "选择供应商…",
@@ -157,7 +155,7 @@
   },
   "export": {
     "title": "完整项目导出",
-    "description": "FR-ADM-10 所定义的完整项目记录 — 台账、预算、审计日志。本导出包尚不包含文档，这是后端一个真实存在、尚待解决的缺口(本页面并未回避该问题)。",
+    "description": "FR-ADM-10 所定义的完整项目记录 — 台账、预算、文档与回写审计记录，以及完整的活动日志。",
     "downloadJson": "下载 JSON",
     "downloadCsv": "下载 CSV(压缩包)",
     "exportError": "导出失败，请重试。"

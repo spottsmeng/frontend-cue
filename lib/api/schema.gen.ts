@@ -739,7 +739,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Channels */
+        /**
+         * List Channels
+         * @description Attached channels only (`detached_at IS NULL`) — a detached channel
+         *     is offboarded, not archived-but-visible; its message history stays on
+         *     the project (`GET .../messages` before detach, or a direct `Message`
+         *     query) but it drops out of the picker/admin list the moment it's
+         *     detached.
+         */
         get: operations["list_channels_projects__project_id__channels_get"];
         put?: never;
         /**
@@ -809,9 +816,18 @@ export interface paths {
          *     revoke — a WhatsApp channel detached here must stop being captured on
          *     Layer A's side too, not just disappear from this project's own channel
          *     list. Same fail-closed ordering as attach: the allowlist revoke runs
-         *     before the Channel row is deleted, so a Layer A failure leaves the
-         *     Channel intact (retryable) instead of silently orphaning a still-active
-         *     capture grant.
+         *     before the Channel row is touched, so a Layer A failure leaves the
+         *     Channel attached (retryable) instead of silently orphaning a
+         *     still-active capture grant.
+         *
+         *     Soft-delete, not `session.delete()`: a real Channel row already has
+         *     `messages` hanging off it by the time anyone detaches it, and
+         *     `messages_channel_id_fkey` has no `ON DELETE` action — deliberately, per
+         *     CLAUDE.md's "no commitment without evidence" (a hard delete would either
+         *     violate that FK and 500, or cascade and silently destroy Evidence for
+         *     already-extracted commitments). `detached_at` stops capture without
+         *     losing history; re-attaching the same `external_ref` later inserts a
+         *     fresh Channel row (see attach_channel) rather than reviving this one.
          */
         delete: operations["detach_channel_projects__project_id__channels__channel_id__delete"];
         options?: never;
@@ -1435,6 +1451,41 @@ export interface paths {
          * @description FR-DOC-02/04: version lineage plus the unambiguous current pointer.
          */
         get: operations["read_lineage_projects__project_id__documents__document_id__lineage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/documents/{document_id}/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Document Audit Log
+         * @description The Documents page's own Activity tab — this document's real
+         *     `DocumentAuditLog` trail, most-recent-first (the same reverse-
+         *     chronological convention deviations/notifications already read in).
+         *     Previously reachable only through `/admin/export`'s whole-project,
+         *     org-admin-only bundle; any project member can read their own document's
+         *     activity here, same read tier as `/lineage` immediately above.
+         *     `project_archived` rows (document_id NULL, a project-wide fact, not any
+         *     one document's) never match this filter — deliberately out of scope for
+         *     a document-scoped view.
+         *
+         *     Two rows written in the same request (e.g. `create_document`'s
+         *     `document_created` immediately followed by `version_created`) can share
+         *     the identical `occurred_at` — Postgres's `now()` is fixed for the whole
+         *     transaction, not re-evaluated per statement — so their relative order
+         *     is genuinely undefined, not something this endpoint claims to resolve;
+         *     ordering is only meaningful across genuinely separate requests.
+         */
+        get: operations["read_document_audit_log_projects__project_id__documents__document_id__audit_log_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2726,6 +2777,8 @@ export interface components {
             display_name: string | null;
             /** Healthy */
             healthy: boolean;
+            /** Detached At */
+            detached_at: string | null;
             /**
              * Created At
              * Format: date-time
@@ -3127,6 +3180,10 @@ export interface components {
             from_state: string | null;
             /** To State */
             to_state: string | null;
+            /** Detail */
+            detail: {
+                [key: string]: unknown;
+            };
             provenance: components["schemas"]["ReportProvenance"];
         };
         /**
@@ -3411,6 +3468,48 @@ export interface components {
             resolution_owner: string;
         };
         /**
+         * DocumentAuditLogOut
+         * @description The Documents page's own Activity tab — one document's real
+         *     `DocumentAuditLog` trail (app/documents/models.py), previously reachable
+         *     only through `/admin/export`'s whole-project bundle. `document_id` is
+         *     always this document's own id here (the endpoint filters on it); it's
+         *     still on the response because `project_archived` rows share this same
+         *     model with `document_id` NULL — a client that ever aggregates rows from
+         *     more than one fetch needs to be able to tell them apart.
+         */
+        DocumentAuditLogOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Document Id */
+            document_id: string | null;
+            /** Document Version Id */
+            document_version_id: string | null;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "document_created" | "version_created" | "version_approved" | "auto_tagged" | "project_archived";
+            /** Actor Id */
+            actor_id: string | null;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /** Detail */
+            detail: {
+                [key: string]: unknown;
+            };
+        };
+        /**
          * DocumentLineageOut
          * @description FR-DOC-02/04: the full version history of one document, in order,
          *     with the currently-approved-and-authoritative version unambiguously
@@ -3558,6 +3657,8 @@ export interface components {
             span_end: number | null;
             /** Media Ref */
             media_ref: string | null;
+            /** Transcript Confidence */
+            transcript_confidence: number | null;
         };
         /** ForesightThresholdCreate */
         ForesightThresholdCreate: {
@@ -3738,6 +3839,10 @@ export interface components {
             sender_external_id: string;
             /** Author Party Id */
             author_party_id: string | null;
+            /** Identity Confidence */
+            identity_confidence: number | null;
+            /** Identity Manually Verified */
+            identity_manually_verified: boolean;
             /**
              * Sent At
              * Format: date-time
@@ -4866,6 +4971,8 @@ export interface components {
             value: string;
             /** Contradicts */
             contradicts: string | null;
+            /** Confidence */
+            confidence: number | null;
             /** Evidence */
             evidence: components["schemas"]["EvidenceOut"][];
         };
@@ -4907,6 +5014,8 @@ export interface components {
             value: string;
             /** Contradicts */
             contradicts: string | null;
+            /** Confidence */
+            confidence: number | null;
             /** Evidence */
             evidence: components["schemas"]["EvidenceOut"][];
             /**
@@ -7704,6 +7813,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DocumentLineageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_document_audit_log_projects__project_id__documents__document_id__audit_log_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentAuditLogOut"][];
                 };
             };
             /** @description Validation Error */

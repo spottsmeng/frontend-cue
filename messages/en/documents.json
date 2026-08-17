@@ -41,6 +41,7 @@
     "fallbackName": "Document",
     "tagsSectionTitle": "Tags",
     "versionsSectionTitle": "Versions",
+    "activitySectionTitle": "Activity",
     "loading": "Loading…",
     "loadError": "Could not load this document.",
     "loadingVersionHistory": "Loading version history…"
@@ -50,7 +51,7 @@
     "current": "Current",
     "superseded": "Superseded",
     "download": "Download →",
-    "approvedBy": "Approved by {name} on {date}. Write-back to SharePoint/Nextcloud may have run in the background — its outcome isn’t surfaced by this build (see frontend/PROGRESS.md).",
+    "approvedBy": "Approved by {name} on {date}. See Activity below for the SharePoint write-back outcome.",
     "notApproved": "Not yet approved.",
     "notIndexed": "Not yet indexed — no text could be extracted from this file. Re-upload a version with extracted text supplied to fix search for this document.",
     "approve": "Approve — this becomes the approved version",
@@ -87,5 +88,17 @@
     "submit": "Save tags",
     "submitting": "Saving…",
     "error": "Could not save tags."
+  },
+  "activityLog": {
+    "loading": "Loading activity…",
+    "loadError": "Could not load this document's activity.",
+    "empty": "No activity recorded for this document yet.",
+    "byOn": "{name} · {date}",
+    "documentCreated": "Document created",
+    "versionCreated": "New version uploaded (v{versionNo})",
+    "versionApprovedSynced": "Version approved and synced to SharePoint",
+    "versionApprovedSyncFailed": "Version approved — SharePoint sync failed",
+    "tagged": "Classification updated",
+    "projectArchived": "Project archived"
   }
 }

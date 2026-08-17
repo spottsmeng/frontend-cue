@@ -118,6 +118,8 @@ export type DocumentVersionOut = components["schemas"]["DocumentVersionOut"];
 export type DocumentLineageOut = components["schemas"]["DocumentLineageOut"];
 export type DocumentTagRequest = components["schemas"]["DocumentTagRequest"];
 export type DocumentSearchResult = components["schemas"]["DocumentSearchResult"];
+export type DocumentAuditLogOut = components["schemas"]["DocumentAuditLogOut"];
+export type DocumentAuditAction = DocumentAuditLogOut["action"];
 export type SpecClaimOut = components["schemas"]["SpecClaimOut"];
 export type SpecClaimResolvedOut = components["schemas"]["SpecClaimResolvedOut"];
 export type SpecClaimAttribute = SpecClaimOut["attribute"];
@@ -199,6 +201,7 @@ export type ChannelCreate = components["schemas"]["ChannelCreate"];
 export type ChannelTypeOut = components["schemas"]["ChannelTypeOut"];
 export type ChannelHealthEventOut = components["schemas"]["ChannelHealthEventOut"];
 export type ChannelHealthSignal = components["schemas"]["ChannelHealthSignal"];
+export type MessageOut = components["schemas"]["MessageOut"];
 
 export type ConsentRecordOut = components["schemas"]["ConsentRecordOut"];
 export type ConsentActionRequest = components["schemas"]["ConsentActionRequest"];

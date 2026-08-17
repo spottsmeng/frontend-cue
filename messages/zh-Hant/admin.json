@@ -32,8 +32,6 @@
     "adminOnly": "此頁面僅限管理員存取。您在本組織的任何專案中都不具備該角色。",
     "loadError": "無法載入渠道身分，請重試。",
     "empty": "目前沒有需要審核的低信賴度或未驗證身分解析。",
-    "confidence": "信賴度 {value}%",
-    "manuallyVerified": "已人工核實",
     "resolvedTo": "目前解析為 {party} · 更新於 {date}",
     "correctPartyLabel": "正確的供應商",
     "selectPartyPlaceholder": "選擇供應商…",
@@ -157,7 +155,7 @@
   },
   "export": {
     "title": "完整專案匯出",
-    "description": "FR-ADM-10 所定義的完整專案記錄 — 帳冊、預算、稽核日誌。此匯出包尚未包含文件，這是後端一項真實存在、尚待解決的缺口(本頁面並未迴避此問題)。",
+    "description": "FR-ADM-10 所定義的完整專案記錄 — 帳冊、預算、文件與回寫稽核紀錄，以及完整的活動日誌。",
     "downloadJson": "下載 JSON",
     "downloadCsv": "下載 CSV(壓縮檔)",
     "exportError": "匯出失敗，請重試。"

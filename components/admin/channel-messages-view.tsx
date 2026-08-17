@@ -11,8 +11,10 @@ import {
   usePullChannelNowMutation,
 } from "@/lib/admin/channels-hooks";
 import { formatDateTime } from "@/lib/format";
+import type { MessageOut } from "@/lib/api/types";
 
 import { SectionPanel } from "../living-wip/section-panel";
+import { ConfidenceBadge, ManuallyVerifiedBadge } from "../ui/confidence-badge";
 
 /**
  * The capture debug console — a real, admin-gated page (same `ADMIN_ROLES`
@@ -149,32 +151,44 @@ export function ChannelMessagesView({ projectId, channelId }: { projectId: strin
         {messages && messages.length > 0 && (
           <ul className="flex flex-col gap-2">
             {messages.map((m) => (
-              <li key={m.id} className="rounded-md border border-border p-2.5 text-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink-muted">
-                  <span className="font-mono">{m.sender_external_id}</span>
-                  <span className="font-mono">{formatDateTime(m.sent_at)}</span>
-                </div>
-                {m.text ? (
-                  <p className="mt-1.5 whitespace-pre-wrap text-ink" lang={m.language ?? undefined}>
-                    {m.text}
-                  </p>
-                ) : (
-                  <p className="mt-1.5 text-ink-muted italic">{t("debug.noText")}</p>
-                )}
-                <span
-                  className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                    m.extraction_attempted_at
-                      ? "bg-good-soft text-good"
-                      : "bg-warning-soft text-warning"
-                  }`}
-                >
-                  {m.extraction_attempted_at ? t("debug.extractionDone") : t("debug.extractionPending")}
-                </span>
-              </li>
+              <MessageRow key={m.id} message={m} />
             ))}
           </ul>
         )}
       </SectionPanel>
     </div>
+  );
+}
+
+/** Exported standalone for channel-messages-view.test.tsx — pure presentational, no hooks but i18n. */
+export function MessageRow({ message: m }: { message: MessageOut }) {
+  const t = useTranslations("admin.channels");
+  return (
+    <li className="rounded-md border border-border p-2.5 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink-muted">
+        <span className="font-mono">{m.sender_external_id}</span>
+        <span className="font-mono">{formatDateTime(m.sent_at)}</span>
+      </div>
+      {m.text ? (
+        <p className="mt-1.5 whitespace-pre-wrap text-ink" lang={m.language ?? undefined}>
+          {m.text}
+        </p>
+      ) : (
+        <p className="mt-1.5 text-ink-muted italic">{t("debug.noText")}</p>
+      )}
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+        <span
+          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+            m.extraction_attempted_at ? "bg-good-soft text-good" : "bg-warning-soft text-warning"
+          }`}
+        >
+          {m.extraction_attempted_at ? t("debug.extractionDone") : t("debug.extractionPending")}
+        </span>
+        {/* FR-NRM-03's own resolved-identity confidence — set at capture
+            time, always present once a Message has an author_party_id. */}
+        {m.identity_confidence !== null && <ConfidenceBadge value={m.identity_confidence} />}
+        {m.identity_manually_verified && <ManuallyVerifiedBadge />}
+      </div>
+    </li>
   );
 }

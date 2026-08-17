@@ -41,6 +41,7 @@
     "fallbackName": "文档",
     "tagsSectionTitle": "标签",
     "versionsSectionTitle": "版本",
+    "activitySectionTitle": "活动记录",
     "loading": "加载中……",
     "loadError": "无法加载此文档。",
     "loadingVersionHistory": "正在加载版本历史……"
@@ -50,7 +51,7 @@
     "current": "当前版本",
     "superseded": "已被替代",
     "download": "下载 →",
-    "approvedBy": "由 {name} 于 {date} 批准。写回 SharePoint/Nextcloud 的操作可能已在后台执行——本版本未显示其结果(详见 frontend/PROGRESS.md)。",
+    "approvedBy": "由 {name} 于 {date} 批准。写回 SharePoint 的结果请见下方的活动记录。",
     "notApproved": "尚未批准。",
     "notIndexed": "尚未建立索引——无法从此文件中提取文本。请重新上传并附上提取文本,以便本文档可被搜索。",
     "approve": "批准——将此版本设为已批准版本",
@@ -87,5 +88,17 @@
     "submit": "保存标签",
     "submitting": "保存中……",
     "error": "无法保存标签。"
+  },
+  "activityLog": {
+    "loading": "正在加载活动记录……",
+    "loadError": "无法加载此文档的活动记录。",
+    "empty": "此文档尚无活动记录。",
+    "byOn": "{name} · {date}",
+    "documentCreated": "文档已创建",
+    "versionCreated": "已上传新版本(v{versionNo})",
+    "versionApprovedSynced": "版本已批准并已同步至 SharePoint",
+    "versionApprovedSyncFailed": "版本已批准——同步至 SharePoint 失败",
+    "tagged": "分类信息已更新",
+    "projectArchived": "项目已归档"
   }
 }

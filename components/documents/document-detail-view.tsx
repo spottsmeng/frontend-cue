@@ -8,6 +8,7 @@ import { useDocumentLineageQuery, useDocumentQuery } from "@/lib/documents/hooks
 
 import { SectionPanel } from "../living-wip/section-panel";
 import { AddVersionForm } from "./add-version-form";
+import { DocumentActivityLog } from "./document-activity-log";
 import { DocumentTagForm } from "./document-tag-form";
 import { VersionHistory } from "./version-history";
 
@@ -56,6 +57,10 @@ export function DocumentDetailView({
           ) : (
             <p className="text-sm text-ink-muted">{t("loadingVersionHistory")}</p>
           )}
+        </SectionPanel>
+
+        <SectionPanel title={t("activitySectionTitle")}>
+          <DocumentActivityLog projectId={projectId} documentId={documentId} />
         </SectionPanel>
       </div>
     </div>

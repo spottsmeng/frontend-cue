@@ -12,5 +12,7 @@
   "back": "Back",
   "next": "Next",
   "noPermission": "You don't have permission to view this.",
-  "notYetMeasurable": "Not yet measurable"
+  "notYetMeasurable": "Not yet measurable",
+  "confidence": "confidence {value}%",
+  "manuallyVerified": "manually verified"
 }

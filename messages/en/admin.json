@@ -32,8 +32,6 @@
     "adminOnly": "This page is Administrator only. You don't hold that role on any project in this organisation.",
     "loadError": "Could not load channel identities. Please retry.",
     "empty": "No low-confidence or unverified identity resolutions to review right now.",
-    "confidence": "confidence {value}%",
-    "manuallyVerified": "manually verified",
     "resolvedTo": "currently resolved to {party} · updated {date}",
     "correctPartyLabel": "Correct party",
     "selectPartyPlaceholder": "Select a party…",
@@ -157,7 +155,7 @@
   },
   "export": {
     "title": "Full project export",
-    "description": "FR-ADM-10's complete project record — ledger, budgets, audit log. Documents are not yet included in this bundle, a real, currently-open gap on the backend side (not something this screen routes around).",
+    "description": "FR-ADM-10's complete project record — ledger, budgets, documents and write-back audit trails, and the full activity log.",
     "downloadJson": "Download JSON",
     "downloadCsv": "Download CSV (zip)",
     "exportError": "Export failed — please retry."

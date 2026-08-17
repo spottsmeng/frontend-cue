@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { renderWithIntl as render } from "@/lib/test-utils";
 import type { EvidenceOut } from "@/lib/api/types";
 
-import { EvidenceViewer } from "./evidence-viewer";
+import { EvidenceItem, EvidenceViewer } from "./evidence-viewer";
 
 const evidence: EvidenceOut = {
   id: "ev-1",
@@ -17,6 +17,7 @@ const evidence: EvidenceOut = {
   span_start: 0,
   span_end: 10,
   media_ref: null,
+  transcript_confidence: null,
 };
 
 // P7 ("the original language is never lost") — every evidence span needs
@@ -62,5 +63,28 @@ describe("EvidenceViewer", () => {
   it("shows a status message, not a blank list, when there is no evidence", () => {
     render(<EvidenceViewer evidence={[]} />);
     expect(screen.getByText("No evidence recorded.")).toBeInTheDocument();
+  });
+});
+
+// Blind Spots item 5: Evidence.transcript_confidence — same "column
+// existed, no schema exposed it" gap media_ref had one field earlier.
+describe("EvidenceItem", () => {
+  it("shows the transcription confidence next to a voice note's player", () => {
+    render(
+      <EvidenceItem
+        evidence={{ ...evidence, media_ref: "https://storage.example.test/voice.ogg", transcript_confidence: 0.81 }}
+      />,
+    );
+    expect(screen.getByText("confidence 81%")).toBeInTheDocument();
+  });
+
+  it("shows no confidence badge for text-only evidence", () => {
+    render(<EvidenceItem evidence={evidence} />);
+    expect(screen.queryByText(/confidence/)).not.toBeInTheDocument();
+  });
+
+  it("shows no confidence badge for a voice note whose transcription has no confidence recorded", () => {
+    render(<EvidenceItem evidence={{ ...evidence, media_ref: "https://storage.example.test/voice.ogg" }} />);
+    expect(screen.queryByText(/confidence/)).not.toBeInTheDocument();
   });
 });

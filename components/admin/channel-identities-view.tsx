@@ -11,6 +11,7 @@ import {
 import { useVendorListQuery } from "@/lib/vendors/hooks";
 import { formatDateTime } from "@/lib/format";
 
+import { ConfidenceBadge, ManuallyVerifiedBadge } from "../ui/confidence-badge";
 import { SectionPanel } from "../living-wip/section-panel";
 
 /**
@@ -63,14 +64,8 @@ export function ChannelIdentitiesView() {
                     {id.channel_type} · {id.external_id}
                   </span>
                   <span className="flex items-center gap-2">
-                    <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs text-warning">
-                      {t("confidence", { value: (id.confidence * 100).toFixed(0) })}
-                    </span>
-                    {id.manually_verified && (
-                      <span className="rounded-full bg-signal-soft px-2 py-0.5 text-xs text-signal">
-                        {t("manuallyVerified")}
-                      </span>
-                    )}
+                    <ConfidenceBadge value={id.confidence} />
+                    {id.manually_verified && <ManuallyVerifiedBadge />}
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-ink-muted">
