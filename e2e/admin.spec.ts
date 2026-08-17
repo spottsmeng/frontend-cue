@@ -96,13 +96,20 @@ test.describe.serial("Admin console (F7)", () => {
   test("attaches a channel, sees an honest empty health history, and reconnects it after a real degraded report", async ({
     page,
   }) => {
+    // "wechat", not "whatsapp" — since 'Layer B Channel Picker', attaching
+    // type="whatsapp" goes through a real picker backed by a live Layer A
+    // instance (see the dedicated test below), which CI's own backend
+    // never has configured. This test is about the generic attach/health-
+    // history/reconnect flow, which every non-discoverable channel type
+    // (wechat included) still exercises identically via the free-text
+    // external_ref field.
     await login(page, seed.email);
     await page.goto(`/admin/projects/${projectId}/channels`);
 
-    await page.getByLabel("Channel type").selectOption("whatsapp");
+    await page.getByLabel("Channel type").selectOption("wechat");
     await page.getByLabel("External reference (optional)").fill("e2e-vendor-group");
     await page.getByRole("button", { name: "Attach channel" }).click();
-    // Scoped to the attached row itself, not the still-visible "whatsapp"
+    // Scoped to the attached row itself, not the still-visible "wechat"
     // option left selected in the attach form's own dropdown.
     const channelRow = page.locator("li", { hasText: "e2e-vendor-group" });
     await expect(channelRow).toBeVisible();
@@ -128,7 +135,7 @@ test.describe.serial("Admin console (F7)", () => {
     const channels = (await (
       await page.request.get(`${API_URL}/projects/${projectId}/channels`, { headers: authHeaders })
     ).json()) as { id: string; type: string }[];
-    const channelId = channels.find((c) => c.type === "whatsapp")!.id;
+    const channelId = channels.find((c) => c.type === "wechat")!.id;
     const degraded = await page.request.post(
       `${API_URL}/projects/${projectId}/channels/${channelId}/health`,
       { headers: authHeaders, data: { healthy: false } },
@@ -141,6 +148,128 @@ test.describe.serial("Admin console (F7)", () => {
     await reloadedRow.getByRole("button", { name: "Reconnect" }).click();
     await expect(reloadedRow.getByText("healthy")).toBeVisible();
     await expect(reloadedRow.getByText("degraded")).toHaveCount(0);
+  });
+
+  test("capture debug console: an honest empty state, and 'pull now' reports a real, polled job status", async ({
+    page,
+  }) => {
+    // Deliberately does not assert that a message actually *appears* after
+    // "Pull now" — that requires a real arq worker process consuming the
+    // queue (backend/README.md's own "Run the worker locally" step), which
+    // this CI job never starts (only the FastAPI server itself), so the job
+    // should sit `queued` (or `in_progress`, if this environment happens to
+    // have a worker running) for as long as this test watches it. What's
+    // genuinely CI-safe and still real: the debug page renders an honest
+    // empty state before anything is captured, and clicking "Pull now"
+    // reaches the real backend, enqueues a real job, and the page's own
+    // `GET .../capture/status` polling reflects that real state — not a
+    // client-side simulation of one, and not the static "runs in the
+    // background, refresh in a moment" message an earlier, real-user-
+    // feedback-driven revision of this page replaced (see frontend/
+    // PROGRESS.md's own entry on this).
+    await login(page, seed.email);
+    await page.goto(`/admin/projects/${projectId}/channels`);
+
+    const channelRow = page.locator("li", { hasText: "e2e-vendor-group" });
+    await channelRow.getByRole("link", { name: "View messages" }).click();
+    await expect(page).toHaveURL(/\/channels\/[^/]+\/messages$/);
+
+    await expect(page.getByText("No messages captured for this channel yet.")).toBeVisible();
+
+    await page.getByRole("button", { name: "Pull now" }).click();
+    await expect(
+      page.getByText(/Queued — waiting for a worker|Pulling now|Pull finished|Pull failed/),
+    ).toBeVisible();
+  });
+
+  test("WhatsApp channel picker: attaches a real, named conversation and grants Layer A capture permission in one submit", async ({
+    page,
+  }) => {
+    // 'Layer B Channel Picker' prompt item 5's own real end-to-end check,
+    // at the UI level. Same skip convention every real-infra test in this
+    // codebase already holds itself to: skip cleanly (not a failure) when
+    // this environment's backend has no WhatsApp/Layer A configured (true
+    // for CI, per frontend/.github/workflows/ci.yml's own env block — no
+    // CUE_WHATSAPP_* there); if it *is* configured but unreachable, this
+    // test fails for real. Detected via the picker endpoint's own 503
+    // ("not configured") vs 200, not an env var this file can't see
+    // (Playwright runs against whatever backend is already listening).
+    await login(page, seed.email);
+    const session = (await (await page.request.get("/api/auth/session")).json()) as {
+      accessToken: string;
+    };
+    const authHeaders = { Authorization: `Bearer ${session.accessToken}` };
+    const probe = await page.request.get(
+      `${API_URL}/projects/${projectId}/channels/whatsapp/conversations`,
+      { headers: authHeaders },
+    );
+    test.skip(probe.status() === 503, "WhatsApp/Layer A not configured in this environment — see probe above");
+    expect(probe.ok()).toBe(true);
+    const conversations = (await probe.json()) as { jid: string; name: string | null; designated: boolean }[];
+    const target = conversations.find((c) => !c.designated);
+    test.skip(target === undefined, "no non-designated real conversation available to test against");
+
+    try {
+      await page.goto(`/admin/projects/${projectId}/channels`);
+      await page.getByLabel("Channel type").selectOption("whatsapp");
+
+      // The free-text external reference field is gone entirely for
+      // WhatsApp — no raw JID input anywhere a human sees, per this
+      // prompt's own hard requirement.
+      await expect(page.getByLabel("External reference (optional)")).toHaveCount(0);
+
+      await page.getByLabel("Find a WhatsApp conversation").fill(target!.name ?? "");
+      await page.getByRole("button", { name: target!.name ?? /Unnamed/ }).click();
+      await expect(page.getByText(`Selected: ${target!.name ?? "Unnamed group"}`)).toBeVisible();
+      await page.getByRole("button", { name: "Attach channel" }).click();
+
+      const channelRow = page.locator("li", { hasText: target!.name ?? "" });
+      await expect(channelRow).toBeVisible();
+      // The resolved display name is shown — never the raw jid.
+      await expect(page.getByText(target!.jid)).toHaveCount(0);
+      // The form resets to a neutral state after a successful attach
+      // (type included) — confirms the picker's own conversation list
+      // (which could otherwise still show this same name as a pickable
+      // row) is no longer rendered, so `channelRow` below unambiguously
+      // refers to the attached-channels list alone.
+      await expect(page.getByLabel("Find a WhatsApp conversation")).toHaveCount(0);
+
+      // Confirmed against Layer A directly, not just the local Channel
+      // row — the exact coupling this whole prompt exists to prove.
+      const afterAttach = await page.request.get(
+        `${API_URL}/projects/${projectId}/channels/whatsapp/conversations`,
+        { headers: authHeaders },
+      );
+      const afterAttachList = (await afterAttach.json()) as { jid: string; designated: boolean }[];
+      expect(afterAttachList.find((c) => c.jid === target!.jid)?.designated).toBe(true);
+
+      await channelRow.getByRole("button", { name: "Detach" }).click();
+      await expect(channelRow).toHaveCount(0);
+
+      const afterDetach = await page.request.get(
+        `${API_URL}/projects/${projectId}/channels/whatsapp/conversations`,
+        { headers: authHeaders },
+      );
+      const afterDetachList = (await afterDetach.json()) as { jid: string; designated: boolean }[];
+      expect(afterDetachList.find((c) => c.jid === target!.jid)?.designated).toBe(false);
+    } finally {
+      // Belt-and-braces, same as the backend's own live test: guarantee
+      // this real account's allowlist state is restored even if an
+      // assertion above failed partway through. There's no bare-jid revoke
+      // endpoint (by design — see app/api/channels.py's detach_channel);
+      // the only path is finding and detaching whatever Channel row this
+      // test's own attach created, which also revokes the Layer A grant.
+      const remaining = await page.request
+        .get(`${API_URL}/projects/${projectId}/channels`, { headers: authHeaders })
+        .then((r) => r.json() as Promise<{ id: string; external_ref: string | null }[]>)
+        .catch(() => []);
+      const leftover = remaining.find((c) => c.external_ref === target!.jid);
+      if (leftover) {
+        await page.request
+          .delete(`${API_URL}/projects/${projectId}/channels/${leftover.id}`, { headers: authHeaders })
+          .catch(() => undefined);
+      }
+    }
   });
 
   test("a consent action-request round-trips to a real current status", async ({ page }) => {

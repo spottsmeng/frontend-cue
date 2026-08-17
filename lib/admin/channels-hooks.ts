@@ -48,7 +48,7 @@ export function useAttachChannelMutation(projectId: string) {
   const api = useApiClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (body: { type: string; external_ref?: string | null }) => {
+    mutationFn: async (body: { type: string; external_ref?: string | null; display_name?: string | null }) => {
       const { data, error } = await api.POST("/projects/{project_id}/channels", {
         params: { path: { project_id: projectId } },
         body,
@@ -57,6 +57,31 @@ export function useAttachChannelMutation(projectId: string) {
       return data;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: channelsQueryKey(projectId) }),
+  });
+}
+
+/**
+ * `GET .../channels/whatsapp/conversations` — backs the real picker
+ * ("Layer B Channel Picker" prompt) that replaces the free-text `external_ref`
+ * input for `type="whatsapp"`. Deliberately not `staleTime`d the way
+ * `useChannelTypesQuery` is: the backend's own docstring is explicit that
+ * this is a live Layer A lookup on every call, never a static list, so this
+ * hook shouldn't paper over that with client-side caching either. Only
+ * enabled once "whatsapp" is the selected type — no reason to hit Layer A
+ * for a picker that isn't shown.
+ */
+export function useWhatsAppConversationsQuery(projectId: string, enabled: boolean) {
+  const api = useApiClient();
+  return useQuery({
+    queryKey: ["whatsapp-conversations", projectId],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/projects/{project_id}/channels/whatsapp/conversations", {
+        params: { path: { project_id: projectId } },
+      });
+      if (error) throw error;
+      return data;
+    },
+    enabled,
   });
 }
 
@@ -100,6 +125,92 @@ export function useChannelHealthHistoryQuery(projectId: string, channelId: strin
     },
     enabled: channelId !== null,
     refetchInterval: 60_000,
+  });
+}
+
+/**
+ * The capture debug console's own raw-message view — real `Message` rows
+ * (app/capture/models.py), independent of extraction: a message shows up
+ * here the moment capture durably writes it, whether or not extraction has
+ * run yet. No `refetchInterval` (unlike health history) — this view has its
+ * own explicit "Pull now" action to drive new data in, not a passive poll.
+ */
+export function channelMessagesQueryKey(projectId: string, channelId: string) {
+  return ["channel-messages", projectId, channelId] as const;
+}
+
+export function useChannelMessagesQuery(projectId: string, channelId: string) {
+  const api = useApiClient();
+  return useQuery({
+    queryKey: channelMessagesQueryKey(projectId, channelId),
+    queryFn: async () => {
+      const { data, error } = await api.GET("/projects/{project_id}/channels/{channel_id}/messages", {
+        params: { path: { project_id: projectId, channel_id: channelId } },
+      });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+/**
+ * The real arq job state behind a "pull now" — polled while the job is
+ * still `queued`/`deferred`/`in_progress` (every 2s, TanStack Query's own
+ * function form of `refetchInterval` reading the *previous* response to
+ * decide whether to keep going), stopping itself the moment the job
+ * resolves to `complete` (success or failure) or `not_found`. Enabled
+ * unconditionally, not just after a fresh "Pull now" click in this
+ * session — a pull triggered by the scheduled worker, a different tab, or
+ * an earlier visit to this same page is exactly the kind of "is something
+ * already happening?" question a debug console should answer honestly on
+ * load, not only for actions taken through this exact page instance.
+ */
+export function channelCaptureStatusQueryKey(projectId: string, channelId: string) {
+  return ["channel-capture-status", projectId, channelId] as const;
+}
+
+export function useChannelCaptureStatusQuery(projectId: string, channelId: string) {
+  const api = useApiClient();
+  return useQuery({
+    queryKey: channelCaptureStatusQueryKey(projectId, channelId),
+    queryFn: async () => {
+      const { data, error } = await api.GET(
+        "/projects/{project_id}/channels/{channel_id}/capture/status",
+        { params: { path: { project_id: projectId, channel_id: channelId } } },
+      );
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === "queued" || status === "in_progress" || status === "deferred" ? 2_000 : false;
+    },
+  });
+}
+
+/**
+ * The debug console's manual "pull now" trigger — enqueues the real arq
+ * ingestion job (app/capture/worker.py's ingest_channel_job) in the
+ * background; this call itself returns immediately (`queued`), it does not
+ * wait for the pull to finish. Invalidates the capture-status query (above)
+ * on success so the UI starts reflecting the new job's real state
+ * immediately, rather than waiting for that query's own next poll tick.
+ */
+export function usePullChannelNowMutation(projectId: string) {
+  const api = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (channelId: string) => {
+      const { data, error } = await api.POST(
+        "/projects/{project_id}/channels/{channel_id}/capture/pull-now",
+        { params: { path: { project_id: projectId, channel_id: channelId } } },
+      );
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_data, channelId) => {
+      queryClient.invalidateQueries({ queryKey: channelCaptureStatusQueryKey(projectId, channelId) });
+    },
   });
 }
 

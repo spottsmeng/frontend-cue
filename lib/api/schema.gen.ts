@@ -747,8 +747,46 @@ export interface paths {
          * @description FR-ADM-06: 'attach channels' — the half of project provisioning the
          *     RBAC/delegation session left for this one (create/assign members was
          *     already built).
+         *
+         *     WHAT TO BUILD #2 ('Layer B Channel Picker' prompt): for `type=
+         *     "whatsapp"` with an `external_ref` (jid) selected from the picker
+         *     above, this is the one call that both attaches the channel *and*
+         *     grants Layer A's Level C capture permission for it — never two
+         *     separate actions in two separate consoles. The allowlist grant runs
+         *     *before* the Channel row is created: if Layer A rejects or is
+         *     unreachable, nothing is persisted here either, so a PM never ends up
+         *     with a Channel that reports success but silently captures nothing.
          */
         post: operations["attach_channel_projects__project_id__channels_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/channels/whatsapp/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Whatsapp Conversations
+         * @description WHAT TO BUILD #1 ('Layer B Channel Picker' prompt): backs the
+         *     attach-flow's real conversation picker — proxies Layer A's live Machine
+         *     API `GET /conversations`, gated the same ADMIN_ROLES tier as
+         *     `attach_channel` below (the only caller this exists for). Deliberately
+         *     a live lookup on every call, not cached beyond the request: Layer A
+         *     resolves conversation names in real time (on reconnect for groups, via
+         *     contact-sync for people), never from a static list — permanent caching
+         *     here would go stale the same way. Not filtered by `project` — Layer A
+         *     has no notion of "project" at all, only a WhatsApp account's own known
+         *     conversations; `project` here only gates *who* may call this.
+         */
+        get: operations["list_whatsapp_conversations_projects__project_id__channels_whatsapp_conversations_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -765,7 +803,16 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Detach Channel */
+        /**
+         * Detach Channel
+         * @description WHAT TO BUILD #3 ('Layer B Channel Picker' prompt): the matching
+         *     revoke — a WhatsApp channel detached here must stop being captured on
+         *     Layer A's side too, not just disappear from this project's own channel
+         *     list. Same fail-closed ordering as attach: the allowlist revoke runs
+         *     before the Channel row is deleted, so a Layer A failure leaves the
+         *     Channel intact (retryable) instead of silently orphaning a still-active
+         *     capture grant.
+         */
         delete: operations["detach_channel_projects__project_id__channels__channel_id__delete"];
         options?: never;
         head?: never;
@@ -836,6 +883,104 @@ export interface paths {
          *     reporting `healthy: true` on its own.
          */
         post: operations["reconnect_channel_projects__project_id__channels__channel_id__reconnect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/channels/{channel_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Channel Messages
+         * @description The debug console's own raw-capture view (project/tenant-admin
+         *     gated, same `_require_admin` tier as everything else in this router) —
+         *     real `Message` rows (app/capture/models.py), independent of extraction:
+         *     a message shows up here the moment capture durably wrote it
+         *     (NFR-AVL-02), whether or not extraction has run or produced anything.
+         *     Chronological, oldest first — read as a conversation transcript, not a
+         *     changelog.
+         */
+        get: operations["list_channel_messages_projects__project_id__channels__channel_id__messages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/channels/{channel_id}/capture/pull-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pull Channel Now
+         * @description The 'manual "poll now" admin action' `app/capture/worker.py`'s own
+         *     module docstring names as a real, anticipated consumer of
+         *     `enqueue_channel_ingestion` — this is that consumer. Enqueues the real
+         *     arq job the scheduled worker itself uses (`since=None`, the adapter's
+         *     own "full backlog" convention), never a second, parallel ingestion
+         *     path — same real consent-gating, identity resolution, dedup and
+         *     extraction as any other trigger. Returns immediately (the job runs in
+         *     the background); `GET .../messages` above is how a caller sees the
+         *     result once it lands. A channel that already has a pull in flight
+         *     (arq's own per-channel job-id dedup) returns `queued=False`, not an
+         *     error.
+         *
+         *     `_get_channel` below confirms `channel_id` actually belongs to
+         *     `project` before anything is queued — `enqueue_channel_ingestion` takes
+         *     a bare channel id with no project/org check of its own (the arq job
+         *     body re-resolves the channel itself, org-unscoped), so skipping this
+         *     would let an admin of *this* project enqueue ingestion for a channel
+         *     belonging to an entirely different project by guessing its id.
+         *
+         *     Callers should not have to guess what happened next by polling
+         *     `GET .../messages` and hoping — `GET .../capture/status` (below) reports
+         *     the real arq job state (queued / in progress / complete, with the
+         *     actual result) behind this call, keyed by the same deterministic
+         *     per-channel job id.
+         */
+        post: operations["pull_channel_now_projects__project_id__channels__channel_id__capture_pull_now_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/channels/{channel_id}/capture/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Channel Capture Status
+         * @description The real status of whatever `POST .../capture/pull-now` most
+         *     recently queued for this channel — meant to be polled by a debug UI
+         *     that would otherwise have no way to tell "still running," "just
+         *     finished with nothing new," and "genuinely stuck/failed" apart, short
+         *     of repeatedly re-fetching `GET .../messages` and guessing. Reads arq's
+         *     own job state directly (`arq.jobs.Job`, keyed by
+         *     `app/capture/worker.py`'s `channel_job_id` — the same id `enqueue_
+         *     channel_ingestion`'s own dedup already uses), never a second,
+         *     separately-tracked status of this API's own invention that could drift
+         *     from what arq itself thinks happened.
+         */
+        get: operations["channel_capture_status_projects__project_id__channels__channel_id__capture_status_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2374,16 +2519,91 @@ export interface components {
             currency: string;
         };
         /**
+         * CapturePullResponse
+         * @description `POST .../capture/pull-now`'s response. `queued=False` means arq's
+         *     own per-channel dedup-by-job-id already had one in flight for this
+         *     channel (app/capture/worker.py's own `enqueue_channel_ingestion`
+         *     docstring) — not an error, just "already running, nothing new to do."
+         */
+        CapturePullResponse: {
+            /** Queued */
+            queued: boolean;
+        };
+        /**
+         * CaptureStatusOut
+         * @description `GET .../capture/status` — the real arq job state behind a prior
+         *     `POST .../capture/pull-now`, keyed by the same deterministic per-channel
+         *     job id (`app/capture/worker.py`'s `channel_job_id`) arq's own dedup
+         *     already uses. `status` mirrors arq's own `JobStatus` enum values.
+         *     `not_found` covers two genuinely different real cases a caller can't
+         *     tell apart from this alone: no pull has ever been queued for this
+         *     channel, or one completed long enough ago that arq's own result TTL
+         *     (`keep_result`, default 1 hour) already expired it — both render the
+         *     same "nothing to show" way client-side, so the ambiguity is harmless.
+         *
+         *     `success`/`error` and `received`.../`latest_sent_at` are only ever
+         *     populated once `status="complete"`: `success=False` with `error` set
+         *     means the job itself raised (a real failure, `error` is `str(exception)`,
+         *     never a raw traceback); `success=True` with the count fields set is
+         *     `_summary_dict`'s own real return shape (app/capture/worker.py's
+         *     `IngestionSummary`), not reconstructed here. `skipped`/`skip_reason`
+         *     cover the job's own early-exit case (channel or project deleted between
+         *     enqueue and pickup) — a real, successful completion, just with nothing
+         *     captured, distinct from either the count-bearing success case or a
+         *     genuine failure.
+         */
+        CaptureStatusOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "not_found" | "deferred" | "queued" | "in_progress" | "complete";
+            /** Success */
+            success?: boolean | null;
+            /** Error */
+            error?: string | null;
+            /** Skipped */
+            skipped?: boolean | null;
+            /** Skip Reason */
+            skip_reason?: string | null;
+            /** Received */
+            received?: number | null;
+            /** New Messages */
+            new_messages?: number | null;
+            /** Duplicates */
+            duplicates?: number | null;
+            /** Opted Out */
+            opted_out?: number | null;
+            /** Commitments Created */
+            commitments_created?: number | null;
+            /** Latest Sent At */
+            latest_sent_at?: string | null;
+        };
+        /**
          * ChannelCreate
          * @description FR-ADM-06's 'attach channels' step. `type` is validated against the
          *     channel_types table at request time, not a static Literal — see
          *     app/api/channels.py's _resolve_channel_type.
+         *
+         *     `external_ref` stays the one generic identifier field for every channel
+         *     type ('Layer B Channel Picker' prompt's own design choice — a second,
+         *     WhatsApp-only field would fork the shape for no real benefit): for
+         *     `type="whatsapp"` the frontend picker now supplies the real JID it
+         *     resolved from `GET .../channels/whatsapp/conversations`, never a
+         *     hand-typed value; every other channel type keeps supplying it directly
+         *     (mailbox address, drive id, ...), unchanged, since none of them has a
+         *     discovery mechanism to pick from (out of scope this session).
+         *     `display_name` is the picker's own resolved label, cached at attach
+         *     time — see `Channel.display_name`'s own docstring
+         *     (app/models/project.py) for why it isn't re-resolved live.
          */
         ChannelCreate: {
             /** Type */
             type: string;
             /** External Ref */
             external_ref?: string | null;
+            /** Display Name */
+            display_name?: string | null;
         };
         /**
          * ChannelHealthEventOut
@@ -2502,6 +2722,8 @@ export interface components {
             type: string;
             /** External Ref */
             external_ref: string | null;
+            /** Display Name */
+            display_name: string | null;
             /** Healthy */
             healthy: boolean;
             /**
@@ -3486,6 +3708,47 @@ export interface components {
             granted_at: string;
             /** Granted By */
             granted_by: string | null;
+        };
+        /**
+         * MessageOut
+         * @description A raw captured `Message` row (app/capture/models.py) — the debug
+         *     console's own view over real capture, deliberately independent of
+         *     extraction: a message is durably captured (NFR-AVL-02) whether or not
+         *     `extraction_attempted_at` is set or ever produces a Commitment.
+         *     `sender_external_id` is shown raw, not resolved to a Party display
+         *     name — this is a debug tool for capture/identity itself, so the raw
+         *     identity string the channel actually reported is more useful here than
+         *     a polished label, same reasoning `ChannelIdentityOut` already shows raw
+         *     `external_id` rather than hiding it.
+         */
+        MessageOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Channel Id
+             * Format: uuid
+             */
+            channel_id: string;
+            /** External Id */
+            external_id: string;
+            /** Sender External Id */
+            sender_external_id: string;
+            /** Author Party Id */
+            author_party_id: string | null;
+            /**
+             * Sent At
+             * Format: date-time
+             */
+            sent_at: string;
+            /** Language */
+            language: string | null;
+            /** Text */
+            text: string | null;
+            /** Extraction Attempted At */
+            extraction_attempted_at: string | null;
         };
         /**
          * MilestoneCreate
@@ -5009,6 +5272,34 @@ export interface components {
              */
             updated_at: string;
         };
+        /**
+         * WhatsAppConversationOut
+         * @description `GET .../channels/whatsapp/conversations` — backs the attach-flow's
+         *     real picker (`frontend/components/admin/project-channels-view.tsx`),
+         *     proxying Layer A's live Machine API `GET /conversations`
+         *     (`layer-A/src/api/machine/index.ts`) unmodified: real, WhatsApp-supplied
+         *     names, discovered independently of capture status. `jid` is the opaque
+         *     id a human never sees rendered directly — `name` is what the picker
+         *     shows, `None` when Layer A hasn't resolved a real one yet (a contact
+         *     whose display name/contact-sync event hasn't arrived) — the frontend
+         *     falls back to a generic, still-jid-free label in that case, never the
+         *     raw jid. `designated` reflects Layer A's own Level C allowlist state
+         *     *before* this project's own attach action runs (e.g. already true if an
+         *     operator manually added it through Layer A's ops console first).
+         */
+        WhatsAppConversationOut: {
+            /** Jid */
+            jid: string;
+            /** Name */
+            name: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "group" | "contact";
+            /** Designated */
+            designated: boolean;
+        };
         /** WritebackConfigOut */
         WritebackConfigOut: {
             /**
@@ -6395,6 +6686,37 @@ export interface operations {
             };
         };
     };
+    list_whatsapp_conversations_projects__project_id__channels_whatsapp_conversations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WhatsAppConversationOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     detach_channel_projects__project_id__channels__channel_id__delete: {
         parameters: {
             query?: never;
@@ -6512,6 +6834,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChannelOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_channel_messages_projects__project_id__channels__channel_id__messages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channel_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pull_channel_now_projects__project_id__channels__channel_id__capture_pull_now_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channel_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CapturePullResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    channel_capture_status_projects__project_id__channels__channel_id__capture_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channel_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaptureStatusOut"];
                 };
             };
             /** @description Validation Error */

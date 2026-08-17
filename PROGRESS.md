@@ -1568,6 +1568,179 @@ What remains genuinely open, by design, not oversight:
   run, but a future session touching either surface locally should expect it and not mistake it for
   a regression of its own.
 
+## Layer B Channel Picker (2026-08-17)
+
+Closed the gap `Layer B Channel Picker — Implementation Prompt.txt` (project root) names: F7's own
+"attach channel" form asked for a free-text "External reference," which for `type="whatsapp"` meant a
+PM had to hand-type the raw WhatsApp group JID — an opaque id WhatsApp never shows a human anywhere in
+its own UI. Confirmed against the real backend, not assumed: the free-text field is now WhatsApp-
+specific-picker-shaped, backed by a real, live endpoint, not a hardcoded or cached list.
+
+**What was built** (`components/admin/project-channels-view.tsx`, `lib/admin/channels-hooks.ts`):
+
+- **`useWhatsAppConversationsQuery`** — a new hook over the backend's new
+  `GET .../channels/whatsapp/conversations`, enabled only once `type="whatsapp"` is selected, no
+  `staleTime` (the backend's own docstring is explicit this is a live Layer A lookup every call, not a
+  static list — this hook doesn't paper over that with client-side caching either).
+- For `type="whatsapp"` specifically, the attach form's free-text `external_ref` input is replaced
+  entirely by a real, name-searchable picker: a search box filtering by name client-side, each result
+  showing its resolved name, `group`/`contact` kind, and an "Already capturing" badge when Layer A's
+  own `designated` flag is already `true` (e.g. an operator added it through Layer A's ops console
+  first) — never the raw jid rendered anywhere. A `name: null` conversation (Layer A hasn't resolved
+  one yet) falls back to a generic "Unnamed group/contact" label, still never the jid. Every other
+  channel type keeps the original free-text field unchanged — no discovery mechanism exists for them
+  (out of scope, named explicitly in the prompt).
+- Attaching submits the picked jid as `external_ref` plus the picker's own resolved name as the new
+  `display_name` field — one submit, matching the backend's "one transaction from the PM's point of
+  view" design. A successful attach resets the whole form, `type` included, not just the picker's own
+  selection — found necessary during this session's own real e2e run (see below): leaving `type=
+  "whatsapp"` selected with the picker still populated re-showed the just-attached (now
+  `designated: true`) conversation as pickable again, inviting an accidental duplicate attach and,
+  concretely, making the attached-channels list and the picker's own list both contain an `<li>` for
+  the same name at once.
+- Detach errors now surface inline (`detachError`) — with the backend's new fail-closed Layer A revoke
+  on detach, a detach can genuinely fail (Layer A unreachable) and leave the channel row in place; F7's
+  original UI had no error path for detach at all since it could never previously fail this way.
+- Fixed the misleading placeholder copy this whole investigation started from
+  (`frontend/messages/*/admin.json`'s `channels.externalRefPlaceholder`, was "e.g. group name,
+  mailbox" — a WhatsApp group *name* was never actually the right value even before this session,
+  since the field always took the raw JID) — now "e.g. mailbox, drive id," scoped to what the field
+  actually still does (non-WhatsApp channel types only). New `channels.picker.*` keys added to all
+  three locale bundles (en/zh-Hans/zh-Hant) in the same change — `messages/messages.test.ts`'s own
+  key-parity check passes.
+
+**Tested, for real, three ways:**
+
+1. `pnpm typecheck` / `pnpm lint` / `pnpm test` (122/122, including the message-parity test) — all
+   clean.
+2. `e2e/admin.spec.ts`'s existing channel-attach test switched from `type="whatsapp"` to `type=
+   "wechat"` — it was never actually testing anything WhatsApp-specific, and with the new picker in
+   place, `type="whatsapp"` no longer has a free-text `external_ref` field for that test to fill at
+   all.
+3. **A new `e2e/admin.spec.ts` test, run for real against the real linked WhatsApp account** (Layer A
+   was genuinely running on this session's own machine): picks a real, currently-undesignated
+   conversation from the live picker, attaches it through the actual UI (search box, click, submit —
+   not an API shortcut), confirms the resulting channel row shows the resolved name and never the raw
+   jid, confirms against Layer A directly that `designated` flipped to `true`, detaches through the
+   UI, confirms it flips back. Skips cleanly if this environment's backend has no WhatsApp/Layer A
+   configured (true for CI — no `CUE_WHATSAPP_*` in `frontend/.github/workflows/ci.yml`), fails for
+   real if configured but unreachable. **This test caught the real "attach leaves the picker
+   populated" bug above** — a first run failed on an ambiguous double-`<li>` match after detach, root-
+   caused to the form not resetting `type`, fixed, re-run clean. Full `e2e/admin.spec.ts` (7/7) and the
+   full Playwright suite (47/49 — the 2 failures are `ask.spec.ts`/`living-wip.spec.ts`'s own
+   pre-existing, already-documented real-Ollama local-run flakiness from this file's own F7/F9 notes
+   above, not a regression from this work) both run clean.
+
+No frontend-side backend gap found this round (F7's own "gap audit" checklist: the picker's own
+`display_name`/`designated`/`jid`/`kind` fields all resolve to real, renderable data from a real,
+role-appropriate endpoint — no Class A or Class B gap to name).
+
+## Capture debug console (2026-08-17)
+
+Requested directly: a manual "pull now" trigger plus a real page to view a channel's raw captured
+messages, gated the same way the rest of the admin console already is, meant to run in production
+(not a throwaway dev tool). Backed by two new backend endpoints
+(`GET .../channels/{id}/messages`, `POST .../channels/{id}/capture/pull-now` — see
+`backend/PROGRESS.md`'s own entry for the same date, which also covers a real production
+org-context concurrency bug this work's own live testing found and fixed along the way).
+
+**What was built:**
+
+- **`app/(shell)/admin/projects/[projectId]/channels/[channelId]/messages/page.tsx`** — a new nested
+  route, `components/admin/channel-messages-view.tsx`. Reached via a new "View messages" link on
+  each channel row in `project-channels-view.tsx`. Inherits the existing `admin/projects/[projectId]/
+  layout.tsx`'s own membership gate; every actual read/write still independently enforces
+  `ADMIN_ROLES` server-side regardless, same posture every other admin surface in this router
+  already holds.
+- Shows real `Message` rows — sender, timestamp, text (with `lang` set from the message's own
+  `language` field, DESIGN.md's "never render evidence text without setting lang from the API's own
+  value" rule applied here too, not just the Living WIP evidence viewer), and whether extraction has
+  run yet. Independent of extraction succeeding or producing anything — a message shows up the
+  moment capture durably writes it.
+- "Pull now" enqueues the real arq job and returns immediately; there is no push mechanism to this
+  UI, so a manual "Refresh" button (not a poll interval) is how new results actually appear — the
+  same honest-about-no-live-socket posture health history already established, just without the
+  `refetchInterval` this view doesn't want (a pull can take real minutes with real LLM extraction, an
+  auto-refetch loop would just be wasted requests).
+
+**Tested, for real, in the ways available to it:**
+
+1. `pnpm typecheck` / `pnpm lint` / `pnpm test` (122/122) — clean. New `admin.channels.debug.*` keys
+   added to all three locale bundles in the same change.
+2. **A new `e2e/admin.spec.ts` test** — attaches a real channel, navigates to the debug page through
+   the actual UI, confirms the honest empty state, clicks "Pull now," confirms a real `{queued: true}}`
+   response reaches the UI. Deliberately does **not** assert a message appears afterward: that
+   requires a real `arq` worker process consuming the queue (`backend/README.md`'s own "Run the
+   worker locally" step), which neither this repo's CI job nor `e2e/global-setup.ts` starts — only
+   the FastAPI server itself. Named here rather than silently asserted around: a genuine environment
+   gap this feature's own full loop depends on, not something this session's own scope covers fixing
+   (standing up a worker process in CI is a real infrastructure decision on its own).
+3. **A real, manual, visual check against this session's own locally-running backend + a real `arq`
+   worker** (not part of the committed test suite): attached a channel, hit "Pull now," polled
+   "Refresh" until the real worker actually processed it, and confirmed a real captured message
+   (Chinese text, correctly rendered via the CJK font routing, `lang` set) rendered in the page —
+   screenshot taken and reviewed, not just trusted from the network response. Confirms the full loop
+   genuinely works end to end in an environment that *does* run a worker (i.e., what a real
+   deployment looks like), even though CI's own e2e job can't cover that last mile yet.
+
+`pnpm test` 122/122, `pnpm exec playwright test e2e/admin.spec.ts` 8/8 (up from 7 — the new debug
+console test), both clean.
+
+## Capture debug console, part 2: real job status, not "refresh and hope" (2026-08-17)
+
+Direct real-user feedback on the console shipped above, in the same session it shipped in: "this is
+BAD UX — user does not know what is going on... is it dead? is it really pulling in the background?
+what is the status? am I going to get anything? should I wait? should I exit?" A static "runs in the
+background, refresh in a moment" message with zero real state genuinely doesn't answer any of that —
+fixed by polling the backend's own new `GET .../capture/status` endpoint (real arq job state, see
+`backend/PROGRESS.md`'s matching entry for the same date) instead of leaving the user to guess.
+
+**What changed:**
+
+- **`useChannelCaptureStatusQuery`** (`lib/admin/channels-hooks.ts`) — polls every 2s via TanStack
+  Query's *function* form of `refetchInterval` (reads the previous response to decide whether to keep
+  going), stopping itself the instant the job resolves (`complete` or `not_found`) rather than polling
+  forever. Enabled unconditionally on page load, not only after a fresh "Pull now" click in the same
+  session — a pull triggered by the scheduled worker, a different tab, or an earlier visit to this
+  same page is exactly the "is something already happening?" question a debug console should answer
+  honestly, not only for actions taken through this exact page instance.
+- The status banner now renders one of five real, distinct states instead of one static line: queued
+  (waiting for a worker), in progress, complete-with-real-counts, complete-but-nothing-captured (the
+  job's own skip case), or failed-with-the-real-error. "Pull now" itself disables while a pull is
+  already `queued`/`in_progress` for this channel, instead of silently letting a second click race the
+  first.
+- The messages list now **re-fetches itself automatically** the moment the status query's own
+  transition into `complete, success=true` is detected (a `previousStatus` ref comparing consecutive
+  poll results, so this fires once per completion, not on every subsequent poll tick while already
+  complete) — the "Refresh" button is now a manual override for an impatient user, not the only way
+  new results ever appear.
+
+**Tested, for real:**
+
+1. `pnpm typecheck`/`lint`/`test` (122/122) clean. `admin.channels.debug.pullQueued`/
+   `pullAlreadyRunning` keys retired (the static messages they backed no longer exist); five new
+   `statusQueued`/`statusInProgress`/`statusComplete`/`statusSkipped`/`statusFailed` keys added to all
+   three locale bundles in the same change.
+2. `e2e/admin.spec.ts`'s own debug-console test updated to assert on the new real status text instead
+   of the retired static one — still deliberately CI-safe (no worker runs in CI, so it can only assert
+   the job reaches a real `queued`/`in_progress` state, not a completion).
+3. **A real, visual, manual verification caught a real bug before it shipped**: the first live check
+   (this session's own locally-running `next dev` + a real `arq` worker) showed the literal
+   untranslated key string (`admin.channels.debug.statusInProgress`) instead of real text — next-intl's
+   own message bundle doesn't hot-reload new JSON keys added after the dev server process started,
+   unlike component code's own Fast Refresh. Restarting the dev process fixed it; recorded here since
+   it's a real, repeatable gotcha for whichever future session next adds a translation key mid-session
+   and wonders why it renders as a raw key.
+4. **That same live check then surfaced a second, real, previously-invisible bug**: a genuinely fresh
+   pull (no cached duplicates to short-circuit it) failed with `MissingGreenlet` — arq's own 300s
+   default job timeout killing the job mid-flight during real Ollama extraction. This was the exact
+   gap `backend/PROGRESS.md`'s own prior entry had already named and deliberately deferred; the new
+   status endpoint making it directly, immediately visible (as "Pull failed" in this exact page) rather
+   than a silent, eventually-retried background failure is what made deferring it further not the
+   right call — fixed backend-side (arq per-function timeout, 30 minutes) the same session, then
+   re-verified live: a fresh channel's pull now genuinely reaches `complete` with real captured
+   messages instead of failing partway through.
+
 ## Updating this file
 
 When a milestone completes:
