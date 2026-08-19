@@ -140,6 +140,46 @@ test.describe.serial("Documents (F4)", () => {
     await expect(page.getByText("LED wall quotation.pdf").first()).toBeVisible();
   });
 
+  // The gap SpecClaimsPanel's own docstring never had a way to close on its
+  // own: nothing in the product could previously call the real extraction
+  // endpoint at all, so a claim's own confidence badge (Blind Spots item 4)
+  // had no path to ever exist outside a seed script or a direct test. Real
+  // model call, real local Ollama, no mocked LLM — same "against real
+  // infrastructure" posture this whole spec file already holds itself to;
+  // a generous timeout since a real qwen2.5:14b call is genuinely slower
+  // than the rest of this suite's own DB-only round trips.
+  test("Extract spec claims produces a real claim with a real confidence badge", async ({ page }) => {
+    const uniqueName = `Truss capacity sheet ${Date.now()}`;
+    const allDocsSection = page
+      .locator("section")
+      .filter({ has: page.getByRole("heading", { name: "All documents" }) });
+
+    await allDocsSection.getByRole("button", { name: "+ Upload document" }).click();
+    await allDocsSection.getByLabel("File", { exact: true }).setInputFiles({
+      name: "truss-capacity.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("%PDF-1.4 truss capacity fixture"),
+    });
+    await allDocsSection.getByLabel("Name").fill(uniqueName);
+    await allDocsSection
+      .getByLabel(/Extracted text/)
+      .fill("Location H: 2040mm x 1040mm graphic panel, Graphic print on plywood, qty 1 set.");
+    await allDocsSection.getByRole("button", { name: "Upload", exact: true }).click();
+    await allDocsSection.getByText(uniqueName).click();
+
+    const versionsSection = page
+      .locator("section")
+      .filter({ has: page.getByRole("heading", { name: "Versions" }) });
+    await versionsSection.getByRole("button", { name: "Extract spec claims" }).click();
+
+    await expect(versionsSection.getByText("Extracting…")).toBeVisible();
+    await expect(
+      versionsSection.getByText(/^dimension$|^finish$|^quantity$|^price$/).first(),
+    ).toBeVisible({ timeout: 90_000 });
+    await expect(versionsSection.getByText(/confidence \d+%/).first()).toBeVisible();
+    await expect(versionsSection.getByText("Could not extract spec claims from this version.")).toHaveCount(0);
+  });
+
   test("a document's real lifecycle — upload, approve, tag — shows up in its own Activity section", async ({
     page,
   }) => {

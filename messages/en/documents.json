@@ -58,7 +58,10 @@
     "approving": "Approving…",
     "hideSpecClaims": "Hide spec claims",
     "viewSpecClaims": "View spec claims",
+    "extractSpecClaims": "Extract spec claims",
+    "extracting": "Extracting…",
     "approveError": "Could not approve this version.",
+    "extractError": "Could not extract spec claims from this version.",
     "addForm": {
       "openButton": "+ New version",
       "fileLabel": "File",

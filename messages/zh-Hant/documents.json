@@ -58,7 +58,10 @@
     "approving": "核准中……",
     "hideSpecClaims": "隱藏規格聲明",
     "viewSpecClaims": "檢視規格聲明",
+    "extractSpecClaims": "擷取規格聲明",
+    "extracting": "正在擷取……",
     "approveError": "無法核准此版本。",
+    "extractError": "無法從此版本擷取規格聲明。",
     "addForm": {
       "openButton": "+ 新增版本",
       "fileLabel": "檔案",

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { formatDateTime } from "@/lib/format";
-import { useApproveVersionMutation } from "@/lib/documents/hooks";
+import { useApproveVersionMutation, useExtractSpecClaimsMutation } from "@/lib/documents/hooks";
 import { resolveMemberLabel, useProjectMembersQuery } from "@/lib/members/hooks";
 import type { DocumentLineageOut, MembershipRole } from "@/lib/api/types";
 import { hasAnyRole, WRITE_ROLES } from "@/lib/roles";
@@ -32,6 +32,7 @@ export function VersionHistory({
   const t = useTranslations("documents.versionHistory");
   const { data: members } = useProjectMembersQuery(projectId);
   const approveMutation = useApproveVersionMutation(projectId);
+  const extractMutation = useExtractSpecClaimsMutation(projectId);
   const [expandedClaims, setExpandedClaims] = useState<string | null>(null);
   const canWrite = hasAnyRole(effectiveRoles, WRITE_ROLES);
 
@@ -104,6 +105,23 @@ export function VersionHistory({
                 {approveMutation.isPending ? t("approving") : t("approve")}
               </button>
             )}
+            {canWrite && (
+              <button
+                type="button"
+                disabled={extractMutation.isPending && extractMutation.variables?.versionId === v.id}
+                onClick={() =>
+                  extractMutation.mutate(
+                    { documentId, versionId: v.id },
+                    { onSuccess: () => setExpandedClaims(v.id) },
+                  )
+                }
+                className="rounded-md border border-border-strong px-2 py-1 text-xs text-ink-secondary hover:border-signal disabled:opacity-50"
+              >
+                {extractMutation.isPending && extractMutation.variables?.versionId === v.id
+                  ? t("extracting")
+                  : t("extractSpecClaims")}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setExpandedClaims(expandedClaims === v.id ? null : v.id)}
@@ -115,6 +133,9 @@ export function VersionHistory({
 
           {approveMutation.isError && approveMutation.variables?.versionId === v.id && (
             <p className="mt-1.5 text-xs text-critical">{t("approveError")}</p>
+          )}
+          {extractMutation.isError && extractMutation.variables?.versionId === v.id && (
+            <p className="mt-1.5 text-xs text-critical">{t("extractError")}</p>
           )}
 
           {expandedClaims === v.id && (

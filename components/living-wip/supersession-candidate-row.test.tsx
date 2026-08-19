@@ -28,7 +28,7 @@ function baseMutation() {
 
 function makeCommitment(overrides: Partial<CommitmentOut> = {}): CommitmentOut {
   return {
-    id: "c-1", project_id: "p-1", party_id: "party-1", counterparty_id: "party-2",
+    id: "c-1", project_id: "p-1", party_id: "party-1", party_name: "Test Vendor", counterparty_id: "party-2",
     deliverable_id: null, act_type_id: "act-1", state: "committed",
     deliverable_en: "LED wall rental — main stage", deliverable_original: null,
     due_at: null, amount: 18500, currency: "SGD", payment_status: null,

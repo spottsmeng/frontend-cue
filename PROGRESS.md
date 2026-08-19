@@ -1886,6 +1886,69 @@ bundling vs. dev-server hot-reload). Fixed by killing the stale process and lett
 
 `pnpm test` 146/146, `pnpm build` clean, 14/14 relevant Playwright specs clean (fresh server).
 
+## Closing the verification guide's own two gaps: TC-04 and TC-05 (2026-08-17)
+
+Writing a real click-by-click test guide for the Blind Spots round (published as an Artifact, not
+committed here) surfaced two further gaps in the product itself, distinct from the eight backend
+Blind Spots fields — not a rendering gap this time, but "there is no way to produce this data by
+using the app at all." Fixed both.
+
+**TC-04 — spec-claim extraction had no button.** The backend endpoint (`POST .../spec-claims/
+extract`) already worked; `SpecClaimsPanel` could only ever display claims that already existed.
+
+- New `useExtractSpecClaimsMutation` (`lib/documents/hooks.ts`), same write-role gate as
+  `useApproveVersionMutation`/`useTagDocumentMutation` (the backend endpoint itself is
+  `_require_write`-gated).
+- A new "Extract spec claims" button in `version-history.tsx`, next to the existing "View/Hide spec
+  claims" toggle — on success, auto-expands the panel so the result is immediately visible rather
+  than requiring a second click to go find it.
+- **Live-verified against this environment's own real `qwen2.5:14b` Ollama, not just unit-tested**:
+  uploaded a real document with the exact §4.3 worked-example text, clicked Extract, and watched
+  three real claims (dimension/finish/quantity) appear with real confidence badges — the first real,
+  product-clickable proof this endpoint has ever had.
+- Tested: 3 new `version-history.test.tsx` cases (role gating, the mutation call, the error path) +
+  1 new, deliberately real (not mocked-LLM) Playwright spec in `documents.spec.ts` with a 90s timeout
+  for the real model call — genuinely slower than the rest of the suite's DB-only round trips, and
+  worth it for what it proves.
+
+**TC-05 — voice-note `transcript_confidence` had no path to exist without a live channel.** Needed a
+real backend fixture first (`backend/PROGRESS.md`'s matching entry) — `FixtureAdapter` previously
+raised `NotImplementedError` for every media fetch, so even the fixture-backed dev/demo capture path
+could never produce real audio for the real ASR pipeline to transcribe. No frontend code changed for
+this half — `EvidenceViewer`'s confidence badge (this round's own earlier item 5 work) already reads
+`transcript_confidence` correctly; the gap was purely that the field could never be populated by
+using the product. Once a WeChat channel is attached with external reference `"voice-demo"` and
+pulled, the real fixture voice note flows through real ASR and (given a real extraction model) real
+commitment extraction, landing on a real `Evidence.transcript_confidence` this badge already renders.
+
+**Live UI verification initially blocked, then completed for real once the environment allowed it**:
+this session's own running backend originally had `CUE_CAPTURE_BACKEND=live` set (left over from
+earlier live-WhatsApp verification work), so "Pull now" tried real channel credentials regardless of
+channel type — fixtures included. The user switched `.env` back to `fixture` and restarted both the
+backend and the `arq` worker; a real Playwright-driven walk through the actual running app then
+confirmed the whole path live: attached a `wechat` channel named `voice-demo` through the real Admin
+UI, clicked **Pull now** → `Pull finished — 5 new message(s)`, saw the real transcript (*"Confirming
+the LED wall installation will be completed by Friday, total cost $1,200."*) with a real `confidence
+100%` identity badge in the captured-messages console, watched real `qwen2.5:14b` extraction produce
+a genuine "LED wall installation" commitment in Living WIP, opened its evidence panel to a real
+playable `<audio>` element (a real signed MinIO URL) and, directly beneath the evidence text, a real
+**`confidence 76%`** badge — the exact `Evidence.transcript_confidence` render this whole round exists
+to prove. Not committed as a Playwright spec (same reasoning `admin.spec.ts`'s own capture-debug-
+console test already gives for not depending on a real worker being present — CI has none), but
+genuinely run, not just claimed; full account in `backend/PROGRESS.md`'s matching entry.
+
+**Tested:**
+
+- `pnpm typecheck`/`lint`/`build` clean.
+- `pnpm test`: 149/149 (3 new cases in `version-history.test.tsx`).
+- `pnpm exec playwright test e2e/documents.spec.ts` — 6/6, including the real-Ollama extraction
+  test above.
+- One real, live, manual Playwright walk-through against the restarted backend + worker (above) —
+  not part of the committed suite, but genuinely run in this session, not merely claimed.
+
+`pnpm test` 149/149, `pnpm build` clean, 6/6 documents.spec.ts (real model call included), plus a
+real live UI confirmation of TC-05 end to end.
+
 ## Updating this file
 
 When a milestone completes:

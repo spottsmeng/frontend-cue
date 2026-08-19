@@ -6,10 +6,13 @@ import type { DocumentLineageOut } from "@/lib/api/types";
 
 import { VersionHistory } from "./version-history";
 
-const { useApproveVersionMutation } = vi.hoisted(() => ({ useApproveVersionMutation: vi.fn() }));
+const { useApproveVersionMutation, useExtractSpecClaimsMutation } = vi.hoisted(() => ({
+  useApproveVersionMutation: vi.fn(),
+  useExtractSpecClaimsMutation: vi.fn(),
+}));
 vi.mock("@/lib/documents/hooks", async (importActual) => {
   const actual = await importActual<typeof import("@/lib/documents/hooks")>();
-  return { ...actual, useApproveVersionMutation };
+  return { ...actual, useApproveVersionMutation, useExtractSpecClaimsMutation };
 });
 
 const { useProjectMembersQuery } = vi.hoisted(() => ({ useProjectMembersQuery: vi.fn() }));
@@ -71,6 +74,7 @@ function makeLineage(overrides: Partial<DocumentLineageOut> = {}): DocumentLinea
 describe("VersionHistory", () => {
   it("marks exactly the current version, and every other one as superseded", () => {
     useApproveVersionMutation.mockReturnValue(baseMutation());
+    useExtractSpecClaimsMutation.mockReturnValue(baseMutation());
     useProjectMembersQuery.mockReturnValue({ data: [{ user_id: "user-1", email: "pm@example.test", display_name: null }] });
 
     render(
@@ -95,6 +99,7 @@ describe("VersionHistory", () => {
 
   it("resolves approved_by to a real member label, not a raw user id", () => {
     useApproveVersionMutation.mockReturnValue(baseMutation());
+    useExtractSpecClaimsMutation.mockReturnValue(baseMutation());
     useProjectMembersQuery.mockReturnValue({
       data: [{ user_id: "user-1", email: "pm@example.test", display_name: "Priya (PM)" }],
     });
@@ -109,6 +114,7 @@ describe("VersionHistory", () => {
 
   it("flags a version with no extracted_text as not yet indexed, rather than implying it's searchable", () => {
     useApproveVersionMutation.mockReturnValue(baseMutation());
+    useExtractSpecClaimsMutation.mockReturnValue(baseMutation());
     useProjectMembersQuery.mockReturnValue({ data: [] });
 
     render(
@@ -121,6 +127,7 @@ describe("VersionHistory", () => {
 
   it("only offers Approve for a not-yet-approved version, and only to a write role", () => {
     useApproveVersionMutation.mockReturnValue(baseMutation());
+    useExtractSpecClaimsMutation.mockReturnValue(baseMutation());
     useProjectMembersQuery.mockReturnValue({ data: [] });
 
     // Separate render()/unmount() per case, not RTL's `rerender` — `render`
@@ -139,5 +146,52 @@ describe("VersionHistory", () => {
       <VersionHistory projectId="p1" documentId="doc-1" lineage={makeLineage()} effectiveRoles={["read_only"]} />,
     );
     expect(screen.queryByRole("button", { name: /^Approve/ })).not.toBeInTheDocument();
+  });
+
+  // The gap this round closes: SpecClaimsPanel could only ever render
+  // claims that already existed — nothing called the extraction endpoint.
+  it("offers Extract spec claims to a write role, and calls the mutation for the right version", () => {
+    useApproveVersionMutation.mockReturnValue(baseMutation());
+    const extractMutate = vi.fn();
+    useExtractSpecClaimsMutation.mockReturnValue({ ...baseMutation(), mutate: extractMutate });
+    useProjectMembersQuery.mockReturnValue({ data: [] });
+
+    render(
+      <VersionHistory projectId="p1" documentId="doc-1" lineage={makeLineage()} effectiveRoles={["producer"]} />,
+    );
+
+    const extractButtons = screen.getAllByRole("button", { name: "Extract spec claims" });
+    expect(extractButtons).toHaveLength(2);
+    extractButtons[1]!.click();
+    expect(extractMutate).toHaveBeenCalledWith(
+      { documentId: "doc-1", versionId: "v2" },
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    );
+  });
+
+  it("hides Extract spec claims from a read-only role", () => {
+    useApproveVersionMutation.mockReturnValue(baseMutation());
+    useExtractSpecClaimsMutation.mockReturnValue(baseMutation());
+    useProjectMembersQuery.mockReturnValue({ data: [] });
+
+    render(
+      <VersionHistory projectId="p1" documentId="doc-1" lineage={makeLineage()} effectiveRoles={["read_only"]} />,
+    );
+    expect(screen.queryByRole("button", { name: "Extract spec claims" })).not.toBeInTheDocument();
+  });
+
+  it("shows a real error, not a silent failure, when extraction is rejected", () => {
+    useApproveVersionMutation.mockReturnValue(baseMutation());
+    useExtractSpecClaimsMutation.mockReturnValue({
+      ...baseMutation(),
+      isError: true,
+      variables: { documentId: "doc-1", versionId: "v2" },
+    });
+    useProjectMembersQuery.mockReturnValue({ data: [] });
+
+    render(
+      <VersionHistory projectId="p1" documentId="doc-1" lineage={makeLineage()} effectiveRoles={["producer"]} />,
+    );
+    expect(screen.getByText("Could not extract spec claims from this version.")).toBeInTheDocument();
   });
 });

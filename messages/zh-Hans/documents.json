@@ -58,7 +58,10 @@
     "approving": "批准中……",
     "hideSpecClaims": "隐藏规格声明",
     "viewSpecClaims": "查看规格声明",
+    "extractSpecClaims": "提取规格声明",
+    "extracting": "正在提取……",
     "approveError": "无法批准此版本。",
+    "extractError": "无法从此版本提取规格声明。",
     "addForm": {
       "openButton": "+ 新增版本",
       "fileLabel": "文件",

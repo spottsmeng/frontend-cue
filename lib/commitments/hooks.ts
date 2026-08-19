@@ -4,6 +4,35 @@ import { useApiClient } from "@/lib/api/browser";
 import { reportQueryKey } from "@/lib/reports/hooks";
 import type { CommitmentCorrection, CommitmentSupersessionCandidateStatus } from "@/lib/api/types";
 
+// --- vendor-attribution-task.md fix 3: the party-reassignment picker -------
+//
+// GET /projects/{project_id}/commitments/vendor-candidates, not
+// lib/vendors/hooks.ts's useVendorListQuery (GET /parties) — that one is
+// require_org_finance_or_administrator-gated (it backs the Vendor
+// Reliability Graph surface), which a project_manager holds WRITE_ROLES but
+// not FINANCE_ROLES for and would 403 on. This endpoint uses the same
+// _require_write gate as every other commitment write, so the same
+// project_manager who can open this panel and hit "confirm" can also load
+// the picker it needs.
+
+export function vendorCandidatesQueryKey(projectId: string) {
+  return ["vendor-candidates", projectId] as const;
+}
+
+export function useVendorCandidatesQuery(projectId: string) {
+  const api = useApiClient();
+  return useQuery({
+    queryKey: vendorCandidatesQueryKey(projectId),
+    queryFn: async () => {
+      const { data, error } = await api.GET("/projects/{project_id}/commitments/vendor-candidates", {
+        params: { path: { project_id: projectId } },
+      });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 export function commitmentQueryKey(projectId: string, commitmentId: string) {
   return ["commitment", projectId, commitmentId] as const;
 }

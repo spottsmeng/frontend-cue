@@ -361,6 +361,33 @@ export function useSpecClaimsQuery(projectId: string, documentId: string, versio
 }
 
 /**
+ * FR-DOC-08's extraction trigger — a real gap this endpoint has had since
+ * it was built: `SpecClaimsPanel` could only ever render claims that
+ * already existed, with nothing in the product able to call
+ * `POST .../spec-claims/extract` and produce a new one. Same write-role
+ * gate as `useApproveVersionMutation`/`useTagDocumentMutation` (the
+ * backend endpoint itself is `_require_write`-gated). Invalidates only this
+ * version's own spec-claims query, not the whole document, since extraction
+ * is scoped to one version.
+ */
+export function useExtractSpecClaimsMutation(projectId: string) {
+  const api = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ documentId, versionId }: { documentId: string; versionId: string }) => {
+      const { data, error } = await api.POST(
+        "/projects/{project_id}/documents/{document_id}/versions/{version_id}/spec-claims/extract",
+        { params: { path: { project_id: projectId, document_id: documentId, version_id: versionId } } },
+      );
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_data, { documentId, versionId }) =>
+      queryClient.invalidateQueries({ queryKey: specClaimsQueryKey(projectId, documentId, versionId) }),
+  });
+}
+
+/**
  * Resolves a `SpecClaim.contradicts` target — app/foresight/contradiction.py
  * compares claims project-wide by shared deliverable_id/location_code, so
  * the conflicting claim can live on a different document version than the

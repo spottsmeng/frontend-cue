@@ -6,7 +6,12 @@ import { useTranslations } from "next-intl";
 import { contentLang, formatDateTime } from "@/lib/format";
 import type { CommitmentCorrection, CommitmentOut } from "@/lib/api/types";
 import { FINANCE_ROLES, hasAnyRole, useEffectiveRoles } from "@/lib/roles";
-import { useCommitmentQuery, usePaymentStatusMutation, useVerifyCommitmentMutation } from "@/lib/commitments/hooks";
+import {
+  useCommitmentQuery,
+  usePaymentStatusMutation,
+  useVendorCandidatesQuery,
+  useVerifyCommitmentMutation,
+} from "@/lib/commitments/hooks";
 
 import { DetailDrawer } from "./detail-drawer";
 import { EvidenceViewer } from "./evidence-viewer";
@@ -34,6 +39,7 @@ interface FormState {
   due_at: string;
   amount: string;
   currency: string;
+  party_id: string;
 }
 
 function formFromCommitment(c: CommitmentOut): FormState {
@@ -43,6 +49,7 @@ function formFromCommitment(c: CommitmentOut): FormState {
     due_at: toDatetimeLocal(c.due_at),
     amount: c.amount === null ? "" : String(c.amount),
     currency: c.currency ?? "",
+    party_id: c.party_id,
   };
 }
 
@@ -81,6 +88,10 @@ function buildCorrections(original: CommitmentOut, form: FormState): CommitmentC
     corrections.currency = currencyVal;
     changed = true;
   }
+  if (form.party_id !== original.party_id) {
+    corrections.party_id = form.party_id;
+    changed = true;
+  }
 
   return changed ? corrections : undefined;
 }
@@ -106,6 +117,7 @@ export function CommitmentDetailPanel({
   const t = useTranslations("livingWip.commitmentDetail");
   const { data: commitment, isLoading } = useCommitmentQuery(projectId, commitmentId);
   const { data: roles } = useEffectiveRoles(projectId);
+  const { data: vendorCandidates } = useVendorCandidatesQuery(projectId);
   const verifyMutation = useVerifyCommitmentMutation(projectId);
   const paymentStatusMutation = usePaymentStatusMutation(projectId);
 
@@ -161,6 +173,28 @@ export function CommitmentDetailPanel({
               {t("correctAndConfirm")}
             </h4>
             <div className="flex flex-col gap-2">
+              <label className="text-xs text-ink-secondary">
+                {t("vendor")}
+                <select
+                  value={form.party_id}
+                  onChange={(e) => setForm({ ...form, party_id: e.target.value })}
+                  className="mt-1 w-full rounded-md border border-border bg-surface p-1.5 text-sm text-ink"
+                >
+                  {/* The commitment's current party might not be in the
+                      vendor_org candidate list yet — vendor-attribution-task.md's
+                      own "Unresolved Vendor" placeholder always is (it's a real
+                      vendor_org row), but this keeps the select from silently
+                      dropping whatever party the commitment actually carries. */}
+                  {!vendorCandidates?.some((p) => p.id === commitment.party_id) && (
+                    <option value={commitment.party_id}>{commitment.party_name}</option>
+                  )}
+                  {vendorCandidates?.map((party) => (
+                    <option key={party.id} value={party.id}>
+                      {party.display_name}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <label className="text-xs text-ink-secondary">
                 {t("deliverable")}
                 <input
