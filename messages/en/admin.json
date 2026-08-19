@@ -5,7 +5,8 @@
       "users": "Users",
       "delegations": "Delegations",
       "retention": "Retention",
-      "channelIdentities": "Channel identities"
+      "channelIdentities": "Channel identities",
+      "layerA": "Layer A"
     },
     "project": {
       "members": "Members & Delegations",
@@ -243,5 +244,106 @@
     "retentionDaysLabel": "Retention (days)",
     "addPolicy": "Add policy",
     "saveError": "Could not save — please retry."
+  },
+  "layerA": {
+    "status": {
+      "connected": "Connected",
+      "connecting": "Connecting",
+      "reconnecting": "Reconnecting",
+      "unhealthy": "Unhealthy",
+      "disconnected": "Disconnected",
+      "unknown": "Unknown"
+    },
+    "alertType": {
+      "sustained_disconnect": "Sustained disconnect",
+      "reconnect_flapping": "Reconnect flapping",
+      "session_conflict": "Session conflict"
+    },
+    "severity": {
+      "serious": "Serious",
+      "critical": "Critical"
+    },
+    "liveStatus": {
+      "title": "Live status",
+      "loading": "Loading live status…",
+      "adminOnly": "Administrator role required to view Layer A status.",
+      "loadError": "Could not load live status.",
+      "unconfigured": "Layer A admin credentials are not configured for this organisation.",
+      "empty": "No Layer A accounts found.",
+      "headers": {
+        "account": "Account",
+        "status": "Status",
+        "connectAttempts": "Connect attempts",
+        "lastError": "Last error"
+      }
+    },
+    "trend": {
+      "title": "Historical trend",
+      "pickerLabel": "Accounts (up to 5)",
+      "pickAnAccount": "Select an account to see its history.",
+      "adminOnly": "Administrator role required to view trend history.",
+      "loadError": "Could not load trend history.",
+      "loading": "Loading trend history…",
+      "empty": "No Layer A accounts found.",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "chartAriaLabel": "Connection status over time, per account",
+      "headers": {
+        "account": "Account",
+        "recordedAt": "Recorded at",
+        "status": "Status"
+      }
+    },
+    "alertHistory": {
+      "title": "Alert history",
+      "loading": "Loading alerts…",
+      "adminOnly": "Administrator role required to view alert history.",
+      "loadError": "Could not load alert history.",
+      "empty": "No alerts have fired yet.",
+      "processWide": "process-wide",
+      "stillOpen": "still open",
+      "acknowledge": "Acknowledge",
+      "acknowledged": "Acknowledged",
+      "hideDeliveries": "Hide deliveries",
+      "showDeliveries": "Show deliveries",
+      "headers": {
+        "type": "Type",
+        "account": "Account",
+        "severity": "Severity",
+        "opened": "Opened",
+        "resolved": "Resolved",
+        "acknowledge": "Acknowledge",
+        "deliveries": "Deliveries"
+      },
+      "deliveries": {
+        "loading": "Loading deliveries…",
+        "empty": "No delivery attempts recorded.",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "channel": {
+          "webhook": "Webhook",
+          "email": "Email",
+          "banner": "Banner"
+        }
+      }
+    },
+    "config": {
+      "title": "Alert configuration",
+      "loading": "Loading configuration…",
+      "adminOnly": "Administrator role required to view alert configuration.",
+      "loadError": "Could not load alert configuration.",
+      "enabledLabel": "Enable Layer A observability alerts for this organisation",
+      "sustainedDisconnectMinutesLabel": "Sustained disconnect threshold (minutes)",
+      "reconnectThresholdLabel": "Reconnect attempt threshold",
+      "reconnectWindowMinutesLabel": "Reconnect attempt window (minutes)",
+      "webhookEnabledLabel": "Send alerts to a webhook",
+      "webhookUrlLabel": "Webhook URL",
+      "webhookConfigured": "A signing secret has been generated for this webhook.",
+      "emailEnabledLabel": "Send alerts by email",
+      "emailRecipientsLabel": "Email recipients (comma-separated)",
+      "save": "Save",
+      "saved": "Saved.",
+      "saveError": "Could not save configuration."
+    }
   }
 }

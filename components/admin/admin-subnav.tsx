@@ -15,6 +15,7 @@ const SURFACES = [
   { segment: "delegations", key: "delegations" },
   { segment: "retention", key: "retention" },
   { segment: "channel-identities", key: "channelIdentities" },
+  { segment: "layer-a", key: "layerA" },
 ] as const;
 
 export function AdminSubnav() {

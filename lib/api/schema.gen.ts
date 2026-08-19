@@ -372,6 +372,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{project_id}/commitments/vendor-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Vendor Candidates
+         * @description The picker behind a PM's own party-reassignment correction
+         *     (CommitmentCorrection.party_id — vendor-attribution-task.md fix 3).
+         *     app/api/parties.py's GET /parties already lists vendor_org parties, but
+         *     it's require_org_finance_or_administrator-gated (it's part of the
+         *     Vendor Reliability Graph surface) — a project_manager, the role this
+         *     task names as the one who assigns a vendor, holds WRITE_ROLES but not
+         *     FINANCE_ROLES, so that endpoint 403s for exactly the caller this form
+         *     needs. frontend/CLAUDE.md's own "Class B" gap shape: a write-role form
+         *     needing to pick an entity with no read endpoint at the write role's own
+         *     access tier. A new, narrower route here — same _require_write gate as
+         *     every other write on this commitment, vendor_org only — rather than
+         *     widening the finance-gated one, which also backs reliability-adjacent
+         *     reads this tier has no reason to inherit. Registered before
+         *     `/{commitment_id}` below so it isn't shadowed by that path parameter.
+         */
+        get: operations["list_vendor_candidates_projects__project_id__commitments_vendor_candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects/{project_id}/commitments/{commitment_id}": {
         parameters: {
             query?: never;
@@ -1292,6 +1325,197 @@ export interface paths {
          *     confines every row this query can see to the caller's own org.
          */
         get: operations["read_cost_summary_admin_cost_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/layer-a/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Layer A Accounts */
+        get: operations["list_layer_a_accounts_admin_layer_a_accounts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/layer-a/accounts/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Layer A Account */
+        get: operations["get_layer_a_account_admin_layer_a_accounts__account_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/layer-a/conflicts/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Layer A Live Conflicts
+         * @description Layer A's own GET /admin/conflicts, proxied live — distinct from
+         *     GET /conflicts below (the durable Postgres copy, unbounded, beyond
+         *     Layer A's own 50-entry file cap).
+         */
+        get: operations["list_layer_a_live_conflicts_admin_layer_a_conflicts_live_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/layer-a/accounts/{account_id}/trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Layer A Account Trend */
+        get: operations["get_layer_a_account_trend_admin_layer_a_accounts__account_id__trend_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/layer-a/conflicts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Layer A Conflict Events */
+        get: operations["list_layer_a_conflict_events_admin_layer_a_conflicts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/layer-a/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Layer A Alerts */
+        get: operations["list_layer_a_alerts_admin_layer_a_alerts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/layer-a/alerts/{alert_id}/acknowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Acknowledge Layer A Alert
+         * @description Acknowledging is resolution only for session_conflict — that alert
+         *     type is event-shaped (a conflict already happened, it doesn't "clear"
+         *     on its own), unlike sustained_disconnect/reconnect_flapping, which are
+         *     condition-shaped and auto-resolve once the poller observes the
+         *     condition has cleared (app/layer_a/alerts.py). Acknowledging the other
+         *     two types is still recorded (who/when saw it) but doesn't force
+         *     state='resolved' — the condition itself decides that.
+         */
+        post: operations["acknowledge_layer_a_alert_admin_layer_a_alerts__alert_id__acknowledge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/layer-a/alerts/{alert_id}/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Layer A Alert Deliveries */
+        get: operations["list_layer_a_alert_deliveries_admin_layer_a_alerts__alert_id__deliveries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/layer-a/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Layer A Alert Config */
+        get: operations["get_layer_a_alert_config_admin_layer_a_config_get"];
+        /** Update Layer A Alert Config */
+        put: operations["update_layer_a_alert_config_admin_layer_a_config_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/layer-a/alerts/open/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count Open Layer A Alerts
+         * @description The always-visible TopNav badge's data source (locked design
+         *     decision: an active alert must be visible before an admin even opens
+         *     the dashboard, not buried inside it) — a lighter read than the full
+         *     /alerts list.
+         */
+        get: operations["count_open_layer_a_alerts_admin_layer_a_alerts_open_count_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2837,6 +3061,13 @@ export interface components {
          * CommitmentCorrection
          * @description FR-LED-08's 'correct if needed' step — every field optional, since
          *     most verifications correct nothing.
+         *
+         *     `party_id` (vendor-attribution-task.md): the one field this endpoint
+         *     validates against the DB before applying (app/api/commitments.py's
+         *     verify_commitment) — every other field here is a scalar the model itself
+         *     produced, but a wrong party_id is exactly what a commitment lands in
+         *     `pending_verification` for (a low-confidence internal-channel vendor
+         *     attribution), so this is a real reassignment control, not a typo fix.
          */
         CommitmentCorrection: {
             /** Deliverable En */
@@ -2849,6 +3080,8 @@ export interface components {
             amount?: number | null;
             /** Currency */
             currency?: string | null;
+            /** Party Id */
+            party_id?: string | null;
         };
         /**
          * CommitmentCreate
@@ -2887,6 +3120,14 @@ export interface components {
          * @description §11.1: 'Every commitment field returned includes confidence,
          *     verification_state and evidence[]' — evidence is always populated here,
          *     never left for the client to fetch separately.
+         *
+         *     `party_name` (vendor-attribution-task.md): `party_id` on its own is a
+         *     Class A gap (frontend/CLAUDE.md) — no prior response resolved it to a
+         *     label, so a caller wanting to show or correct "who this is attributed
+         *     to" had no way to render it without a second round-trip. Resolved
+         *     server-side in app/api/commitments.py's `_to_out`, the same explicit-
+         *     select-not-relationship() pattern this codebase already uses everywhere
+         *     else a Party is read.
          */
         CommitmentOut: {
             /**
@@ -2904,6 +3145,8 @@ export interface components {
              * Format: uuid
              */
             party_id: string;
+            /** Party Name */
+            party_name: string;
             /**
              * Counterparty Id
              * Format: uuid
@@ -3732,6 +3975,247 @@ export interface components {
             /** Approved */
             approved: boolean;
             provenance: components["schemas"]["ReportProvenance"];
+        };
+        /** LayerAAccountOut */
+        LayerAAccountOut: {
+            /** Accountid */
+            accountId: string;
+            /** Channeltype */
+            channelType: string;
+            /** Mode */
+            mode: string | null;
+            /** Displayname */
+            displayName: string | null;
+            /** Risktier */
+            riskTier: string | null;
+            /** Healthy */
+            healthy: boolean;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "connecting" | "connected" | "reconnecting" | "unhealthy" | "disconnected" | "unknown";
+            /** Lasterror */
+            lastError: string | null;
+            /** Detail */
+            detail: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * LayerAAlertConfigOut
+         * @description Never carries `webhook_secret` — same "shown once, never
+         *     re-serialized" posture as WebhookSubscriptionOut above; a caller that
+         *     needs to know *whether* a secret exists reads `webhook_configured`
+         *     instead of the secret itself.
+         */
+        LayerAAlertConfigOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Organisation Id
+             * Format: uuid
+             */
+            organisation_id: string;
+            /** Enabled */
+            enabled: boolean;
+            /** Sustained Disconnect Minutes */
+            sustained_disconnect_minutes: number;
+            /** Reconnect Attempt Threshold */
+            reconnect_attempt_threshold: number;
+            /** Reconnect Attempt Window Minutes */
+            reconnect_attempt_window_minutes: number;
+            /** Webhook Url */
+            webhook_url: string | null;
+            /** Webhook Enabled */
+            webhook_enabled: boolean;
+            /**
+             * Webhook Configured
+             * @description true if a signing secret has already been generated for webhook_url
+             */
+            webhook_configured: boolean;
+            /** Email Recipients */
+            email_recipients: string[];
+            /** Email Enabled */
+            email_enabled: boolean;
+            /** Updated By */
+            updated_by: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** LayerAAlertConfigUpdate */
+        LayerAAlertConfigUpdate: {
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Sustained Disconnect Minutes */
+            sustained_disconnect_minutes?: number | null;
+            /** Reconnect Attempt Threshold */
+            reconnect_attempt_threshold?: number | null;
+            /** Reconnect Attempt Window Minutes */
+            reconnect_attempt_window_minutes?: number | null;
+            /** Webhook Url */
+            webhook_url?: string | null;
+            /** Webhook Enabled */
+            webhook_enabled?: boolean | null;
+            /** Email Recipients */
+            email_recipients?: string[] | null;
+            /** Email Enabled */
+            email_enabled?: boolean | null;
+        };
+        /** LayerAAlertDeliveryOut */
+        LayerAAlertDeliveryOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Alert Id
+             * Format: uuid
+             */
+            alert_id: string;
+            /**
+             * Channel
+             * @enum {string}
+             */
+            channel: "webhook" | "email" | "banner";
+            /**
+             * Attempted At
+             * Format: date-time
+             */
+            attempted_at: string;
+            /** Success */
+            success: boolean;
+            /** Detail */
+            detail: string | null;
+        };
+        /** LayerAAlertOut */
+        LayerAAlertOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Alert Type
+             * @enum {string}
+             */
+            alert_type: "sustained_disconnect" | "reconnect_flapping" | "session_conflict";
+            /** Account Id */
+            account_id: string | null;
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "serious" | "critical";
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "open" | "resolved";
+            /**
+             * Opened At
+             * Format: date-time
+             */
+            opened_at: string;
+            /** Resolved At */
+            resolved_at: string | null;
+            /** Condition Detail */
+            condition_detail: {
+                [key: string]: unknown;
+            };
+            /** Acknowledged By */
+            acknowledged_by: string | null;
+            /** Acknowledged At */
+            acknowledged_at: string | null;
+        };
+        /** LayerAConflictEventOut */
+        LayerAConflictEventOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Detected At
+             * Format: date-time
+             */
+            detected_at: string;
+            /** Refused Pid */
+            refused_pid: number;
+            /** Owner Pid */
+            owner_pid: number;
+            /**
+             * Ingested At
+             * Format: date-time
+             */
+            ingested_at: string;
+        };
+        /**
+         * LayerAConflictSummary
+         * @description The live half of "another process tried to start" — Layer A's own
+         *     GET /admin/conflicts pass-through, distinct from LayerAConflictEventOut
+         *     below (the durable Postgres copy).
+         */
+        LayerAConflictSummary: {
+            /** Detectedat */
+            detectedAt: number;
+            /** Refusedpid */
+            refusedPid: number;
+            /** Ownerpid */
+            ownerPid: number;
+        };
+        /** LayerAHealthSnapshotOut */
+        LayerAHealthSnapshotOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Account Id */
+            account_id: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "poll" | "transition";
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "connecting" | "connected" | "reconnecting" | "unhealthy" | "disconnected" | "unknown";
+            /** Connect Attempts */
+            connect_attempts: number;
+            /** Last Connected At */
+            last_connected_at: string | null;
+            /** Last Message Timestamp */
+            last_message_timestamp: string | null;
+            /** Last Error */
+            last_error: string | null;
+            /** Last Disconnect Reason */
+            last_disconnect_reason: string | null;
+            /** Last Disconnect Status Code */
+            last_disconnect_status_code: number | null;
+            /** Healthy */
+            healthy: boolean | null;
+            /** Risk Tier */
+            risk_tier: string | null;
+        };
+        /** LayerAOpenAlertCountOut */
+        LayerAOpenAlertCountOut: {
+            /** Count */
+            count: number;
         };
         /**
          * LivingWipReportOut
@@ -6033,6 +6517,37 @@ export interface operations {
             };
         };
     };
+    list_vendor_candidates_projects__project_id__commitments_vendor_candidates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartyOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     read_commitment_projects__project_id__commitments__commitment_id__get: {
         parameters: {
             query?: never;
@@ -7527,6 +8042,297 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_layer_a_accounts_admin_layer_a_accounts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayerAAccountOut"][];
+                };
+            };
+        };
+    };
+    get_layer_a_account_admin_layer_a_accounts__account_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayerAAccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_layer_a_live_conflicts_admin_layer_a_conflicts_live_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayerAConflictSummary"][];
+                };
+            };
+        };
+    };
+    get_layer_a_account_trend_admin_layer_a_accounts__account_id__trend_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayerAHealthSnapshotOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_layer_a_conflict_events_admin_layer_a_conflicts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayerAConflictEventOut"][];
+                };
+            };
+        };
+    };
+    list_layer_a_alerts_admin_layer_a_alerts_get: {
+        parameters: {
+            query?: {
+                state?: string | null;
+                alert_type?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayerAAlertOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    acknowledge_layer_a_alert_admin_layer_a_alerts__alert_id__acknowledge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayerAAlertOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_layer_a_alert_deliveries_admin_layer_a_alerts__alert_id__deliveries_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayerAAlertDeliveryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_layer_a_alert_config_admin_layer_a_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayerAAlertConfigOut"];
+                };
+            };
+        };
+    };
+    update_layer_a_alert_config_admin_layer_a_config_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LayerAAlertConfigUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayerAAlertConfigOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    count_open_layer_a_alerts_admin_layer_a_alerts_open_count_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayerAOpenAlertCountOut"];
                 };
             };
         };

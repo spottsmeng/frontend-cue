@@ -247,3 +247,18 @@ export interface ExportBlockedBody {
 
 export type CostSummaryOut = components["schemas"]["CostSummaryOut"];
 export type CostSummaryRow = components["schemas"]["CostSummaryRow"];
+
+// --- Layer A observability (task-layer-A-observability-dashboard-prompt.txt)
+
+export type LayerAAccountOut = components["schemas"]["LayerAAccountOut"];
+export type LayerAWorkerStatus = LayerAAccountOut["status"];
+export type LayerAConflictSummary = components["schemas"]["LayerAConflictSummary"];
+export type LayerAHealthSnapshotOut = components["schemas"]["LayerAHealthSnapshotOut"];
+export type LayerAConflictEventOut = components["schemas"]["LayerAConflictEventOut"];
+export type LayerAAlertOut = components["schemas"]["LayerAAlertOut"];
+export type LayerAAlertType = LayerAAlertOut["alert_type"];
+export type LayerAAlertSeverity = LayerAAlertOut["severity"];
+export type LayerAAlertState = LayerAAlertOut["state"];
+export type LayerAAlertDeliveryOut = components["schemas"]["LayerAAlertDeliveryOut"];
+export type LayerAAlertConfigOut = components["schemas"]["LayerAAlertConfigOut"];
+export type LayerAAlertConfigUpdate = components["schemas"]["LayerAAlertConfigUpdate"];

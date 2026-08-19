@@ -5,7 +5,8 @@
       "users": "用户",
       "delegations": "授权",
       "retention": "留存策略",
-      "channelIdentities": "渠道身份"
+      "channelIdentities": "渠道身份",
+      "layerA": "Layer A"
     },
     "project": {
       "members": "成员与授权",
@@ -243,5 +244,106 @@
     "retentionDaysLabel": "留存天数",
     "addPolicy": "添加策略",
     "saveError": "保存失败，请重试。"
+  },
+  "layerA": {
+    "status": {
+      "connected": "已连接",
+      "connecting": "连接中",
+      "reconnecting": "重新连接中",
+      "unhealthy": "不健康",
+      "disconnected": "已断开",
+      "unknown": "未知"
+    },
+    "alertType": {
+      "sustained_disconnect": "持续断线",
+      "reconnect_flapping": "反复重连",
+      "session_conflict": "会话冲突"
+    },
+    "severity": {
+      "serious": "严重",
+      "critical": "危急"
+    },
+    "liveStatus": {
+      "title": "实时状态",
+      "loading": "正在加载实时状态…",
+      "adminOnly": "需要管理员角色才能查看 Layer A 状态。",
+      "loadError": "无法加载实时状态。",
+      "unconfigured": "此组织尚未配置 Layer A 管理员凭据。",
+      "empty": "未找到 Layer A 账号。",
+      "headers": {
+        "account": "账号",
+        "status": "状态",
+        "connectAttempts": "连接尝试次数",
+        "lastError": "最近错误"
+      }
+    },
+    "trend": {
+      "title": "历史趋势",
+      "pickerLabel": "账号（最多 5 个）",
+      "pickAnAccount": "选择一个账号以查看其历史记录。",
+      "adminOnly": "需要管理员角色才能查看趋势历史。",
+      "loadError": "无法加载趋势历史。",
+      "loading": "正在加载趋势历史…",
+      "empty": "未找到 Layer A 账号。",
+      "connected": "已连接",
+      "notConnected": "未连接",
+      "chartAriaLabel": "各账号随时间变化的连接状态",
+      "headers": {
+        "account": "账号",
+        "recordedAt": "记录时间",
+        "status": "状态"
+      }
+    },
+    "alertHistory": {
+      "title": "告警历史",
+      "loading": "正在加载告警…",
+      "adminOnly": "需要管理员角色才能查看告警历史。",
+      "loadError": "无法加载告警历史。",
+      "empty": "尚未触发任何告警。",
+      "processWide": "整个进程",
+      "stillOpen": "仍未解决",
+      "acknowledge": "确认",
+      "acknowledged": "已确认",
+      "hideDeliveries": "隐藏投递记录",
+      "showDeliveries": "显示投递记录",
+      "headers": {
+        "type": "类型",
+        "account": "账号",
+        "severity": "严重程度",
+        "opened": "触发时间",
+        "resolved": "解决时间",
+        "acknowledge": "确认",
+        "deliveries": "投递记录"
+      },
+      "deliveries": {
+        "loading": "正在加载投递记录…",
+        "empty": "尚无投递记录。",
+        "succeeded": "成功",
+        "failed": "失败",
+        "channel": {
+          "webhook": "Webhook",
+          "email": "邮件",
+          "banner": "横幅提示"
+        }
+      }
+    },
+    "config": {
+      "title": "告警配置",
+      "loading": "正在加载配置…",
+      "adminOnly": "需要管理员角色才能查看告警配置。",
+      "loadError": "无法加载告警配置。",
+      "enabledLabel": "为此组织启用 Layer A 可观测性告警",
+      "sustainedDisconnectMinutesLabel": "持续断线阈值（分钟）",
+      "reconnectThresholdLabel": "重连尝试次数阈值",
+      "reconnectWindowMinutesLabel": "重连尝试时间窗口（分钟）",
+      "webhookEnabledLabel": "通过 Webhook 发送告警",
+      "webhookUrlLabel": "Webhook 网址",
+      "webhookConfigured": "已为此 Webhook 生成签名密钥。",
+      "emailEnabledLabel": "通过邮件发送告警",
+      "emailRecipientsLabel": "收件人邮箱（以逗号分隔）",
+      "save": "保存",
+      "saved": "已保存。",
+      "saveError": "无法保存配置。"
+    }
   }
 }

@@ -5,7 +5,8 @@
       "users": "使用者",
       "delegations": "授權",
       "retention": "保留政策",
-      "channelIdentities": "渠道身分"
+      "channelIdentities": "渠道身分",
+      "layerA": "Layer A"
     },
     "project": {
       "members": "成員與授權",
@@ -243,5 +244,106 @@
     "retentionDaysLabel": "保留天數",
     "addPolicy": "新增政策",
     "saveError": "儲存失敗，請重試。"
+  },
+  "layerA": {
+    "status": {
+      "connected": "已連接",
+      "connecting": "連接中",
+      "reconnecting": "重新連接中",
+      "unhealthy": "不健康",
+      "disconnected": "已斷開",
+      "unknown": "未知"
+    },
+    "alertType": {
+      "sustained_disconnect": "持續斷線",
+      "reconnect_flapping": "反覆重連",
+      "session_conflict": "會話衝突"
+    },
+    "severity": {
+      "serious": "嚴重",
+      "critical": "危急"
+    },
+    "liveStatus": {
+      "title": "即時狀態",
+      "loading": "正在載入即時狀態…",
+      "adminOnly": "需要管理員角色才能檢視 Layer A 狀態。",
+      "loadError": "無法載入即時狀態。",
+      "unconfigured": "此組織尚未設定 Layer A 管理員憑證。",
+      "empty": "找不到 Layer A 帳號。",
+      "headers": {
+        "account": "帳號",
+        "status": "狀態",
+        "connectAttempts": "連線嘗試次數",
+        "lastError": "最近錯誤"
+      }
+    },
+    "trend": {
+      "title": "歷史趨勢",
+      "pickerLabel": "帳號（最多 5 個）",
+      "pickAnAccount": "選擇一個帳號以檢視其歷史記錄。",
+      "adminOnly": "需要管理員角色才能檢視趨勢歷史。",
+      "loadError": "無法載入趨勢歷史。",
+      "loading": "正在載入趨勢歷史…",
+      "empty": "找不到 Layer A 帳號。",
+      "connected": "已連接",
+      "notConnected": "未連接",
+      "chartAriaLabel": "各帳號隨時間變化的連線狀態",
+      "headers": {
+        "account": "帳號",
+        "recordedAt": "記錄時間",
+        "status": "狀態"
+      }
+    },
+    "alertHistory": {
+      "title": "警示歷史",
+      "loading": "正在載入警示…",
+      "adminOnly": "需要管理員角色才能檢視警示歷史。",
+      "loadError": "無法載入警示歷史。",
+      "empty": "尚未觸發任何警示。",
+      "processWide": "整個處理程序",
+      "stillOpen": "仍未解決",
+      "acknowledge": "確認",
+      "acknowledged": "已確認",
+      "hideDeliveries": "隱藏投遞記錄",
+      "showDeliveries": "顯示投遞記錄",
+      "headers": {
+        "type": "類型",
+        "account": "帳號",
+        "severity": "嚴重程度",
+        "opened": "觸發時間",
+        "resolved": "解決時間",
+        "acknowledge": "確認",
+        "deliveries": "投遞記錄"
+      },
+      "deliveries": {
+        "loading": "正在載入投遞記錄…",
+        "empty": "尚無投遞記錄。",
+        "succeeded": "成功",
+        "failed": "失敗",
+        "channel": {
+          "webhook": "Webhook",
+          "email": "郵件",
+          "banner": "橫幅提示"
+        }
+      }
+    },
+    "config": {
+      "title": "警示設定",
+      "loading": "正在載入設定…",
+      "adminOnly": "需要管理員角色才能檢視警示設定。",
+      "loadError": "無法載入警示設定。",
+      "enabledLabel": "為此組織啟用 Layer A 可觀測性警示",
+      "sustainedDisconnectMinutesLabel": "持續斷線閾值（分鐘）",
+      "reconnectThresholdLabel": "重連嘗試次數閾值",
+      "reconnectWindowMinutesLabel": "重連嘗試時間窗口（分鐘）",
+      "webhookEnabledLabel": "透過 Webhook 傳送警示",
+      "webhookUrlLabel": "Webhook 網址",
+      "webhookConfigured": "已為此 Webhook 產生簽章密鑰。",
+      "emailEnabledLabel": "透過電子郵件傳送警示",
+      "emailRecipientsLabel": "收件人電子郵件（以逗號分隔）",
+      "save": "儲存",
+      "saved": "已儲存。",
+      "saveError": "無法儲存設定。"
+    }
   }
 }

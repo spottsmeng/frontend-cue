@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
+import { LayerAAlertBadge } from "./layer-a-alert-badge";
 import { ProjectSwitcher, type ProjectSwitcherItem } from "./project-switcher";
 import { UserMenu } from "./user-menu";
 
@@ -58,9 +59,10 @@ export async function TopNav({
           <Link
             key={link.href}
             href={link.href}
-            className="rounded-md px-3 py-1.5 text-sm text-ink-secondary hover:bg-surface-sunk hover:text-ink"
+            className="flex items-center rounded-md px-3 py-1.5 text-sm text-ink-secondary hover:bg-surface-sunk hover:text-ink"
           >
             {link.label}
+            {link.href === "/admin" && <LayerAAlertBadge />}
           </Link>
         ))}
       </nav>
