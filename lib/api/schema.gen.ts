@@ -356,6 +356,18 @@ export interface paths {
         /**
          * List Commitments
          * @description PRD §11.2: list filtered by state, party and due window.
+         *
+         *     `verification_state` is the review queue. Extraction routes anything it
+         *     is not certain about to `pending_verification` — a price or date field
+         *     (FR-LED-07), a vendor it could not confidently identify on an internal
+         *     channel, two commitments quoting the same text (the over-split
+         *     signature), a commitment the model itself was unsure of, and a message
+         *     that asserts a change to an already-logged commitment without that change
+         *     being applied (app/ledger/extractor.py's `_attach_evidence_to_existing`).
+         *     Every one of those routes into this one queue rather than its own state,
+         *     which is only useful if a PM can actually ask for it: without this filter
+         *     a flagged row comes back in the same undifferentiated list as a verified
+         *     one, and flagging it changes nothing anybody can see.
          */
         get: operations["list_commitments_projects__project_id__commitments_get"];
         put?: never;
@@ -6450,6 +6462,7 @@ export interface operations {
         parameters: {
             query?: {
                 state?: ("proposed" | "committed" | "at_risk" | "delivered" | "broken" | "renegotiated" | "withdrawn") | null;
+                verification_state?: ("auto" | "pending_verification" | "human_verified" | "human_corrected") | null;
                 party_id?: string | null;
                 due_before?: string | null;
                 due_after?: string | null;
