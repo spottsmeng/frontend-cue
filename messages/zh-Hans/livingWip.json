@@ -139,7 +139,17 @@
     "empty": "尚无决策或待处理审批记录。",
     "outstandingApprovals": "待处理审批",
     "due": "截止 {date}",
-    "recentDecisions": "近期决策"
+    "recentDecisions": "近期决策",
+    "reviewReason": {
+      "monetary_field": "待确认金额",
+      "date_field": "待确认日期",
+      "vendor_unconfirmed": "供应商未确认",
+      "overlapping_spans": "可能重复",
+      "multiple_vendors_in_span": "可能涉及两家供应商",
+      "low_model_confidence": "置信度低",
+      "unapplied_claim": "变更未应用",
+      "low_confidence_link": "匹配不确定"
+    }
   },
   "milestoneTracker": {
     "title": "里程碑追踪",

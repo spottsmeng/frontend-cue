@@ -139,7 +139,17 @@
     "empty": "尚無決策或待處理核准紀錄。",
     "outstandingApprovals": "待處理核准",
     "due": "截止 {date}",
-    "recentDecisions": "近期決策"
+    "recentDecisions": "近期決策",
+    "reviewReason": {
+      "monetary_field": "待確認金額",
+      "date_field": "待確認日期",
+      "vendor_unconfirmed": "供應商未確認",
+      "overlapping_spans": "可能重複",
+      "multiple_vendors_in_span": "可能涉及兩家供應商",
+      "low_model_confidence": "信心度低",
+      "unapplied_claim": "變更未套用",
+      "low_confidence_link": "匹配不確定"
+    }
   },
   "milestoneTracker": {
     "title": "里程碑追蹤",

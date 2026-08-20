@@ -139,7 +139,17 @@
     "empty": "No decisions or outstanding approvals recorded yet.",
     "outstandingApprovals": "Outstanding approvals",
     "due": "due {date}",
-    "recentDecisions": "Recent decisions"
+    "recentDecisions": "Recent decisions",
+    "reviewReason": {
+      "monetary_field": "price to confirm",
+      "date_field": "date to confirm",
+      "vendor_unconfirmed": "vendor unconfirmed",
+      "overlapping_spans": "may be a duplicate",
+      "multiple_vendors_in_span": "may cover two vendors",
+      "low_model_confidence": "low confidence",
+      "unapplied_claim": "change not applied",
+      "low_confidence_link": "uncertain match"
+    }
   },
   "milestoneTracker": {
     "title": "Milestone tracker",

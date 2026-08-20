@@ -4662,7 +4662,17 @@ export interface components {
             /** By Due Window */
             by_due_window: components["schemas"]["OutstandingActionsByWindow"][];
         };
-        /** OutstandingApprovalRow */
+        /**
+         * OutstandingApprovalRow
+         * @description One row of the review queue a PM actually reads.
+         *
+         *     Carried the deliverable and a date and nothing else, which makes a queue
+         *     of thirty rows untriageable: no vendor to chase, no amount to weigh, and
+         *     above all no reason — a price waiting for confirmation and a possible
+         *     hallucination looked identical. `verification_reasons` is the machine
+         *     vocabulary set at extraction time (app/ledger/extractor.py's
+         *     REVIEW_* constants); the renderer maps it to display text.
+         */
         OutstandingApprovalRow: {
             /**
              * Commitment Id
@@ -4671,8 +4681,16 @@ export interface components {
             commitment_id: string;
             /** Deliverable En */
             deliverable_en: string;
+            /** Party Name */
+            party_name: string | null;
             /** Due At */
             due_at: string | null;
+            /** Amount */
+            amount: number | null;
+            /** Currency */
+            currency: string | null;
+            /** Verification Reasons */
+            verification_reasons: string[];
             provenance: components["schemas"]["ReportProvenance"];
         };
         /**
